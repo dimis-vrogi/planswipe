@@ -474,6 +474,16 @@ async function handleApi(request, response) {
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/api/users") {
+  const users = loadUsers();
+
+  sendJson(response, 200, {
+    users
+  });
+
+  return;
+}
+
   users.push({
     username,
     password: hashPassword(password)
