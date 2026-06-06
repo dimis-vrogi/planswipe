@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PlanSwipe</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="App header">
+        <div>
+          <p class="eyebrow">Group plans</p>
+          <h1>PlanSwipe</h1>
+        </div>
+        <button class="icon-button" id="resetButton" type="button" aria-label="Leave group" title="Leave group">R</button>
+      </section>
+
+      <section class="setup-panel" id="setupPanel" aria-label="Create or join group">
+        <div>
+          <h2>Create or join a group</h2>
+          <p>Share a group code with friends, agree on the basics together, then swipe real place suggestions.</p>
+        </div>
+
+        <label class="field">
+          <span>Your name</span>
+          <input id="nameInput" type="text" maxlength="24" placeholder="Dimitris">
+        </label>
+
+        <label class="field">
+          <span>Group name</span>
+          <input id="groupInput" type="text" maxlength="30" placeholder="Friday crew">
+        </label>
+
+        <label class="field">
+          <span>Join code</span>
+          <input id="codeInput" type="text" maxlength="8" placeholder="ABC123">
+        </label>
+
+        <div class="setup-actions">
+          <button class="primary-button" id="createButton" type="button">Create group</button>
+          <button class="secondary-button" id="joinButton" type="button">Join group</button>
+        </div>
+      </section>
+
+      <section class="group-panel is-hidden" id="groupPanel" aria-label="Group status">
+        <div>
+          <p class="eyebrow">Current group</p>
+          <h2 id="groupName">Friday crew</h2>
+          <p class="group-code">Code: <strong id="groupCode">ABC123</strong></p>
+        </div>
+        <div class="member-row" id="memberRow" aria-label="Group members"></div>
+      </section>
+
+      <section class="status-panel is-hidden" id="statusPanel" aria-live="polite"></section>
+
+      <section class="decision-panel is-hidden" id="decisionPanel" aria-label="Group alignment questions">
+        <div class="decision-header">
+          <div>
+            <p class="eyebrow" id="decisionStep">Step 1 of 2</p>
+            <h2 id="decisionTitle">Where should the group go out?</h2>
+          </div>
+          <p id="decisionHint">Everyone needs to choose the same area before the group moves on.</p>
+        </div>
+        <div class="option-grid" id="optionGrid"></div>
+      </section>
+
+      <section class="swipe-layout is-hidden" id="swipeLayout">
+        <article class="card-stage" aria-live="polite">
+          <div class="search-summary" id="searchSummary">Searching places...</div>
+          <div class="activity-card" id="activityCard">
+            <img class="activity-photo" id="activityPhoto" alt="">
+            <div class="card-copy">
+              <div>
+                <p class="activity-category" id="activityCategory">Restaurant</p>
+                <h2 id="activityTitle">Psyrri meze spot</h2>
+              </div>
+              <p id="activityDescription">Greek small plates, casual tables, and good for a mixed group.</p>
+              <div class="activity-meta">
+                <span id="activityArea">Center of Athens</span>
+                <span id="activityTime">Open tonight</span>
+                <span id="activityCost">$$</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <div class="actions" aria-label="Swipe actions">
+          <button class="choice-button no" id="noButton" type="button" aria-label="Not interested" title="Not interested">X</button>
+          <button class="choice-button yes" id="yesButton" type="button" aria-label="Interested" title="Interested">Y</button>
+        </div>
+      </section>
+
+      <section class="results-panel is-hidden" id="resultsPanel" aria-label="Group matches">
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">Live matches</p>
+            <h2>What your group should do</h2>
+          </div>
+          <button class="secondary-button" id="reviewButton" type="button">Change basics</button>
+        </div>
+        <div class="result-list" id="resultList"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
