@@ -5,7 +5,7 @@ const crypto = require("crypto");
 
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
-const publicRoot = path.resolve(__dirname, "outputs");
+const publicRoot = path.resolve(__dirname, "public");
 const googleApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
 
 /* -------------------- AREAS (Greek) -------------------- */
