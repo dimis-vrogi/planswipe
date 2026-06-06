@@ -45,6 +45,8 @@ const loginUsername = document.querySelector("#loginUsername");
 const loginPassword = document.querySelector("#loginPassword");
 const loginButton = document.querySelector("#loginButton");
 const registerButton = document.querySelector("#registerButton");
+const logoutButton = document.querySelector("#logoutButton");
+const topbar = document.querySelector("#topbar");
 
 
 function setVisible(element, visible) {
@@ -65,10 +67,12 @@ async function login() {
     data.username
   );
 
-  loginPanel.classList.add("is-hidden");
+  loginUsername.value = "";
+  loginPassword.value = "";
 
   renderApp();
 }
+
 async function registerUser() {
   await api("/api/register", {
     method: "POST",
@@ -251,31 +255,35 @@ function renderStatus() {
 function renderApp() {
 
   const loggedIn =
-  localStorage.getItem("planswipe:login");
+    localStorage.getItem("planswipe:login");
 
-if (!loggedIn) {
+  if (!loggedIn) {
 
-  setVisible(loginPanel, true);
+    setVisible(loginPanel, true);
+    setVisible(topbar, false);
 
-  setVisible(setupPanel, false);
-  setVisible(groupPanel, false);
-  setVisible(statusPanel, false);
-  setVisible(decisionPanel, false);
-  setVisible(swipeLayout, false);
-  setVisible(resultsPanel, false);
+    setVisible(setupPanel, false);
+    setVisible(groupPanel, false);
+    setVisible(statusPanel, false);
+    setVisible(decisionPanel, false);
+    setVisible(swipeLayout, false);
+    setVisible(resultsPanel, false);
 
-  return;
-}
+    return;
+  }
 
-setVisible(loginPanel, false);
-  
+  setVisible(loginPanel, false);
+  setVisible(topbar, true);
+
   if (!state.group || !state.user) {
+
     setVisible(setupPanel, true);
     setVisible(groupPanel, false);
     setVisible(statusPanel, false);
     setVisible(decisionPanel, false);
     setVisible(swipeLayout, false);
     setVisible(resultsPanel, false);
+
     return;
   }
 
@@ -309,9 +317,10 @@ setVisible(loginPanel, false);
 
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
+
   renderResults();
 
-  if (state.index < state.group.places.length) {
+  if (state.index < (state.group.places?.length || 0)) {
     setVisible(swipeLayout, true);
     renderCard();
   } else {
@@ -436,6 +445,12 @@ function leaveGroup() {
 }
 
 function showError(message) {
+
+  if (!localStorage.getItem("planswipe:login")) {
+    alert(message);
+    return;
+  }
+
   setVisible(statusPanel, true);
   statusPanel.textContent = message;
 }
@@ -488,6 +503,22 @@ reviewButton.addEventListener("click", () => {
   state.index = 0;
   renderApp();
 });
+
+logoutButton.addEventListener("click", () => {
+
+  localStorage.removeItem("planswipe:login");
+  localStorage.removeItem("planswipe:user");
+  localStorage.removeItem("planswipe:groupCode");
+
+  state.user = null;
+  state.group = null;
+  state.groupCode = "";
+
+  clearInterval(state.pollTimer);
+
+  renderApp();
+});
+
 
 optionGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".option-card");
