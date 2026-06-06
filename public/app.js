@@ -40,9 +40,45 @@ const activityCost = document.querySelector("#activityCost");
 const noButton = document.querySelector("#noButton");
 const yesButton = document.querySelector("#yesButton");
 const resultList = document.querySelector("#resultList");
+const loginPanel = document.querySelector("#loginPanel");
+const loginUsername = document.querySelector("#loginUsername");
+const loginPassword = document.querySelector("#loginPassword");
+const loginButton = document.querySelector("#loginButton");
+const registerButton = document.querySelector("#registerButton");
+
 
 function setVisible(element, visible) {
   element.classList.toggle("is-hidden", !visible);
+}
+
+async function login() {
+  const data = await api("/api/login", {
+    method: "POST",
+    body: {
+      username: loginUsername.value,
+      password: loginPassword.value
+    }
+  });
+
+  localStorage.setItem(
+    "planswipe:login",
+    data.username
+  );
+
+  loginPanel.classList.add("is-hidden");
+
+  renderApp();
+}
+async function registerUser() {
+  await api("/api/register", {
+    method: "POST",
+    body: {
+      username: loginUsername.value,
+      password: loginPassword.value
+    }
+  });
+
+  alert("Account created.");
 }
 
 async function api(path, options = {}) {
@@ -213,6 +249,26 @@ function renderStatus() {
 }
 
 function renderApp() {
+
+  const loggedIn =
+  localStorage.getItem("planswipe:login");
+
+if (!loggedIn) {
+
+  setVisible(loginPanel, true);
+
+  setVisible(setupPanel, false);
+  setVisible(groupPanel, false);
+  setVisible(statusPanel, false);
+  setVisible(decisionPanel, false);
+  setVisible(swipeLayout, false);
+  setVisible(resultsPanel, false);
+
+  return;
+}
+
+setVisible(loginPanel, false);
+  
   if (!state.group || !state.user) {
     setVisible(setupPanel, true);
     setVisible(groupPanel, false);
@@ -405,7 +461,19 @@ createButton.addEventListener("click", () =>
 joinButton.addEventListener("click", () =>
   joinGroup().catch((error) => showError(error.message))
 );
+loginButton.addEventListener(
+  "click",
+  () => login().catch(
+    err => showError(err.message)
+  )
+);
 
+registerButton.addEventListener(
+  "click",
+  () => registerUser().catch(
+    err => showError(err.message)
+  )
+);
 resetButton.addEventListener("click", leaveGroup);
 
 noButton.addEventListener("click", () =>
