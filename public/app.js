@@ -53,7 +53,7 @@ async function api(path, options = {}) {
   });
 
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
+  if (!response.ok) throw new Error(data.error || "Αποτυχία αιτήματος");
   return data;
 }
 
@@ -84,7 +84,7 @@ function renderMembers() {
       (member) => `
         <span class="member-chip">
           <span class="avatar">${initials(member.name)}</span>
-          ${member.name}${member.id === state.user.id ? " (you)" : ""}
+          ${member.name}${member.id === state.user.id ? " (εσύ)" : ""}
         </span>
       `
     )
@@ -100,19 +100,23 @@ function renderDecisionStep(kind) {
   const options = isAreaStep ? state.areas : state.types;
   const chosen = selected(kind);
 
-  decisionStep.textContent = isAreaStep ? "Step 1 of 2" : "Step 2 of 2";
+  decisionStep.textContent = isAreaStep ? "Βήμα 1 από 2" : "Βήμα 2 από 2";
+
   decisionTitle.textContent = isAreaStep
-    ? "Where should the group go out?"
-    : "What kind of place should we search for?";
-  decisionHint.textContent = "Everyone needs to choose the same answer. If the group splits, choose again until there is agreement.";
+    ? "Πού θέλετε να πάτε;"
+    : "Τι είδους μέρος θέλετε;";
+
+  decisionHint.textContent =
+    "Όλοι πρέπει να συμφωνήσουν πριν προχωρήσετε στο επόμενο βήμα.";
 
   optionGrid.innerHTML = options
     .map((option) => {
       const score = optionScore(kind, option.id);
       const selectedClass = chosen === option.id ? " is-selected" : "";
+
       return `
         <button class="option-card${selectedClass}" type="button" data-kind="${kind}" data-id="${option.id}">
-          <span class="option-score">${score}/${memberCount()} chose this</span>
+          <span class="option-score">${score}/${memberCount()} ψήφισαν</span>
           <span>
             <h3>${option.label}</h3>
             <p>${option.description}</p>
@@ -125,6 +129,7 @@ function renderDecisionStep(kind) {
 
 function renderCard() {
   const place = state.group.places[state.index];
+
   if (!place) {
     setVisible(swipeLayout, false);
     setVisible(resultsPanel, true);
@@ -135,9 +140,11 @@ function renderCard() {
   activityCard.classList.remove("swipe-yes", "swipe-no");
   activityPhoto.src = place.photoUrl;
   activityPhoto.alt = place.title;
-  activityCategory.textContent = `${place.category} | ${Number(place.rating || 4).toFixed(1)} rating`;
+
+  activityCategory.textContent = `${place.category} | ${Number(place.rating || 4).toFixed(1)} αξιολόγηση`;
   activityTitle.textContent = place.title;
   activityDescription.textContent = place.description;
+
   activityArea.textContent = place.areaLabel;
   activityTime.textContent = place.time;
   activityCost.textContent = place.cost;
@@ -151,8 +158,8 @@ function renderResults() {
       <article class="result-card">
         <div class="result-icon"></div>
         <div>
-          <h3>No strong match yet</h3>
-          <p>Keep swiping, wait for friends, or change the basics.</p>
+          <h3>Δεν υπάρχει ακόμα ισχυρή επιλογή</h3>
+          <p>Συνεχίστε τις επιλογές ή περιμένετε την ομάδα.</p>
         </div>
         <strong class="result-score">0/${memberCount()}</strong>
       </article>
@@ -167,7 +174,7 @@ function renderResults() {
           <img class="result-icon" src="${item.photoUrl}" alt="">
           <div>
             <h3>${item.title}</h3>
-            <p>${item.areaLabel} | ${item.category} | ${item.yes} of ${item.total} people swiped yes</p>
+            <p>${item.areaLabel} | ${item.category} | ${item.yes}/${item.total} ψήφισαν ναι</p>
           </div>
           <strong class="result-score">${Math.round(item.score * 100)}%</strong>
         </article>
@@ -186,16 +193,23 @@ function renderStatus() {
   }
 
   setVisible(statusPanel, true);
+
   if (!areaReady) {
-    statusPanel.textContent = "Waiting for everyone to agree on an area.";
+    statusPanel.textContent = "Αναμονή για συμφωνία στην περιοχή.";
     return;
   }
+
   if (!typeReady) {
-    statusPanel.textContent = "Area agreed. Waiting for everyone to agree on the place type.";
+    statusPanel.textContent = "Η περιοχή έχει επιλεγεί. Αναμονή για τύπο.";
     return;
   }
-  const source = state.group.search?.source === "google" ? "Google Places" : "sample data";
-  statusPanel.textContent = `Searching ${source}: "${state.group.search?.query || ""}"`;
+
+  const source = state.group.search?.source === "google"
+    ? "Google Places"
+    : "δοκιμαστικά δεδομένα";
+
+  statusPanel.textContent =
+    `Αναζήτηση ${source}: "${state.group.search?.query || ""}"`;
 }
 
 function renderApp() {
@@ -211,6 +225,7 @@ function renderApp() {
 
   groupName.textContent = state.group.name;
   groupCode.textContent = state.group.code;
+
   renderMembers();
   renderStatus();
 
@@ -233,7 +248,9 @@ function renderApp() {
     return;
   }
 
-  searchSummary.textContent = `Maps search: "${state.group.search?.query || ""}"`;
+  searchSummary.textContent =
+    `Αναζήτηση: "${state.group.search?.query || ""}"`;
+
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
   renderResults();
@@ -248,6 +265,7 @@ function renderApp() {
 
 async function refreshGroup() {
   if (!state.groupCode) return;
+
   try {
     const data = await api(`/api/groups/${state.groupCode}`);
     state.group = data.group;
@@ -267,8 +285,10 @@ function saveSession(user, group) {
   state.user = user;
   state.group = group;
   state.groupCode = group.code;
+
   localStorage.setItem("planswipe:user", JSON.stringify(user));
   localStorage.setItem("planswipe:groupCode", group.code);
+
   startPolling();
   renderApp();
 }
@@ -276,9 +296,10 @@ function saveSession(user, group) {
 async function createGroup() {
   const userName = nameInput.value.trim();
   if (!userName) {
-    showError("Enter your name first.");
+    showError("Εισάγετε το όνομά σας.");
     return;
   }
+
   const data = await api("/api/groups", {
     method: "POST",
     body: {
@@ -286,20 +307,24 @@ async function createGroup() {
       groupName: groupInput.value.trim()
     }
   });
+
   saveSession(data.user, data.group);
 }
 
 async function joinGroup() {
   const userName = nameInput.value.trim();
   const code = codeInput.value.trim().toUpperCase();
+
   if (!userName || !code) {
-    showError("Enter your name and a group code.");
+    showError("Συμπληρώστε όνομα και κωδικό ομάδας.");
     return;
   }
+
   const data = await api(`/api/groups/${code}/join`, {
     method: "POST",
     body: { userName }
   });
+
   saveSession(data.user, data.group);
 }
 
@@ -312,6 +337,7 @@ async function chooseOption(kind, optionId) {
       optionId
     }
   });
+
   state.index = 0;
   state.group = data.group;
   renderApp();
@@ -322,6 +348,7 @@ async function vote(liked) {
   if (!place) return;
 
   activityCard.classList.add(liked ? "swipe-yes" : "swipe-no");
+
   const data = await api(`/api/groups/${state.group.code}/vote`, {
     method: "POST",
     body: {
@@ -330,7 +357,9 @@ async function vote(liked) {
       liked
     }
   });
+
   state.group = data.group;
+
   setTimeout(() => {
     state.index += 1;
     renderApp();
@@ -343,8 +372,10 @@ function leaveGroup() {
   state.group = null;
   state.groupCode = "";
   state.index = 0;
+
   localStorage.removeItem("planswipe:user");
   localStorage.removeItem("planswipe:groupCode");
+
   renderApp();
 }
 
@@ -367,11 +398,24 @@ async function boot() {
   renderApp();
 }
 
-createButton.addEventListener("click", () => createGroup().catch((error) => showError(error.message)));
-joinButton.addEventListener("click", () => joinGroup().catch((error) => showError(error.message)));
+createButton.addEventListener("click", () =>
+  createGroup().catch((error) => showError(error.message))
+);
+
+joinButton.addEventListener("click", () =>
+  joinGroup().catch((error) => showError(error.message))
+);
+
 resetButton.addEventListener("click", leaveGroup);
-noButton.addEventListener("click", () => vote(false).catch((error) => showError(error.message)));
-yesButton.addEventListener("click", () => vote(true).catch((error) => showError(error.message)));
+
+noButton.addEventListener("click", () =>
+  vote(false).catch((error) => showError(error.message))
+);
+
+yesButton.addEventListener("click", () =>
+  vote(true).catch((error) => showError(error.message))
+);
+
 reviewButton.addEventListener("click", () => {
   state.index = 0;
   renderApp();
@@ -380,15 +424,19 @@ reviewButton.addEventListener("click", () => {
 optionGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".option-card");
   if (!button) return;
-  chooseOption(button.dataset.kind, button.dataset.id).catch((error) => showError(error.message));
+
+  chooseOption(button.dataset.kind, button.dataset.id)
+    .catch((error) => showError(error.message));
 });
 
 nameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") createGroup().catch((error) => showError(error.message));
+  if (event.key === "Enter")
+    createGroup().catch((error) => showError(error.message));
 });
 
 codeInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") joinGroup().catch((error) => showError(error.message));
+  if (event.key === "Enter")
+    joinGroup().catch((error) => showError(error.message));
 });
 
 boot().catch((error) => showError(error.message));
