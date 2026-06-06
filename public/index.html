@@ -8,126 +8,140 @@
   </head>
 
   <body>
-
-    <!-- ✅ LOGIN BOX (MISSING BEFORE — REQUIRED FOR YOUR APP.JS) -->
-    <div id="loginBox" class="login-box">
-      <h2>PlanSwipe</h2>
-      <p>Σύνδεση / Είσοδος</p>
-
-      <input id="nameInput" type="text" maxlength="24" placeholder="Το όνομά σου">
-
-      <input id="groupInput" type="text" maxlength="30" placeholder="Όνομα ομάδας">
-
-      <input id="codeInput" type="text" maxlength="8" placeholder="Κωδικός ομάδας">
-
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button id="createButton" type="button">Δημιουργία</button>
-        <button id="joinButton" type="button">Συμμετοχή</button>
-      </div>
-    </div>
-
     <main class="app-shell">
 
       <!-- TOP BAR -->
       <section class="topbar" aria-label="App header">
-        <div>
-          <p class="eyebrow">Group plans</p>
-          <h1>PlanSwipe</h1>
-        </div>
+  <div>
+    <p class="eyebrow">Group plans</p>
+    <h1>PlanSwipe</h1>
+  </div>
 
-        <div style="display:flex; gap:10px; align-items:center;">
-          <a href="previous.html" class="secondary-button" style="text-decoration:none;">
-            Προηγούμενες Βόλτες
-          </a>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <a href="previous.html" class="secondary-button" style="text-decoration:none;">
+      Προηγούμενες Βόλτες
+    </a>
 
-          <button class="icon-button" id="resetButton" type="button">
-            R
-          </button>
-        </div>
-      </section>
+    <button class="icon-button" id="resetButton" type="button" aria-label="Leave group" title="Leave group">
+      R
+    </button>
+  </div>
+</section>
 
       <!-- SETUP -->
-      <section class="setup-panel is-hidden" id="setupPanel">
+      <section class="setup-panel" id="setupPanel" aria-label="Δημιουργία ή συμμετοχή σε ομάδα">
         <div>
           <h2>Δημιουργία ή συμμετοχή σε ομάδα</h2>
-          <p>Συμφωνήστε με φίλους για το τι θα κάνετε.</p>
+          <p>Μοιράσου έναν κωδικό με τους φίλους σου, συμφωνήστε στα βασικά και μετά επιλέξτε μέρη μαζί.</p>
+        </div>
+
+        <label class="field">
+          <span>Το όνομά σου</span>
+          <input id="nameInput" type="text" maxlength="24" placeholder="Δημήτρης">
+        </label>
+
+        <label class="field">
+          <span>Όνομα ομάδας</span>
+          <input id="groupInput" type="text" maxlength="30" placeholder="Παρέα Παρασκευής">
+        </label>
+
+        <label class="field">
+          <span>Κωδικός ομάδας</span>
+          <input id="codeInput" type="text" maxlength="8" placeholder="ABC123">
+        </label>
+
+        <div class="setup-actions">
+          <button class="primary-button" id="createButton" type="button">Δημιουργία ομάδας</button>
+          <button class="secondary-button" id="joinButton" type="button">Συμμετοχή</button>
         </div>
       </section>
 
       <!-- GROUP HEADER -->
-      <section class="group-panel is-hidden" id="groupPanel">
+      <section class="group-panel is-hidden" id="groupPanel" aria-label="Ομάδα">
         <div>
           <p class="eyebrow">Τρέχουσα ομάδα</p>
           <h2 id="groupName">Παρέα</h2>
-          <p>Κωδικός: <strong id="groupCode"></strong></p>
+          <p class="group-code">Κωδικός: <strong id="groupCode">ABC123</strong></p>
         </div>
-
-        <div class="member-row" id="memberRow"></div>
+        <div class="member-row" id="memberRow" aria-label="Μέλη ομάδας"></div>
       </section>
 
       <!-- STATUS -->
-      <section class="status-panel is-hidden" id="statusPanel"></section>
+      <section class="status-panel is-hidden" id="statusPanel" aria-live="polite"></section>
 
-      <!-- DECISION -->
-      <section class="decision-panel is-hidden" id="decisionPanel">
+      <!-- DECISION STEP -->
+      <section class="decision-panel is-hidden" id="decisionPanel" aria-label="Επιλογές ομάδας">
 
         <div class="decision-header">
-          <p id="decisionStep">Βήμα</p>
-          <h2 id="decisionTitle"></h2>
-          <p id="decisionHint"></p>
+          <div>
+            <p class="eyebrow" id="decisionStep">Βήμα 1 από 2</p>
+            <h2 id="decisionTitle">Πού θέλετε να πάτε;</h2>
+          </div>
+          <p id="decisionHint">
+            Όλοι πρέπει να συμφωνήσουν πριν προχωρήσετε στο επόμενο βήμα.
+          </p>
         </div>
 
         <div class="option-grid" id="optionGrid"></div>
-
       </section>
 
       <!-- SWIPE -->
       <section class="swipe-layout is-hidden" id="swipeLayout">
 
-        <div class="search-summary" id="searchSummary"></div>
+        <article class="card-stage" aria-live="polite">
+          <div class="search-summary" id="searchSummary">
+            Αναζήτηση...
+          </div>
 
-        <div class="activity-card" id="activityCard">
-          <img id="activityPhoto" alt="">
+          <div class="activity-card" id="activityCard">
+            <img class="activity-photo" id="activityPhoto" alt="">
 
-          <div class="card-copy">
-            <p id="activityCategory"></p>
-            <h2 id="activityTitle"></h2>
-            <p id="activityDescription"></p>
+            <div class="card-copy">
+              <div>
+                <p class="activity-category" id="activityCategory">Κατηγορία</p>
+                <h2 id="activityTitle">Μέρος</h2>
+              </div>
 
-            <div>
-              <span id="activityArea"></span>
-              <span id="activityTime"></span>
-              <span id="activityCost"></span>
+              <p id="activityDescription">Περιγραφή</p>
+
+              <div class="activity-meta">
+                <span id="activityArea">Περιοχή</span>
+                <span id="activityTime">Ώρα</span>
+                <span id="activityCost">Κόστος</span>
+              </div>
             </div>
           </div>
-        </div>
+        </article>
 
-        <div class="actions">
-          <button id="noButton" type="button">✕</button>
-          <button id="yesButton" type="button">✓</button>
+        <div class="actions" aria-label="Επιλογές swipe">
+          <button class="choice-button no" id="noButton" type="button" aria-label="Όχι ενδιαφέρον">
+            ✕
+          </button>
+          <button class="choice-button yes" id="yesButton" type="button" aria-label="Ενδιαφέρον">
+            ✓
+          </button>
         </div>
 
       </section>
 
       <!-- RESULTS -->
-      <section class="results-panel is-hidden" id="resultsPanel">
+      <section class="results-panel is-hidden" id="resultsPanel" aria-label="Αποτελέσματα">
 
         <div class="results-header">
-          <h2>Αποτελέσματα</h2>
-
-          <button id="reviewButton" type="button">
-            Επανεξέταση
+          <div>
+            <p class="eyebrow">Ζωντανές επιλογές</p>
+            <h2>Τι μπορείτε να κάνετε</h2>
+          </div>
+          <button class="secondary-button" id="reviewButton" type="button">
+            Αλλαγή βασικών
           </button>
         </div>
 
         <div class="result-list" id="resultList"></div>
-
       </section>
 
     </main>
 
-    <!-- SCRIPT -->
     <script src="app.js"></script>
-
   </body>
 </html>
