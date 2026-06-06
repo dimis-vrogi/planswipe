@@ -2,7 +2,11 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-
+const { createClient } = require("@supabase/supabase-js");
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
 const publicRoot = path.resolve(__dirname, "public");
@@ -174,24 +178,6 @@ const mockPlaces = [
 ];
 
 const groups = new Map();
-
-const USERS_FILE = path.join(__dirname, "users.json");
-
-function loadUsers() {
-  try {
-    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(
-    USERS_FILE,
-    JSON.stringify(users, null, 2),
-    "utf8"
-  );
-}
 
 function hashPassword(password) {
   return crypto
@@ -465,21 +451,29 @@ async function handleApi(request, response) {
     return;
   }
 
-  const users = loadUsers();
+  const existing = await supabase
+    .from("users")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
 
-  if (users.find(u => u.username === username)) {
+  if (existing.data) {
     sendJson(response, 400, {
       error: "User already exists"
     });
     return;
   }
 
-  users.push({
-    username,
-    password: hashPassword(password)
-  });
+  const { error } = await supabase
+    .from("users")
+    .insert({
+      username,
+      password_hash: hashPassword(password)
+    });
 
-  saveUsers(users);
+  if (error) {
+    throw error;
+  }
 
   sendJson(response, 201, {
     success: true
@@ -488,42 +482,38 @@ async function handleApi(request, response) {
   return;
 }
   if (request.method === "POST" && url.pathname === "/api/login") {
-  const body = await readBody(request);
+        const body = await readBody(request);
 
-  const username = String(body.username || "").trim();
-  const password = String(body.password || "");
+const username = String(body.username || "").trim();
+const password = String(body.password || "");
 
-  const users = loadUsers();
+const { data: user, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("username", username)
+  .maybeSingle();
 
-  const user = users.find(
-    u =>
-      u.username === username &&
-      u.password === hashPassword(password)
-  );
+if (error) {
+  throw error;
+}
 
-  if (!user) {
-    sendJson(response, 401, {
-      error: "Invalid credentials"
-    });
-    return;
+if (
+  !user ||
+  user.password_hash !== hashPassword(password)
+) {
+  sendJson(response, 401, {
+    error: "Invalid credentials"
+  });
+  return;
+}
+
+sendJson(response, 200, {
+  success: true,
+  username
+});
+
+return;
   }
-
-  sendJson(response, 200, {
-    success: true,
-    username
-  });
-
-  return;
-}
-  if (request.method === "GET" && url.pathname === "/api/users") {
-  const users = loadUsers();
-
-  sendJson(response, 200, {
-    users
-  });
-
-  return;
-}
   
   if (request.method === "GET" && url.pathname === "/api/options") {
     sendJson(response, 200, { areas: areaOptions, types: typeOptions });
