@@ -175,6 +175,31 @@ const mockPlaces = [
 
 const groups = new Map();
 
+const USERS_FILE = path.join(__dirname, "users.json");
+
+function loadUsers() {
+  try {
+    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(
+    USERS_FILE,
+    JSON.stringify(users, null, 2),
+    "utf8"
+  );
+}
+
+function hashPassword(password) {
+  return crypto
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
+}
+
 function id(prefix) {
   return `${prefix}_${crypto.randomBytes(6).toString("hex")}`;
 }
@@ -427,6 +452,70 @@ async function handleApi(request, response) {
   const url = new URL(request.url, `http://${host}:${port}`);
   const parts = url.pathname.split("/").filter(Boolean);
 
+  if (request.method === "POST" && url.pathname === "/api/register") {
+  const body = await readBody(request);
+
+  const username = String(body.username || "").trim();
+  const password = String(body.password || "");
+
+  if (!username || !password) {
+    sendJson(response, 400, {
+      error: "Username and password required"
+    });
+    return;
+  }
+
+  const users = loadUsers();
+
+  if (users.find(u => u.username === username)) {
+    sendJson(response, 400, {
+      error: "User already exists"
+    });
+    return;
+  }
+
+  users.push({
+    username,
+    password: hashPassword(password)
+  });
+
+  saveUsers(users);
+
+  sendJson(response, 201, {
+    success: true
+  });
+
+  return;
+}
+  if (request.method === "POST" && url.pathname === "/api/login") {
+  const body = await readBody(request);
+
+  const username = String(body.username || "").trim();
+  const password = String(body.password || "");
+
+  const users = loadUsers();
+
+  const user = users.find(
+    u =>
+      u.username === username &&
+      u.password === hashPassword(password)
+  );
+
+  if (!user) {
+    sendJson(response, 401, {
+      error: "Invalid credentials"
+    });
+    return;
+  }
+
+  sendJson(response, 200, {
+    success: true,
+    username
+  });
+
+  return;
+}
+  
   if (request.method === "GET" && url.pathname === "/api/options") {
     sendJson(response, 200, { areas: areaOptions, types: typeOptions });
     return;
