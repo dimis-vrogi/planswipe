@@ -10,33 +10,38 @@
   <body>
     <main class="app-shell">
 
-      <section id="loginPanel">
-  <h2>Login</h2>
+      <section
+  id="loginPanel"
+  class="login-screen"
+>
+  <div class="login-panel">
 
-  <input
-    id="loginUsername"
-    placeholder="Username"
-  >
+    <h2>PlanSwipe</h2>
 
-  <input
-    id="loginPassword"
-    type="password"
-    placeholder="Password"
-  >
+    <input
+      id="loginUsername"
+      placeholder="Username"
+    >
 
-  <div style="margin-top:10px;">
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+    >
+
     <button id="loginButton">
       Login
     </button>
 
     <button id="registerButton">
-      Register
+      Create Account
     </button>
+
   </div>
 </section>
       
       <!-- TOP BAR -->
-      <section class="topbar is-hidden" id="topbar"aria-label="App header">
+      <section class="topbar is-hidden" id="topbar" aria-label="App header">
   <div>
     <p class="eyebrow">Group plans</p>
     <h1>PlanSwipe</h1>
@@ -72,7 +77,7 @@
 </section>
 
       <!-- SETUP -->
-      <section class="setup-panel" id="setupPanel" aria-label="Δημιουργία ή συμμετοχή σε ομάδα">
+      <section class="setup-panel is-hidden" id="setupPanel" aria-label="Δημιουργία ή συμμετοχή σε ομάδα">
         <div>
           <h2>Δημιουργία ή συμμετοχή σε ομάδα</h2>
           <p>Μοιράσου έναν κωδικό με τους φίλους σου, συμφωνήστε στα βασικά και μετά επιλέξτε μέρη μαζί.</p>
