@@ -59,8 +59,17 @@ async function api(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined
   });
 
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Invalid server response");
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+
   return data;
 }
 
@@ -75,6 +84,7 @@ async function login(name) {
 async function loadUser() {
   const res = await api("/api/me");
   currentUser = res.user;
+  state.user = res.user; // ✅ FIX: sync state
   return currentUser;
 }
 
@@ -83,7 +93,10 @@ async function handleLogin() {
   if (!name) return;
 
   const user = await login(name);
+
   currentUser = user;
+  state.user = user; // ✅ FIX: sync state
+  localStorage.setItem("planswipe:user", JSON.stringify(user)); // ✅ persist
 
   document.querySelector("#loginBox").style.display = "none";
 
@@ -94,6 +107,7 @@ async function init() {
   await loadUser();
 
   if (currentUser) {
+    state.user = currentUser;
     document.querySelector("#loginBox").style.display = "none";
   }
 }
@@ -113,10 +127,7 @@ function initials(name) {
 }
 
 // -------------------- CORE APP LOGIC --------------------
-// (KEEP YOUR EXISTING FUNCTIONS BELOW THIS POINT)
-
-// IMPORTANT: everything else in your file stays the same
-// BUT REMOVE duplicate login/api/init code inside api()
+// (your existing app logic stays below unchanged)
 
 // -------------------- BOOT --------------------
 init();
