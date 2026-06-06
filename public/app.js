@@ -83,6 +83,8 @@ async function registerUser() {
   });
 
   alert("Account created.");
+  loginUsername.value = "";
+  loginPassword.value = "";
 }
 
 async function api(path, options = {}) {
@@ -119,7 +121,7 @@ function memberCount() {
 }
 
 function renderMembers() {
-  memberRow.innerHTML = state.group.members
+  memberRow.innerHTML = (state.group.members || [])
     .map(
       (member) => `
         <span class="member-chip">
@@ -168,7 +170,7 @@ function renderDecisionStep(kind) {
 }
 
 function renderCard() {
-  const place = state.group.places[state.index];
+  const place = state.group.places?.[state.index];
 
   if (!place) {
     setVisible(swipeLayout, false);
@@ -460,6 +462,16 @@ async function boot() {
   state.areas = options.areas;
   state.types = options.types;
 
+  if (
+  localStorage.getItem("planswipe:login") &&
+  state.user &&
+  state.groupCode
+) {
+  startPolling();
+  await refreshGroup();
+  return;
+}
+  
   if (state.user && state.groupCode) {
     startPolling();
     await refreshGroup();
@@ -482,6 +494,17 @@ loginButton.addEventListener(
     err => showError(err.message)
   )
 );
+loginUsername.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    login().catch(err => showError(err.message));
+  }
+});
+
+loginPassword.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    login().catch(err => showError(err.message));
+  }
+});
 
 registerButton.addEventListener(
   "click",
