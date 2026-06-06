@@ -1,0 +1,13 @@
+{
+  "name": "planswipe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A group planning app where friends agree on basics, swipe places, and find shared matches.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
