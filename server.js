@@ -270,6 +270,40 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function publicError(error) {
+  if (error?.message?.includes("Supabase is not configured")) {
+    return {
+      status: 503,
+      message: "Supabase is not configured on the server."
+    };
+  }
+
+  if (
+    error?.code === "42P01" ||
+    error?.message?.includes('relation "public.groups" does not exist')
+  ) {
+    return {
+      status: 503,
+      message: "The Supabase groups table is missing. Run supabase-schema.sql in Supabase."
+    };
+  }
+
+  if (
+    error?.code === "42703" ||
+    error?.message?.includes("column")
+  ) {
+    return {
+      status: 503,
+      message: "The Supabase groups table has the wrong columns. Run supabase-schema.sql in Supabase."
+    };
+  }
+
+  return {
+    status: 500,
+    message: "Server error"
+  };
+}
+
 function readBody(request) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -676,7 +710,8 @@ const server = http.createServer(async (request, response) => {
     serveStatic(request, response);
   } catch (error) {
     console.error(error);
-    sendJson(response, 500, { error: "Server error" });
+    const details = publicError(error);
+    sendJson(response, details.status, { error: details.message });
   }
 });
 
