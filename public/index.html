@@ -1,31 +1,14 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PlanSwipe</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-
-  <body>
-    <main class="app-shell">
-      <section id="loginPanel" class="login-screen is-hidden">
-        <div class="login-panel">
-          <h2>PlanSwipe</h2>
-
-          <div class="login-entry" id="loginEntry">
-            <p>Log in or create an account to start planning with your group.</p>
-            <button id="openLoginButton" type="button">Login</button>
+            </article>
+            <article>
+              <h3>Discover options</h3>
+              <p>Use sample ideas or Google Places results when the API key is configured.</p>
+            </article>
+            <article>
+              <h3>Vote as a group</h3>
+              <p>Mark activities as No, Maybe, or Yes and compare support instantly.</p>
+            </article>
           </div>
-
-          <div class="login-form is-hidden" id="loginForm">
-            <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
-            <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
-
-            <button id="loginButton" type="button">Login</button>
-            <button id="registerButton" type="button">Create Account</button>
-          </div>
-        </div>
+        </section>
       </section>
 
       <section class="topbar is-hidden" id="topbar" aria-label="App header">
@@ -123,7 +106,10 @@
             <p class="eyebrow" id="decisionStep">Step 1 of 2</p>
             <h2 id="decisionTitle">Where do you want to go?</h2>
           </div>
-          <p id="decisionHint">Everyone needs to agree before the group moves to the next step.</p>
+          <div class="decision-side">
+            <p id="decisionHint">Everyone needs to agree before the group moves to the next step.</p>
+            <button class="secondary-button is-hidden" id="backChoiceButton" type="button">Back</button>
+          </div>
         </div>
 
         <div class="option-grid" id="optionGrid"></div>
@@ -154,8 +140,9 @@
         </article>
 
         <div class="actions" aria-label="Swipe choices">
-          <button class="choice-button no" id="noButton" type="button" aria-label="Not interested">X</button>
-          <button class="choice-button yes" id="yesButton" type="button" aria-label="Interested">Yes</button>
+          <button class="choice-button no" id="noButton" type="button" aria-label="No">No</button>
+          <button class="choice-button maybe" id="maybeButton" type="button" aria-label="Maybe">Maybe</button>
+          <button class="choice-button yes" id="yesButton" type="button" aria-label="Yes">Yes</button>
         </div>
       </section>
 
