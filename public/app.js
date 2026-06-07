@@ -7,7 +7,8 @@ const state = {
   index: 0,
   pollTimer: null,
   setupMode: "",
-  activePage: ""
+  activePage: "",
+  loginOpen: false
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -20,8 +21,6 @@ const pagePanel = document.querySelector("#pagePanel");
 const modeButtons = document.querySelector("#modeButtons");
 const createForm = document.querySelector("#createForm");
 const joinForm = document.querySelector("#joinForm");
-const createNameInput = document.querySelector("#createNameInput");
-const joinNameInput = document.querySelector("#joinNameInput");
 const groupInput = document.querySelector("#groupInput");
 const codeInput = document.querySelector("#codeInput");
 const showCreateButton = document.querySelector("#showCreateButton");
@@ -52,6 +51,9 @@ const noButton = document.querySelector("#noButton");
 const yesButton = document.querySelector("#yesButton");
 const resultList = document.querySelector("#resultList");
 const loginPanel = document.querySelector("#loginPanel");
+const loginEntry = document.querySelector("#loginEntry");
+const loginForm = document.querySelector("#loginForm");
+const openLoginButton = document.querySelector("#openLoginButton");
 const loginUsername = document.querySelector("#loginUsername");
 const loginPassword = document.querySelector("#loginPassword");
 const loginButton = document.querySelector("#loginButton");
@@ -154,6 +156,7 @@ async function login() {
   setLoggedIn(data.username);
   loginUsername.value = "";
   loginPassword.value = "";
+  state.loginOpen = false;
   renderApp();
 }
 
@@ -169,6 +172,7 @@ async function registerUser() {
   setLoggedIn(username);
   loginUsername.value = "";
   loginPassword.value = "";
+  state.loginOpen = false;
   renderApp();
 }
 
@@ -375,6 +379,8 @@ function hideAppPanels() {
 function renderApp() {
   if (!isLoggedIn()) {
     setVisible(loginPanel, true);
+    setVisible(loginEntry, !state.loginOpen);
+    setVisible(loginForm, state.loginOpen);
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
@@ -474,7 +480,7 @@ function saveSession(user, group) {
 }
 
 async function createGroup() {
-  const userName = createNameInput.value.trim();
+  const userName = localStorage.getItem("planswipe:login") || "Friend";
   if (!userName) {
     showError("Enter your name.");
     return;
@@ -492,11 +498,11 @@ async function createGroup() {
 }
 
 async function joinGroup() {
-  const userName = joinNameInput.value.trim();
+  const userName = localStorage.getItem("planswipe:login") || "Friend";
   const code = codeInput.value.trim();
 
-  if (!userName || !/^\d{8}$/.test(code)) {
-    showError("Enter your name and an 8-digit group code.");
+  if (!/^\d{8}$/.test(code)) {
+    showError("Enter an 8-digit group code.");
     return;
   }
 
@@ -564,6 +570,7 @@ function leaveGroup() {
 function logout() {
   leaveGroup();
   state.activePage = "";
+  state.loginOpen = false;
   localStorage.removeItem("planswipe:login");
   renderApp();
 }
@@ -600,6 +607,12 @@ showCreateButton.addEventListener("click", () => {
 showJoinButton.addEventListener("click", () => {
   state.setupMode = "join";
   renderApp();
+});
+
+openLoginButton.addEventListener("click", () => {
+  state.loginOpen = true;
+  renderApp();
+  loginUsername.focus();
 });
 
 backFromCreateButton.addEventListener("click", () => {
@@ -692,16 +705,8 @@ optionGrid.addEventListener("click", (event) => {
   chooseOption(kind, button.dataset.id).catch((error) => showError(error.message));
 });
 
-createNameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") createGroup().catch((error) => showError(error.message));
-});
-
 groupInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") createGroup().catch((error) => showError(error.message));
-});
-
-joinNameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") joinGroup().catch((error) => showError(error.message));
 });
 
 codeInput.addEventListener("input", () => {
