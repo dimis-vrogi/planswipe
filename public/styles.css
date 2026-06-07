@@ -534,6 +534,20 @@ h3 {
   color: #111;
 }
 
+.login-entry {
+  display: grid;
+  gap: 18px;
+}
+
+.login-entry p {
+  color: #20232a;
+  line-height: 1.5;
+}
+
+.login-form {
+  display: grid;
+}
+
 .login-panel input {
   width: 100%;
   padding: 14px;
