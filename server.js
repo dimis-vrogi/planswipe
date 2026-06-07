@@ -681,24 +681,38 @@ console.log("Sending verification email to:", email);
 console.log("Using BASE_URL:", process.env.BASE_URL);
 console.log("ABOUT TO SEND EMAIL");
 console.log("API KEY EXISTS:", !!process.env.RESEND_API_KEY);
-console.log("FROM:", process.env.FROM_EMAIL);
-console.log("TO:", email);
-    
 try {
-  const result = await resend.emails.send({
-    from: process.env.FROM_EMAIL,
+  const baseUrl = process.env.BASE_URL || `http://${host}:${port}`;
+
+  const { data, error } = await resend.emails.send({
+    from: "onboarding@resend.dev",
     to: email,
     subject: "Verify your PlanSwipe account",
     html: `
       <h2>Welcome to PlanSwipe</h2>
       <p>Click below to verify your account:</p>
-      <a href="${process.env.BASE_URL}/api/verify?token=${token}">
+      <a href="${baseUrl}/api/verify?token=${token}">
         Verify Email
       </a>
     `
   });
 
-  console.log("Resend response:", result);
+  if (error) {
+    console.error("Resend error:", error);
+    return sendJson(response, 500, {
+      error: "Email sending failed"
+    });
+  }
+
+  console.log("Email sent successfully:", data);
+
+} catch (err) {
+  console.error("Resend failed:", err);
+  return sendJson(response, 500, {
+    error: "Failed to send verification email"
+  });
+}
+    
 } catch (err) {
   console.error("Resend failed:", err);
   sendJson(response, 500, {
