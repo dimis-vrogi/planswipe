@@ -668,26 +668,47 @@ async function handleApi(request, response) {
     return;
   }
 
-  const token = await createUser(username, email, password);
-  await resend.emails.send({
-  from: process.env.FROM_EMAIL,
-  to: email,
-  subject: "Verify your PlanSwipe account",
-  html: `
-    <h2>Welcome to PlanSwipe</h2>
-    <p>Click below to verify your account:</p>
-    <a href="${process.env.BASE_URL}/api/verify?token=${token}">
-  Verify Email
-</a>
-  `
-});
+ let token;
+
+try {
+  token = await createUser(username, email, password);
+} catch (err) {
+  sendJson(response, 500, { error: "Failed to create user" });
+  return;
+}
+
+console.log("Sending verification email to:", email);
+console.log("Using BASE_URL:", process.env.BASE_URL);
+
+try {
+  const result = await resend.emails.send({
+    from: process.env.FROM_EMAIL,
+    to: email,
+    subject: "Verify your PlanSwipe account",
+    html: `
+      <h2>Welcome to PlanSwipe</h2>
+      <p>Click below to verify your account:</p>
+      <a href="${process.env.BASE_URL}/api/verify?token=${token}">
+        Verify Email
+      </a>
+    `
+  });
+
+  console.log("Resend response:", result);
+} catch (err) {
+  console.error("Resend failed:", err);
+  sendJson(response, 500, {
+    error: "Failed to send verification email"
+  });
+  return;
+}
 
   sendJson(response, 201, {
   success: true,
   message: "Account created. Check your email to verify your account.",
   username,
   email,
-  debugToken: token
+  debugToken: process.env.NODE_ENV !== "production" ? token : undefined
 });
 
   return;
@@ -742,8 +763,23 @@ const password = String(body.password || "");
 
 const user = await findUserByUsername(username);
 
+if (!user) {
+  sendJson(response, 401, {
+    error: "Invalid credentials"
+  });
+  return;
+}
+
+if (!user.email_verified) {
+  sendJson(response, 403, {
+    error: "Please verify your email before logging in"
+  });
+  return;
+}
+    
 if (
   !user ||
+  !user.password_hash ||
   String(user.email || "").toLowerCase() !== email ||
   user.password_hash !== hashPassword(password)
 ) {
