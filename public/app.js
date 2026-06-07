@@ -5,7 +5,9 @@ const state = {
   areas: [],
   types: [],
   index: 0,
-  pollTimer: null
+  pollTimer: null,
+  setupMode: "",
+  activePage: ""
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -14,9 +16,18 @@ const statusPanel = document.querySelector("#statusPanel");
 const decisionPanel = document.querySelector("#decisionPanel");
 const swipeLayout = document.querySelector("#swipeLayout");
 const resultsPanel = document.querySelector("#resultsPanel");
-const nameInput = document.querySelector("#nameInput");
+const pagePanel = document.querySelector("#pagePanel");
+const modeButtons = document.querySelector("#modeButtons");
+const createForm = document.querySelector("#createForm");
+const joinForm = document.querySelector("#joinForm");
+const createNameInput = document.querySelector("#createNameInput");
+const joinNameInput = document.querySelector("#joinNameInput");
 const groupInput = document.querySelector("#groupInput");
 const codeInput = document.querySelector("#codeInput");
+const showCreateButton = document.querySelector("#showCreateButton");
+const showJoinButton = document.querySelector("#showJoinButton");
+const backFromCreateButton = document.querySelector("#backFromCreateButton");
+const backFromJoinButton = document.querySelector("#backFromJoinButton");
 const createButton = document.querySelector("#createButton");
 const joinButton = document.querySelector("#joinButton");
 const resetButton = document.querySelector("#resetButton");
@@ -47,10 +58,88 @@ const loginButton = document.querySelector("#loginButton");
 const registerButton = document.querySelector("#registerButton");
 const logoutButton = document.querySelector("#logoutButton");
 const topbar = document.querySelector("#topbar");
+const profileButton = document.querySelector("#profileButton");
+const profileMenu = document.querySelector("#profileMenu");
+const profileInitial = document.querySelector("#profileInitial");
+const pageEyebrow = document.querySelector("#pageEyebrow");
+const pageTitle = document.querySelector("#pageTitle");
+const pageDemo = document.querySelector("#pageDemo");
+const closePageButton = document.querySelector("#closePageButton");
 
+const pageContent = {
+  inbox: {
+    title: "Inbox",
+    eyebrow: "Messages",
+    cards: [
+      ["Group invite", "New invitations and plan updates will appear here."],
+      ["Friend requests", "Pending friend activity will be listed in this space."]
+    ]
+  },
+  groups: {
+    title: "My Groups",
+    eyebrow: "Groups",
+    cards: [
+      ["Active groups", "A list of groups you created or joined will appear here."],
+      ["Saved codes", "Quick access to recent 8-digit group codes will live here."]
+    ]
+  },
+  friends: {
+    title: "Friends",
+    eyebrow: "People",
+    cards: [
+      ["Friend list", "Your contacts and frequent planning partners will appear here."],
+      ["Add friends", "Search and invite tools can be added in this panel later."]
+    ]
+  },
+  past: {
+    title: "Past Activities",
+    eyebrow: "History",
+    cards: [
+      ["Completed plans", "Past matches and finished activities will replace the old page here."],
+      ["Highlights", "Photos, dates, and group members can be shown in this section later."]
+    ]
+  },
+  personal: {
+    title: "Personal Information",
+    eyebrow: "Profile",
+    cards: [
+      ["Profile details", "Name, profile picture, and account information will be edited here."],
+      ["Preferences", "Favorite areas and activity types can live in this page."]
+    ]
+  },
+  settings: {
+    title: "Settings",
+    eyebrow: "Account",
+    cards: [
+      ["Notifications", "Notification preferences will appear here."],
+      ["Privacy", "Account privacy and session controls can be added here."]
+    ]
+  }
+};
 
 function setVisible(element, visible) {
   element.classList.toggle("is-hidden", !visible);
+}
+
+function isLoggedIn() {
+  return Boolean(localStorage.getItem("planswipe:login"));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+
+function setLoggedIn(username) {
+  localStorage.setItem("planswipe:login", username);
+  profileInitial.textContent = initials(username) || "P";
 }
 
 async function login() {
@@ -62,45 +151,29 @@ async function login() {
     }
   });
 
-  localStorage.setItem(
-    "planswipe:login",
-    data.username
-  );
-
+  setLoggedIn(data.username);
   loginUsername.value = "";
   loginPassword.value = "";
-
   renderApp();
 }
 
 async function registerUser() {
+  const username = loginUsername.value.trim();
+  const password = loginPassword.value;
+
   await api("/api/register", {
     method: "POST",
-    body: {
-      username: loginUsername.value,
-      password: loginPassword.value
-    }
+    body: { username, password }
   });
 
-  alert("Account created.");
+  setLoggedIn(username);
   loginUsername.value = "";
   loginPassword.value = "";
-}
-
-async function api(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
-
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Αποτυχία αιτήματος");
-  return data;
+  renderApp();
 }
 
 function initials(name) {
-  return name
+  return String(name || "")
     .trim()
     .split(/\s+/)
     .slice(0, 2)
@@ -120,45 +193,53 @@ function memberCount() {
   return state.group?.members?.length || 1;
 }
 
-function renderMembers() {
-  memberRow.innerHTML = (state.group.members || [])
-    .map(
-      (member) => `
-        <span class="member-chip">
-          <span class="avatar">${initials(member.name)}</span>
-          ${member.name}${member.id === state.user.id ? " (εσύ)" : ""}
-        </span>
-      `
-    )
-    .join("");
+function optionsFor(kind) {
+  return state.group?.options?.[kind] || (kind === "area" ? state.areas : state.types);
 }
 
 function optionScore(kind, id) {
   return state.group?.counts?.[kind]?.[id] || 0;
 }
 
+function renderMembers() {
+  memberRow.innerHTML = (state.group.members || [])
+    .map(
+      (member) => `
+        <span class="member-chip">
+          <span class="avatar">${initials(member.name)}</span>
+          ${member.name}${member.id === state.user.id ? " (you)" : ""}
+        </span>
+      `
+    )
+    .join("");
+}
+
+function renderSetup() {
+  setVisible(modeButtons, !state.setupMode);
+  setVisible(createForm, state.setupMode === "create");
+  setVisible(joinForm, state.setupMode === "join");
+}
+
 function renderDecisionStep(kind) {
   const isAreaStep = kind === "area";
-  const options = isAreaStep ? state.areas : state.types;
+  const options = optionsFor(kind);
   const chosen = selected(kind);
 
-  decisionStep.textContent = isAreaStep ? "Βήμα 1 από 2" : "Βήμα 2 από 2";
-
+  decisionStep.textContent = isAreaStep ? "Step 1 of 2" : "Step 2 of 2";
   decisionTitle.textContent = isAreaStep
-    ? "Πού θέλετε να πάτε;"
-    : "Τι είδους μέρος θέλετε;";
-
+    ? "Where do you want to go?"
+    : "What kind of activity do you want?";
   decisionHint.textContent =
-    "Όλοι πρέπει να συμφωνήσουν πριν προχωρήσετε στο επόμενο βήμα.";
+    "Everyone needs to agree before the group moves to the next step.";
 
-  optionGrid.innerHTML = options
+  const optionCards = options
     .map((option) => {
       const score = optionScore(kind, option.id);
       const selectedClass = chosen === option.id ? " is-selected" : "";
 
       return `
         <button class="option-card${selectedClass}" type="button" data-kind="${kind}" data-id="${option.id}">
-          <span class="option-score">${score}/${memberCount()} ψήφισαν</span>
+          <span class="option-score">${score}/${memberCount()} voted</span>
           <span>
             <h3>${option.label}</h3>
             <p>${option.description}</p>
@@ -167,6 +248,17 @@ function renderDecisionStep(kind) {
       `;
     })
     .join("");
+
+  optionGrid.innerHTML = `
+    ${optionCards}
+    <button class="option-card add-option-card" type="button" data-kind="${kind}" data-custom="true">
+      <span class="option-score">Add your own</span>
+      <span>
+        <h3>${isAreaStep ? "Add area" : "Add activity"}</h3>
+        <p>${isAreaStep ? "Suggest a different neighborhood or place." : "Suggest a different activity type."}</p>
+      </span>
+    </button>
+  `;
 }
 
 function renderCard() {
@@ -182,11 +274,9 @@ function renderCard() {
   activityCard.classList.remove("swipe-yes", "swipe-no");
   activityPhoto.src = place.photoUrl;
   activityPhoto.alt = place.title;
-
-  activityCategory.textContent = `${place.category} | ${Number(place.rating || 4).toFixed(1)} αξιολόγηση`;
+  activityCategory.textContent = `${place.category} | ${Number(place.rating || 4).toFixed(1)} rating`;
   activityTitle.textContent = place.title;
   activityDescription.textContent = place.description;
-
   activityArea.textContent = place.areaLabel;
   activityTime.textContent = place.time;
   activityCost.textContent = place.cost;
@@ -200,8 +290,8 @@ function renderResults() {
       <article class="result-card">
         <div class="result-icon"></div>
         <div>
-          <h3>Δεν υπάρχει ακόμα ισχυρή επιλογή</h3>
-          <p>Συνεχίστε τις επιλογές ή περιμένετε την ομάδα.</p>
+          <h3>No strong choice yet</h3>
+          <p>Keep swiping or wait for the rest of the group.</p>
         </div>
         <strong class="result-score">0/${memberCount()}</strong>
       </article>
@@ -216,7 +306,7 @@ function renderResults() {
           <img class="result-icon" src="${item.photoUrl}" alt="">
           <div>
             <h3>${item.title}</h3>
-            <p>${item.areaLabel} | ${item.category} | ${item.yes}/${item.total} ψήφισαν ναι</p>
+            <p>${item.areaLabel} | ${item.category} | ${item.yes}/${item.total} voted yes</p>
           </div>
           <strong class="result-score">${Math.round(item.score * 100)}%</strong>
         </article>
@@ -237,61 +327,86 @@ function renderStatus() {
   setVisible(statusPanel, true);
 
   if (!areaReady) {
-    statusPanel.textContent = "Αναμονή για συμφωνία στην περιοχή.";
+    statusPanel.textContent = "Waiting for everyone to agree on an area.";
     return;
   }
 
   if (!typeReady) {
-    statusPanel.textContent = "Η περιοχή έχει επιλεγεί. Αναμονή για τύπο.";
+    statusPanel.textContent = "Area selected. Waiting for everyone to agree on an activity.";
     return;
   }
 
   const source = state.group.search?.source === "google"
     ? "Google Places"
-    : "δοκιμαστικά δεδομένα";
+    : state.group.search?.source === "custom"
+      ? "custom group idea"
+      : "sample data";
 
-  statusPanel.textContent =
-    `Αναζήτηση ${source}: "${state.group.search?.query || ""}"`;
+  statusPanel.textContent = `Search from ${source}: "${state.group.search?.query || ""}"`;
+}
+
+function renderProfilePage() {
+  const content = pageContent[state.activePage];
+  if (!content) return;
+
+  pageEyebrow.textContent = content.eyebrow;
+  pageTitle.textContent = content.title;
+  pageDemo.innerHTML = content.cards
+    .map(
+      ([title, text]) => `
+        <article class="demo-card">
+          <h3>${title}</h3>
+          <p>${text}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function hideAppPanels() {
+  setVisible(setupPanel, false);
+  setVisible(groupPanel, false);
+  setVisible(statusPanel, false);
+  setVisible(decisionPanel, false);
+  setVisible(swipeLayout, false);
+  setVisible(resultsPanel, false);
 }
 
 function renderApp() {
-
-  const loggedIn =
-    localStorage.getItem("planswipe:login");
-
-  if (!loggedIn) {
-
+  if (!isLoggedIn()) {
     setVisible(loginPanel, true);
     setVisible(topbar, false);
-
-    setVisible(setupPanel, false);
-    setVisible(groupPanel, false);
-    setVisible(statusPanel, false);
-    setVisible(decisionPanel, false);
-    setVisible(swipeLayout, false);
-    setVisible(resultsPanel, false);
-
+    setVisible(pagePanel, false);
+    hideAppPanels();
     return;
   }
 
   setVisible(loginPanel, false);
   setVisible(topbar, true);
+  profileInitial.textContent = initials(localStorage.getItem("planswipe:login")) || "P";
+
+  if (state.activePage) {
+    hideAppPanels();
+    setVisible(pagePanel, true);
+    renderProfilePage();
+    return;
+  }
+
+  setVisible(pagePanel, false);
 
   if (!state.group || !state.user) {
-
     setVisible(setupPanel, true);
     setVisible(groupPanel, false);
     setVisible(statusPanel, false);
     setVisible(decisionPanel, false);
     setVisible(swipeLayout, false);
     setVisible(resultsPanel, false);
-
+    renderSetup();
     return;
   }
 
   groupName.textContent = state.group.name;
   groupCode.textContent = state.group.code;
-
   renderMembers();
   renderStatus();
 
@@ -314,12 +429,9 @@ function renderApp() {
     return;
   }
 
-  searchSummary.textContent =
-    `Αναζήτηση: "${state.group.search?.query || ""}"`;
-
+  searchSummary.textContent = `Search: "${state.group.search?.query || ""}"`;
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
-
   renderResults();
 
   if (state.index < (state.group.places?.length || 0)) {
@@ -352,6 +464,7 @@ function saveSession(user, group) {
   state.user = user;
   state.group = group;
   state.groupCode = group.code;
+  state.setupMode = "";
 
   localStorage.setItem("planswipe:user", JSON.stringify(user));
   localStorage.setItem("planswipe:groupCode", group.code);
@@ -361,9 +474,9 @@ function saveSession(user, group) {
 }
 
 async function createGroup() {
-  const userName = nameInput.value.trim();
+  const userName = createNameInput.value.trim();
   if (!userName) {
-    showError("Εισάγετε το όνομά σας.");
+    showError("Enter your name.");
     return;
   }
 
@@ -379,11 +492,11 @@ async function createGroup() {
 }
 
 async function joinGroup() {
-  const userName = nameInput.value.trim();
-  const code = codeInput.value.trim().toUpperCase();
+  const userName = joinNameInput.value.trim();
+  const code = codeInput.value.trim();
 
-  if (!userName || !code) {
-    showError("Συμπληρώστε όνομα και κωδικό ομάδας.");
+  if (!userName || !/^\d{8}$/.test(code)) {
+    showError("Enter your name and an 8-digit group code.");
     return;
   }
 
@@ -395,13 +508,14 @@ async function joinGroup() {
   saveSession(data.user, data.group);
 }
 
-async function chooseOption(kind, optionId) {
+async function chooseOption(kind, optionId, customLabel = "") {
   const data = await api(`/api/groups/${state.group.code}/choice`, {
     method: "POST",
     body: {
       userId: state.user.id,
       kind,
-      optionId
+      optionId,
+      customLabel
     }
   });
 
@@ -439,6 +553,7 @@ function leaveGroup() {
   state.group = null;
   state.groupCode = "";
   state.index = 0;
+  state.setupMode = "";
 
   localStorage.removeItem("planswipe:user");
   localStorage.removeItem("planswipe:groupCode");
@@ -446,9 +561,15 @@ function leaveGroup() {
   renderApp();
 }
 
-function showError(message) {
+function logout() {
+  leaveGroup();
+  state.activePage = "";
+  localStorage.removeItem("planswipe:login");
+  renderApp();
+}
 
-  if (!localStorage.getItem("planswipe:login")) {
+function showError(message) {
+  if (!isLoggedIn()) {
     alert(message);
     return;
   }
@@ -462,17 +583,7 @@ async function boot() {
   state.areas = options.areas;
   state.types = options.types;
 
-  if (
-  localStorage.getItem("planswipe:login") &&
-  state.user &&
-  state.groupCode
-) {
-  startPolling();
-  await refreshGroup();
-  return;
-}
-  
-  if (state.user && state.groupCode) {
+  if (isLoggedIn() && state.user && state.groupCode) {
     startPolling();
     await refreshGroup();
     return;
@@ -481,6 +592,26 @@ async function boot() {
   renderApp();
 }
 
+showCreateButton.addEventListener("click", () => {
+  state.setupMode = "create";
+  renderApp();
+});
+
+showJoinButton.addEventListener("click", () => {
+  state.setupMode = "join";
+  renderApp();
+});
+
+backFromCreateButton.addEventListener("click", () => {
+  state.setupMode = "";
+  renderApp();
+});
+
+backFromJoinButton.addEventListener("click", () => {
+  state.setupMode = "";
+  renderApp();
+});
+
 createButton.addEventListener("click", () =>
   createGroup().catch((error) => showError(error.message))
 );
@@ -488,31 +619,49 @@ createButton.addEventListener("click", () =>
 joinButton.addEventListener("click", () =>
   joinGroup().catch((error) => showError(error.message))
 );
-loginButton.addEventListener(
-  "click",
-  () => login().catch(
-    err => showError(err.message)
-  )
+
+loginButton.addEventListener("click", () =>
+  login().catch((error) => showError(error.message))
 );
+
+registerButton.addEventListener("click", () =>
+  registerUser().catch((error) => showError(error.message))
+);
+
 loginUsername.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    login().catch(err => showError(err.message));
-  }
+  if (event.key === "Enter") login().catch((error) => showError(error.message));
 });
 
 loginPassword.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    login().catch(err => showError(err.message));
-  }
+  if (event.key === "Enter") login().catch((error) => showError(error.message));
 });
 
-registerButton.addEventListener(
-  "click",
-  () => registerUser().catch(
-    err => showError(err.message)
-  )
-);
 resetButton.addEventListener("click", leaveGroup);
+logoutButton.addEventListener("click", logout);
+
+profileButton.addEventListener("click", () => {
+  profileMenu.classList.toggle("is-hidden");
+});
+
+profileMenu.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-page]");
+  if (!button) return;
+
+  state.activePage = button.dataset.page;
+  profileMenu.classList.add("is-hidden");
+  renderApp();
+});
+
+closePageButton.addEventListener("click", () => {
+  state.activePage = "";
+  renderApp();
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".profile-wrap")) {
+    profileMenu.classList.add("is-hidden");
+  }
+});
 
 noButton.addEventListener("click", () =>
   vote(false).catch((error) => showError(error.message))
@@ -527,38 +676,40 @@ reviewButton.addEventListener("click", () => {
   renderApp();
 });
 
-logoutButton.addEventListener("click", () => {
-
-  localStorage.removeItem("planswipe:login");
-  localStorage.removeItem("planswipe:user");
-  localStorage.removeItem("planswipe:groupCode");
-
-  state.user = null;
-  state.group = null;
-  state.groupCode = "";
-
-  clearInterval(state.pollTimer);
-
-  renderApp();
-});
-
-
 optionGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".option-card");
   if (!button) return;
 
-  chooseOption(button.dataset.kind, button.dataset.id)
-    .catch((error) => showError(error.message));
+  const kind = button.dataset.kind;
+
+  if (button.dataset.custom === "true") {
+    const label = prompt(kind === "area" ? "Add an area" : "Add an activity");
+    if (!label?.trim()) return;
+    chooseOption(kind, "", label.trim()).catch((error) => showError(error.message));
+    return;
+  }
+
+  chooseOption(kind, button.dataset.id).catch((error) => showError(error.message));
 });
 
-nameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter")
-    createGroup().catch((error) => showError(error.message));
+createNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") createGroup().catch((error) => showError(error.message));
+});
+
+groupInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") createGroup().catch((error) => showError(error.message));
+});
+
+joinNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") joinGroup().catch((error) => showError(error.message));
+});
+
+codeInput.addEventListener("input", () => {
+  codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 8);
 });
 
 codeInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter")
-    joinGroup().catch((error) => showError(error.message));
+  if (event.key === "Enter") joinGroup().catch((error) => showError(error.message));
 });
 
 boot().catch((error) => showError(error.message));
