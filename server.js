@@ -204,7 +204,20 @@ async function findUserByUsername(username) {
   return user;
 }
 
-async function createUser(username, password) {
+async function findUserByEmail(email) {
+  requireSupabase();
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) throw error;
+  return user;
+}
+
+async function createUser(username, email, password) {
   requireSupabase();
   const passwordHash = hashPassword(password);
 
@@ -212,6 +225,7 @@ async function createUser(username, password) {
     .from("users")
     .insert({
       username,
+      email,
       password_hash: passwordHash
     });
 
@@ -528,29 +542,32 @@ function summarizeGroup(group) {
   const votesByPlace = {};
 
   Object.values(group.votes).forEach((userVotes) => {
-    Object.entries(userVotes).forEach(([placeId, liked]) => {
-      if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, no: 0 };
-      if (liked) votesByPlace[placeId].yes += 1;
+    Object.entries(userVotes).forEach(([placeId, vote]) => {
+      const value = vote === true ? "yes" : vote === false ? "no" : vote;
+      if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, maybe: 0, no: 0 };
+      if (value === "yes") votesByPlace[placeId].yes += 1;
+      else if (value === "maybe") votesByPlace[placeId].maybe += 1;
       else votesByPlace[placeId].no += 1;
     });
   });
 
   const matches = group.places
     .map((place) => {
-      const votes = votesByPlace[place.id] || { yes: 0, no: 0 };
+      const votes = votesByPlace[place.id] || { yes: 0, maybe: 0, no: 0 };
       const total = group.members.length || 1;
-      const groupScore = votes.yes / total;
-      const ratingScore = (place.rating || 4) / 5;
+      const percent = Math.round((votes.yes / total) * 100);
       return {
         ...place,
         yes: votes.yes,
+        maybe: votes.maybe,
         no: votes.no,
         total,
-        score: groupScore * 0.8 + ratingScore * 0.2
+        percent,
+        score: percent
       };
     })
-    .filter((place) => place.yes >= Math.ceil(place.total * 0.7))
-    .sort((a, b) => b.score - a.score || b.yes - a.yes);
+    .filter((place) => place.yes > 0 || place.maybe > 0)
+    .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
 
   return {
     code: group.code,
@@ -594,6 +611,7 @@ function serveStatic(request, response) {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
+    ".png": "image/png",
     ".txt": "text/plain; charset=utf-8",
     ".cmd": "text/plain; charset=utf-8"
   };
@@ -617,28 +635,31 @@ async function handleApi(request, response) {
   const body = await readBody(request);
 
   const username = String(body.username || "").trim();
+  const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
 
-  if (!username || !password) {
+  if (!username || !email || !password) {
     sendJson(response, 400, {
-      error: "Username and password required"
+      error: "Username, email, and password required"
     });
     return;
   }
 
   const existing = await findUserByUsername(username);
 
-  if (existing) {
+  if (existing || await findUserByEmail(email)) {
     sendJson(response, 400, {
       error: "User already exists"
     });
     return;
   }
 
-  await createUser(username, password);
+  await createUser(username, email, password);
 
   sendJson(response, 201, {
-    success: true
+    success: true,
+    username,
+    email
   });
 
   return;
@@ -647,12 +668,14 @@ async function handleApi(request, response) {
         const body = await readBody(request);
 
 const username = String(body.username || "").trim();
+const email = String(body.email || "").trim().toLowerCase();
 const password = String(body.password || "");
 
 const user = await findUserByUsername(username);
 
 if (
   !user ||
+  String(user.email || "").toLowerCase() !== email ||
   user.password_hash !== hashPassword(password)
 ) {
   sendJson(response, 401, {
@@ -663,7 +686,8 @@ if (
 
 sendJson(response, 200, {
   success: true,
-  username
+  username,
+  email: user.email
 });
 
 return;
@@ -782,8 +806,34 @@ return;
       sendJson(response, 400, { error: "Invalid place" });
       return;
     }
+    const value = ["yes", "maybe", "no"].includes(body.vote) ? body.vote : (body.liked ? "yes" : "no");
     if (!group.votes[body.userId]) group.votes[body.userId] = {};
-    group.votes[body.userId][body.placeId] = Boolean(body.liked);
+    group.votes[body.userId][body.placeId] = value;
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "back") {
+    const group = await loadGroup(parts[2]);
+    if (!group) {
+      sendJson(response, 404, { error: "Group not found" });
+      return;
+    }
+    const body = await readBody(request);
+    const userId = body.userId;
+    const step = body.step === "type" ? "type" : "area";
+
+    if (step === "type") {
+      delete group.choices.type[userId];
+    } else {
+      delete group.choices.area[userId];
+      delete group.choices.type[userId];
+      delete group.votes[userId];
+      group.search = null;
+      group.places = [];
+    }
+
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
     return;
