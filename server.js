@@ -3,18 +3,19 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
-console.log("Resend loaded successfully");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
 const publicRoot = path.resolve(__dirname, "public");
 const googleApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
 const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const openAiApiKey = process.env.OPENAI_API_KEY || "";
+const openAiModel = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const supabase = supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : null;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const areaOptions = [
   {
@@ -188,10 +189,6 @@ function hashPassword(password) {
     .digest("hex");
 }
 
-function generateToken() {
-  return crypto.randomBytes(32).toString("hex");
-}
-
 function requireSupabase() {
   if (!supabase) {
     throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
@@ -226,24 +223,326 @@ async function findUserByEmail(email) {
 
 async function createUser(username, email, password) {
   requireSupabase();
-
   const passwordHash = hashPassword(password);
-  const token = generateToken();
 
   const { error } = await supabase
     .from("users")
     .insert({
       username,
       email,
-      password_hash: passwordHash,
-      email_verified: false,
-      verification_token: token,
-      verification_sent_at: Date.now()
+      password_hash: passwordHash
     });
 
   if (error) throw error;
+}
 
-  return token;
+function validEmail(email) {
+  return emailPattern.test(String(email || "").trim().toLowerCase());
+}
+
+function defaultProfile(username = "") {
+  return {
+    picture: "",
+    bio: "",
+    age: "",
+    preferences: {
+      areas: [],
+      activities: [],
+      places: []
+    },
+    pastActivities: [],
+    displayName: username
+  };
+}
+
+function normalizeProfile(profile, username = "") {
+  const source = profile && typeof profile === "object" ? profile : {};
+  const preferences = source.preferences && typeof source.preferences === "object"
+    ? source.preferences
+    : {};
+
+  return {
+    ...defaultProfile(username),
+    ...source,
+    preferences: {
+      areas: Array.isArray(preferences.areas) ? preferences.areas.slice(0, 20) : [],
+      activities: Array.isArray(preferences.activities) ? preferences.activities.slice(0, 20) : [],
+      places: Array.isArray(preferences.places) ? preferences.places.slice(0, 20) : []
+    },
+    age: source.age ? Number(source.age) : "",
+    pastActivities: Array.isArray(source.pastActivities) ? source.pastActivities.slice(0, 50) : []
+  };
+}
+
+function publicUser(user, friendStatus = "none") {
+  if (!user) return null;
+  const profile = normalizeProfile(user.profile, user.username);
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    profile,
+    friendStatus
+  };
+}
+
+async function updateUserProfile(username, profile) {
+  requireSupabase();
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .update({ profile: normalizeProfile(profile, username) })
+    .eq("username", username)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return user;
+}
+
+async function authUserFromRequest(request) {
+  requireSupabase();
+  const authHeader = request.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) return null;
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error) throw error;
+  return data.user || null;
+}
+
+async function syncAuthProfile(request, body) {
+  const authUser = await authUserFromRequest(request);
+  if (!authUser) {
+    throw new Error("Supabase Auth session required.");
+  }
+
+  const username = String(body.username || authUser.user_metadata?.username || "").trim().slice(0, 24);
+  const email = String(authUser.email || body.email || "").trim().toLowerCase();
+  if (!username || !validEmail(email)) {
+    throw new Error("Username and a valid email are required.");
+  }
+
+  const existingUsername = await findUserByUsername(username);
+  if (existingUsername && existingUsername.id !== authUser.id) {
+    throw new Error("Username is already taken.");
+  }
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .upsert(
+      {
+        id: authUser.id,
+        username,
+        email,
+        profile: normalizeProfile(existingUsername?.profile, username)
+      },
+      { onConflict: "id" }
+    )
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return user;
+}
+
+async function friendshipRows(username) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("friend_requests")
+    .select("*")
+    .or(`requester.eq.${username},receiver.eq.${username}`)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function friendshipBetween(a, b) {
+  const rows = await friendshipRows(a);
+  return rows.find((row) =>
+    (row.requester === a && row.receiver === b) ||
+    (row.requester === b && row.receiver === a)
+  ) || null;
+}
+
+function friendshipStatus(row, username) {
+  if (!row) return "none";
+  if (row.status === "accepted") return "friends";
+  return row.requester === username ? "requested" : "incoming";
+}
+
+async function listFriends(username) {
+  const rows = await friendshipRows(username);
+  const otherUsernames = rows.map((row) => row.requester === username ? row.receiver : row.requester);
+  if (!otherUsernames.length) {
+    return { friends: [], incoming: [], outgoing: [] };
+  }
+
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("username,email,profile")
+    .in("username", otherUsernames);
+
+  if (error) throw error;
+  const usersByUsername = new Map((users || []).map((user) => [user.username, user]));
+
+  return rows.reduce((result, row) => {
+    const otherUsername = row.requester === username ? row.receiver : row.requester;
+    const item = publicUser(usersByUsername.get(otherUsername), friendshipStatus(row, username));
+    if (!item) return result;
+    if (row.status === "accepted") result.friends.push(item);
+    else if (row.receiver === username) result.incoming.push(item);
+    else result.outgoing.push(item);
+    return result;
+  }, { friends: [], incoming: [], outgoing: [] });
+}
+
+async function searchUsers(query, username) {
+  requireSupabase();
+  const cleanQuery = String(query || "").trim();
+  if (!cleanQuery) return [];
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("username,email,profile")
+    .ilike("username", `%${cleanQuery}%`)
+    .neq("username", username)
+    .limit(8);
+
+  if (error) throw error;
+  const rows = await friendshipRows(username);
+  return (data || []).map((user) => {
+    const row = rows.find((friendship) =>
+      (friendship.requester === username && friendship.receiver === user.username) ||
+      (friendship.requester === user.username && friendship.receiver === username)
+    );
+    return publicUser(user, friendshipStatus(row, username));
+  });
+}
+
+async function listGroupsForUsername(username) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("groups")
+    .select("code,data,updated_at")
+    .order("updated_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data || [])
+    .map((row) => row.data)
+    .filter((group) => (group.members || []).some((member) => member.username === username || member.name === username))
+    .map((group) => ({
+      code: group.code,
+      name: group.name,
+      memberCount: group.members?.length || 0,
+      createdAt: group.createdAt || null,
+      updatedAt: group.updatedAt || null
+    }));
+}
+
+async function likedPlacesForUsername(username) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("groups")
+    .select("data")
+    .order("updated_at", { ascending: false });
+
+  if (error) throw error;
+
+  const liked = [];
+  (data || []).forEach((row) => {
+    const group = row.data;
+    const member = (group.members || []).find((item) => item.username === username || item.name === username);
+    if (!member) return;
+    const votes = group.votes?.[member.id] || {};
+    Object.entries(votes).forEach(([placeId, vote]) => {
+      if (vote !== "yes" && vote !== true) return;
+      const place = (group.places || []).find((item) => item.id === placeId);
+      if (place) {
+        liked.push({
+          place: place.title,
+          area: place.areaLabel,
+          activity: place.category
+        });
+      }
+    });
+  });
+
+  return liked.slice(0, 20);
+}
+
+function textFromOpenAiResponse(data) {
+  if (typeof data.output_text === "string") return data.output_text;
+  return (data.output || [])
+    .flatMap((item) => item.content || [])
+    .map((content) => content.text || "")
+    .join("\n")
+    .trim();
+}
+
+function fallbackSuggestions(area, activity) {
+  return [
+    {
+      place: `${activity} in ${area}`,
+      reason: "Add an OpenAI API key to get personalized suggestions from your profile and past activity."
+    }
+  ];
+}
+
+async function aiSuggestions(username, area, activity) {
+  const user = await findUserByUsername(username);
+  if (!user) throw new Error("User not found");
+
+  const profile = normalizeProfile(user.profile, username);
+  const likedPlaces = await likedPlacesForUsername(username);
+
+  if (!openAiApiKey) {
+    return fallbackSuggestions(area, activity);
+  }
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openAiApiKey}`
+    },
+    body: JSON.stringify({
+      model: openAiModel,
+      instructions: "You suggest realistic places for a social planning app. Return only JSON with a suggestions array of 3 objects. Each object must have place and reason fields. Keep reasons short.",
+      input: JSON.stringify({
+        area,
+        activity,
+        age: profile.age || null,
+        preferences: profile.preferences,
+        pastActivities: profile.pastActivities,
+        likedPlaces
+      }),
+      max_output_tokens: 500
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI request failed with ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = textFromOpenAiResponse(data);
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 5) : fallbackSuggestions(area, activity);
+  } catch (_error) {
+    return [
+      {
+        place: "Personalized idea",
+        reason: text.slice(0, 280)
+      }
+    ];
+  }
 }
 
 function id(prefix) {
@@ -307,12 +606,24 @@ function publicError(error) {
   }
 
   if (
+    error?.message?.includes("Supabase Auth session required") ||
+    error?.message?.includes("Username is already taken") ||
+    error?.message?.includes("Username and a valid email")
+  ) {
+    return {
+      status: 400,
+      message: error.message
+    };
+  }
+
+  if (
     error?.code === "42P01" ||
-    error?.message?.includes('relation "public.groups" does not exist')
+    error?.message?.includes('relation "public.groups" does not exist') ||
+    error?.message?.includes('relation "public.friend_requests" does not exist')
   ) {
     return {
       status: 503,
-      message: "The Supabase groups table is missing. Run supabase-schema.sql in Supabase."
+      message: "A Supabase table is missing. Run supabase-schema.sql in Supabase."
     };
   }
 
@@ -322,7 +633,7 @@ function publicError(error) {
   ) {
     return {
       status: 503,
-      message: "The Supabase groups table has the wrong columns. Run supabase-schema.sql in Supabase."
+      message: "A Supabase table has the wrong columns. Run supabase-schema.sql in Supabase."
     };
   }
 
@@ -350,10 +661,16 @@ function readBody(request) {
   });
 }
 
-function addMember(group, name) {
+function addMember(group, body) {
+  const username = String(body?.username || body?.userName || "").trim().slice(0, 24);
+  const profile = normalizeProfile(body?.profile, username);
   const user = {
     id: id("user"),
-    name: String(name || "Friend").trim().slice(0, 24) || "Friend",
+    name: username || "Friend",
+    username,
+    profile: {
+      picture: profile.picture || ""
+    },
     joinedAt: Date.now()
   };
   group.members.push(user);
@@ -645,6 +962,21 @@ async function handleApi(request, response) {
   const url = new URL(request.url, `http://${host}:${port}`);
   const parts = url.pathname.split("/").filter(Boolean);
 
+  if (request.method === "GET" && url.pathname === "/api/config") {
+    sendJson(response, 200, {
+      supabaseUrl: supabaseUrl || "",
+      supabaseAnonKey
+    });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/auth/profile") {
+    const body = await readBody(request);
+    const user = await syncAuthProfile(request, body);
+    sendJson(response, 200, { user: publicUser(user) });
+    return;
+  }
+
   if (request.method === "POST" && url.pathname === "/api/register") {
   const body = await readBody(request);
 
@@ -659,6 +991,13 @@ async function handleApi(request, response) {
     return;
   }
 
+  if (!validEmail(email)) {
+    sendJson(response, 400, {
+      error: "Enter a valid email address"
+    });
+    return;
+  }
+
   const existing = await findUserByUsername(username);
 
   if (existing || await findUserByEmail(email)) {
@@ -668,99 +1007,17 @@ async function handleApi(request, response) {
     return;
   }
 
- let token;
-
-try {
-  token = await createUser(username, email, password);
-} catch (err) {
-  sendJson(response, 500, { error: "Failed to create user" });
-  return;
-}
-
-try {
-  const baseUrl = process.env.BASE_URL || `http://${host}:${port}`;
-
-  const { data, error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
-    to: "dimitris.vrongistinos@gmail.com",
-    subject: "Verify your PlanSwipe account",
-    html: `
-      <h2>Welcome to PlanSwipe</h2>
-      <p>Click below to verify your account:</p>
-      <a href="${baseUrl}/api/verify?token=${token}">
-        Verify Email
-      </a>
-    `
-  });
-
-  if (error) {
-    console.error("Resend error:", error);
-    return sendJson(response, 500, {
-      error: "Email sending failed",
-      debug: error
-    });
-  }
-
-  console.log("Email sent successfully:", data);
-
-} catch (err) {
-  console.error("Resend failed:", err);
-  return sendJson(response, 500, {
-    error: "Failed to send verification email"
-  });
-}
+  await createUser(username, email, password);
 
   sendJson(response, 201, {
-  success: true,
-  message: "Account created. Check your email to verify your account.",
-  username,
-  email,
-  debugToken: process.env.NODE_ENV !== "production" ? token : undefined
-});
-
-  return;
-}
-
-  if (request.method === "GET" && url.pathname === "/api/verify") {
-  const token = url.searchParams.get("token");
-
-  if (!token) {
-    sendJson(response, 400, { error: "Missing token" });
-    return;
-  }
-
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("verification_token", token)
-    .maybeSingle();
-
-  if (error || !user) {
-    sendJson(response, 400, { error: "Invalid or expired token" });
-    return;
-  }
-
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({
-      email_verified: true,
-      verification_token: null
-    })
-    .eq("id", user.id);
-
-  if (updateError) {
-    sendJson(response, 500, { error: "Failed to verify email" });
-    return;
-  }
-
-  sendJson(response, 200, {
     success: true,
-    message: "Email verified successfully"
+    username,
+    email,
+    profile: defaultProfile(username)
   });
 
   return;
 }
-  
   if (request.method === "POST" && url.pathname === "/api/login") {
         const body = await readBody(request);
 
@@ -768,25 +1025,17 @@ const username = String(body.username || "").trim();
 const email = String(body.email || "").trim().toLowerCase();
 const password = String(body.password || "");
 
+if (!validEmail(email)) {
+  sendJson(response, 400, {
+    error: "Enter a valid email address"
+  });
+  return;
+}
+
 const user = await findUserByUsername(username);
 
-if (!user) {
-  sendJson(response, 401, {
-    error: "Invalid credentials"
-  });
-  return;
-}
-
-if (!user.email_verified) {
-  sendJson(response, 403, {
-    error: "Please verify your email before logging in"
-  });
-  return;
-}
-    
 if (
   !user ||
-  !user.password_hash ||
   String(user.email || "").toLowerCase() !== email ||
   user.password_hash !== hashPassword(password)
 ) {
@@ -799,10 +1048,135 @@ if (
 sendJson(response, 200, {
   success: true,
   username,
-  email: user.email
+  email: user.email,
+  profile: normalizeProfile(user.profile, user.username)
 });
 
 return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/account") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    const viewer = String(url.searchParams.get("viewer") || "").trim();
+    const user = await findUserByUsername(username);
+    if (!user) {
+      sendJson(response, 404, { error: "User not found" });
+      return;
+    }
+    const row = viewer && viewer !== username ? await friendshipBetween(viewer, username) : null;
+    sendJson(response, 200, { user: publicUser(user, friendshipStatus(row, viewer)) });
+    return;
+  }
+
+  if (request.method === "PATCH" && url.pathname === "/api/account") {
+    const body = await readBody(request);
+    const username = String(body.username || "").trim();
+    const existing = await findUserByUsername(username);
+    if (!existing) {
+      sendJson(response, 404, { error: "User not found" });
+      return;
+    }
+    const user = await updateUserProfile(username, body.profile);
+    sendJson(response, 200, { user: publicUser(user) });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/users/search") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    const query = url.searchParams.get("q") || "";
+    sendJson(response, 200, { users: await searchUsers(query, username) });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/friends") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    sendJson(response, 200, await listFriends(username));
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/friends/request") {
+    const body = await readBody(request);
+    const fromUsername = String(body.fromUsername || "").trim();
+    const toUsername = String(body.toUsername || "").trim();
+
+    if (!fromUsername || !toUsername || fromUsername === toUsername) {
+      sendJson(response, 400, { error: "Choose another user to add" });
+      return;
+    }
+
+    const target = await findUserByUsername(toUsername);
+    if (!target) {
+      sendJson(response, 404, { error: "User not found" });
+      return;
+    }
+
+    const existing = await friendshipBetween(fromUsername, toUsername);
+    if (existing?.status === "accepted") {
+      sendJson(response, 200, { status: "friends" });
+      return;
+    }
+
+    if (existing?.status === "pending" && existing.receiver === fromUsername) {
+      const { error } = await supabase
+        .from("friend_requests")
+        .update({ status: "accepted", responded_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) throw error;
+      sendJson(response, 200, { status: "friends" });
+      return;
+    }
+
+    if (!existing) {
+      const { error } = await supabase
+        .from("friend_requests")
+        .insert({ requester: fromUsername, receiver: toUsername, status: "pending" });
+      if (error) throw error;
+    }
+
+    sendJson(response, 201, { status: "requested" });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/friends/accept") {
+    const body = await readBody(request);
+    const username = String(body.username || "").trim();
+    const requester = String(body.requester || "").trim();
+    const existing = await friendshipBetween(username, requester);
+
+    if (!existing || existing.receiver !== username) {
+      sendJson(response, 404, { error: "Friend request not found" });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("friend_requests")
+      .update({ status: "accepted", responded_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    if (error) throw error;
+
+    sendJson(response, 200, { status: "friends" });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/groups/mine") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    sendJson(response, 200, { groups: await listGroupsForUsername(username) });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/suggestions") {
+    const body = await readBody(request);
+    const username = String(body.username || "").trim();
+    const area = String(body.area || "").trim();
+    const activity = String(body.activity || "").trim();
+    if (!username || !area || !activity) {
+      sendJson(response, 400, { error: "Username, area, and activity are required" });
+      return;
+    }
+
+    const suggestions = await aiSuggestions(username, area, activity);
+    sendJson(response, 200, { suggestions });
+    return;
   }
   
   if (request.method === "GET" && url.pathname === "/api/options") {
@@ -837,7 +1211,12 @@ return;
       places: [],
       createdAt: Date.now()
     };
-    const user = addMember(group, body.userName);
+    group.updatedAt = Date.now();
+    const account = await findUserByUsername(String(body.username || body.userName || "").trim());
+    const user = addMember(group, {
+      username: body.username || body.userName,
+      profile: account?.profile
+    });
     await saveGroup(group);
     sendJson(response, 201, { user, group: summarizeGroup(group) });
     return;
@@ -850,7 +1229,18 @@ return;
       return;
     }
     const body = await readBody(request);
-    const user = addMember(group, body.userName);
+    const username = String(body.username || body.userName || "").trim();
+    const existingMember = (group.members || []).find((member) => member.username === username);
+    if (existingMember) {
+      sendJson(response, 200, { user: existingMember, group: summarizeGroup(group) });
+      return;
+    }
+    const account = await findUserByUsername(username);
+    const user = addMember(group, {
+      username,
+      profile: account?.profile
+    });
+    group.updatedAt = Date.now();
     await saveGroup(group);
     sendJson(response, 200, { user, group: summarizeGroup(group) });
     return;
