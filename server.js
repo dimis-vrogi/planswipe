@@ -606,6 +606,7 @@ function sendJson(response, status, payload) {
 
 function publicError(error) {
   if (error?.message?.includes("Supabase is not configured")) {
+    console.error("SUPABASE ERROR:", error);
     return {
       status: 503,
       message: "Supabase is not configured on the server."
