@@ -38,6 +38,7 @@ const decisionStep = document.querySelector("#decisionStep");
 const decisionTitle = document.querySelector("#decisionTitle");
 const decisionHint = document.querySelector("#decisionHint");
 const optionGrid = document.querySelector("#optionGrid");
+const backChoiceButton = document.querySelector("#backChoiceButton");
 const searchSummary = document.querySelector("#searchSummary");
 const activityCard = document.querySelector("#activityCard");
 const activityPhoto = document.querySelector("#activityPhoto");
@@ -48,13 +49,15 @@ const activityArea = document.querySelector("#activityArea");
 const activityTime = document.querySelector("#activityTime");
 const activityCost = document.querySelector("#activityCost");
 const noButton = document.querySelector("#noButton");
+const maybeButton = document.querySelector("#maybeButton");
 const yesButton = document.querySelector("#yesButton");
 const resultList = document.querySelector("#resultList");
 const loginPanel = document.querySelector("#loginPanel");
-const loginEntry = document.querySelector("#loginEntry");
 const loginForm = document.querySelector("#loginForm");
 const openLoginButton = document.querySelector("#openLoginButton");
+const heroLoginButton = document.querySelector("#heroLoginButton");
 const loginUsername = document.querySelector("#loginUsername");
+const loginEmail = document.querySelector("#loginEmail");
 const loginPassword = document.querySelector("#loginPassword");
 const loginButton = document.querySelector("#loginButton");
 const registerButton = document.querySelector("#registerButton");
@@ -73,41 +76,40 @@ const pageContent = {
     title: "Inbox",
     eyebrow: "Messages",
     cards: [
-      ["Group invite", "New invitations and plan updates will appear here."],
-      ["Friend requests", "Pending friend activity will be listed in this space."]
+      ["Group invite", "Maria invited you to join Athens Saturday with code 28469103."],
+      ["Group invite", "Nikos invited you to North Athens Games with code 73019485."],
+      ["Friend request", "Alex wants to add you as a planning friend."]
     ]
   },
   groups: {
     title: "My Groups",
     eyebrow: "Groups",
     cards: [
-      ["Active groups", "A list of groups you created or joined will appear here."],
-      ["Saved codes", "Quick access to recent 8-digit group codes will live here."]
+      ["Active groups", "Groups you created or joined will appear here."],
+      ["Saved codes", "Recent 8-digit group codes will live here."]
     ]
   },
   friends: {
     title: "Friends",
     eyebrow: "People",
     cards: [
-      ["Friend list", "Your contacts and frequent planning partners will appear here."],
-      ["Add friends", "Search and invite tools can be added in this panel later."]
+      ["Maria P.", "Usually votes yes for restaurants and seaside walks."],
+      ["Nikos A.", "Favorite activities: games, escape rooms, late food."],
+      ["Alex K.", "Pending friend request."]
     ]
   },
   past: {
     title: "Past Activities",
     eyebrow: "History",
     cards: [
-      ["Completed plans", "Past matches and finished activities will replace the old page here."],
+      ["Completed plans", "Past matches and finished activities will appear here."],
       ["Highlights", "Photos, dates, and group members can be shown in this section later."]
     ]
   },
   personal: {
     title: "Personal Information",
     eyebrow: "Profile",
-    cards: [
-      ["Profile details", "Name, profile picture, and account information will be edited here."],
-      ["Preferences", "Favorite areas and activity types can live in this page."]
-    ]
+    personal: true
   },
   settings: {
     title: "Settings",
@@ -139,8 +141,18 @@ async function api(path, options = {}) {
   return data;
 }
 
-function setLoggedIn(username) {
+function initials(name) {
+  return String(name || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+}
+
+function setLoggedIn(username, email) {
   localStorage.setItem("planswipe:login", username);
+  localStorage.setItem("planswipe:email", email || "");
   profileInitial.textContent = initials(username) || "P";
 }
 
@@ -149,12 +161,14 @@ async function login() {
     method: "POST",
     body: {
       username: loginUsername.value,
+      email: loginEmail.value,
       password: loginPassword.value
     }
   });
 
-  setLoggedIn(data.username);
+  setLoggedIn(data.username, data.email || loginEmail.value.trim());
   loginUsername.value = "";
+  loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
   renderApp();
@@ -162,27 +176,20 @@ async function login() {
 
 async function registerUser() {
   const username = loginUsername.value.trim();
+  const email = loginEmail.value.trim();
   const password = loginPassword.value;
 
-  await api("/api/register", {
+  const data = await api("/api/register", {
     method: "POST",
-    body: { username, password }
+    body: { username, email, password }
   });
 
-  setLoggedIn(username);
+  setLoggedIn(data.username || username, data.email || email);
   loginUsername.value = "";
+  loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
   renderApp();
-}
-
-function initials(name) {
-  return String(name || "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
 }
 
 function selected(kind) {
@@ -207,14 +214,12 @@ function optionScore(kind, id) {
 
 function renderMembers() {
   memberRow.innerHTML = (state.group.members || [])
-    .map(
-      (member) => `
-        <span class="member-chip">
-          <span class="avatar">${initials(member.name)}</span>
-          ${member.name}${member.id === state.user.id ? " (you)" : ""}
-        </span>
-      `
-    )
+    .map((member) => `
+      <span class="member-chip">
+        <span class="avatar">${initials(member.name)}</span>
+        ${member.name}${member.id === state.user.id ? " (you)" : ""}
+      </span>
+    `)
     .join("");
 }
 
@@ -233,8 +238,8 @@ function renderDecisionStep(kind) {
   decisionTitle.textContent = isAreaStep
     ? "Where do you want to go?"
     : "What kind of activity do you want?";
-  decisionHint.textContent =
-    "Everyone needs to agree before the group moves to the next step.";
+  decisionHint.textContent = "Everyone needs to agree before the group moves to the next step.";
+  setVisible(backChoiceButton, kind === "type" || Boolean(chosen));
 
   const optionCards = options
     .map((option) => {
@@ -297,25 +302,23 @@ function renderResults() {
           <h3>No strong choice yet</h3>
           <p>Keep swiping or wait for the rest of the group.</p>
         </div>
-        <strong class="result-score">0/${memberCount()}</strong>
+        <strong class="result-score">0%</strong>
       </article>
     `;
     return;
   }
 
   resultList.innerHTML = matches
-    .map(
-      (item) => `
-        <article class="result-card">
-          <img class="result-icon" src="${item.photoUrl}" alt="">
-          <div>
-            <h3>${item.title}</h3>
-            <p>${item.areaLabel} | ${item.category} | ${item.yes}/${item.total} voted yes</p>
-          </div>
-          <strong class="result-score">${Math.round(item.score * 100)}%</strong>
-        </article>
-      `
-    )
+    .map((item) => `
+      <article class="result-card">
+        <img class="result-icon" src="${item.photoUrl}" alt="">
+        <div>
+          <h3>${item.title}</h3>
+          <p>${item.areaLabel} | ${item.category} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p>
+        </div>
+        <strong class="result-score">${item.percent}%</strong>
+      </article>
+    `)
     .join("");
 }
 
@@ -349,21 +352,78 @@ function renderStatus() {
   statusPanel.textContent = `Search from ${source}: "${state.group.search?.query || ""}"`;
 }
 
+function preferenceOptions(title, items, placeholder) {
+  return `
+    <div class="preference-box">
+      <h3>${title}</h3>
+      <div class="pill-row">
+        ${items.map((item) => `<label><input type="checkbox"> ${item}</label>`).join("")}
+      </div>
+      <div class="inline-add">
+        <input type="text" placeholder="${placeholder}">
+        <button type="button">Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPersonalInformation() {
+  pageDemo.innerHTML = `
+    <form class="personal-form">
+      <section>
+        <h3>My Profile</h3>
+        <label class="profile-upload">
+          <span class="profile-preview">${profileInitial.textContent}</span>
+          <span>Edit profile picture</span>
+          <input type="file" accept="image/*">
+        </label>
+        <label class="field">
+          <span>Username</span>
+          <input type="text" value="${localStorage.getItem("planswipe:login") || ""}">
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" value="${localStorage.getItem("planswipe:email") || ""}">
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" placeholder="Email authentication required to change password" disabled>
+        </label>
+        <label class="field">
+          <span>Bio</span>
+          <textarea rows="5" placeholder="Tell friends what kind of plans you like."></textarea>
+        </label>
+      </section>
+
+      <section>
+        <h3>Preferences</h3>
+        ${preferenceOptions("Favourite Areas", ["Center of Athens", "Athens seaside", "North Athens"], "Add another area")}
+        ${preferenceOptions("Favourite Activities", ["Restaurants", "Games", "Walking"], "Add another activity")}
+        ${preferenceOptions("Favourite Places", ["Psyrri meze spot", "Flisvos seaside walk", "Syntagma sushi"], "Add another place")}
+      </section>
+    </form>
+  `;
+}
+
 function renderProfilePage() {
   const content = pageContent[state.activePage];
   if (!content) return;
 
   pageEyebrow.textContent = content.eyebrow;
   pageTitle.textContent = content.title;
+
+  if (content.personal) {
+    renderPersonalInformation();
+    return;
+  }
+
   pageDemo.innerHTML = content.cards
-    .map(
-      ([title, text]) => `
-        <article class="demo-card">
-          <h3>${title}</h3>
-          <p>${text}</p>
-        </article>
-      `
-    )
+    .map(([title, text]) => `
+      <article class="demo-card">
+        <h3>${title}</h3>
+        <p>${text}</p>
+      </article>
+    `)
     .join("");
 }
 
@@ -379,7 +439,6 @@ function hideAppPanels() {
 function renderApp() {
   if (!isLoggedIn()) {
     setVisible(loginPanel, true);
-    setVisible(loginEntry, !state.loginOpen);
     setVisible(loginForm, state.loginOpen);
     setVisible(topbar, false);
     setVisible(pagePanel, false);
@@ -390,6 +449,7 @@ function renderApp() {
   setVisible(loginPanel, false);
   setVisible(topbar, true);
   profileInitial.textContent = initials(localStorage.getItem("planswipe:login")) || "P";
+  setVisible(resetButton, Boolean(state.group && state.user));
 
   if (state.activePage) {
     hideAppPanels();
@@ -415,7 +475,6 @@ function renderApp() {
   groupCode.textContent = state.group.code;
   renderMembers();
   renderStatus();
-
   setVisible(setupPanel, false);
   setVisible(groupPanel, true);
 
@@ -471,21 +530,14 @@ function saveSession(user, group) {
   state.group = group;
   state.groupCode = group.code;
   state.setupMode = "";
-
   localStorage.setItem("planswipe:user", JSON.stringify(user));
   localStorage.setItem("planswipe:groupCode", group.code);
-
   startPolling();
   renderApp();
 }
 
 async function createGroup() {
   const userName = localStorage.getItem("planswipe:login") || "Friend";
-  if (!userName) {
-    showError("Enter your name.");
-    return;
-  }
-
   const data = await api("/api/groups", {
     method: "POST",
     body: {
@@ -530,23 +582,37 @@ async function chooseOption(kind, optionId, customLabel = "") {
   renderApp();
 }
 
-async function vote(liked) {
+async function goBackChoice() {
+  if (!state.group || !state.user) return;
+  const step = consensus("area") && !consensus("type") ? "area" : "type";
+  const data = await api(`/api/groups/${state.group.code}/back`, {
+    method: "POST",
+    body: {
+      userId: state.user.id,
+      step
+    }
+  });
+
+  state.index = 0;
+  state.group = data.group;
+  renderApp();
+}
+
+async function vote(value) {
   const place = state.group.places[state.index];
   if (!place) return;
 
-  activityCard.classList.add(liked ? "swipe-yes" : "swipe-no");
-
+  activityCard.classList.add(value === "yes" ? "swipe-yes" : "swipe-no");
   const data = await api(`/api/groups/${state.group.code}/vote`, {
     method: "POST",
     body: {
       userId: state.user.id,
       placeId: place.id,
-      liked
+      vote: value
     }
   });
 
   state.group = data.group;
-
   setTimeout(() => {
     state.index += 1;
     renderApp();
@@ -560,10 +626,8 @@ function leaveGroup() {
   state.groupCode = "";
   state.index = 0;
   state.setupMode = "";
-
   localStorage.removeItem("planswipe:user");
   localStorage.removeItem("planswipe:groupCode");
-
   renderApp();
 }
 
@@ -572,6 +636,7 @@ function logout() {
   state.activePage = "";
   state.loginOpen = false;
   localStorage.removeItem("planswipe:login");
+  localStorage.removeItem("planswipe:email");
   renderApp();
 }
 
@@ -599,6 +664,12 @@ async function boot() {
   renderApp();
 }
 
+function openLogin() {
+  state.loginOpen = true;
+  renderApp();
+  loginUsername.focus();
+}
+
 showCreateButton.addEventListener("click", () => {
   state.setupMode = "create";
   renderApp();
@@ -609,11 +680,8 @@ showJoinButton.addEventListener("click", () => {
   renderApp();
 });
 
-openLoginButton.addEventListener("click", () => {
-  state.loginOpen = true;
-  renderApp();
-  loginUsername.focus();
-});
+openLoginButton.addEventListener("click", openLogin);
+heroLoginButton.addEventListener("click", openLogin);
 
 backFromCreateButton.addEventListener("click", () => {
   state.setupMode = "";
@@ -641,12 +709,10 @@ registerButton.addEventListener("click", () =>
   registerUser().catch((error) => showError(error.message))
 );
 
-loginUsername.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") login().catch((error) => showError(error.message));
-});
-
-loginPassword.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") login().catch((error) => showError(error.message));
+[loginUsername, loginEmail, loginPassword].forEach((input) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") login().catch((error) => showError(error.message));
+  });
 });
 
 resetButton.addEventListener("click", leaveGroup);
@@ -659,7 +725,6 @@ profileButton.addEventListener("click", () => {
 profileMenu.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-page]");
   if (!button) return;
-
   state.activePage = button.dataset.page;
   profileMenu.classList.add("is-hidden");
   renderApp();
@@ -677,16 +742,23 @@ document.addEventListener("click", (event) => {
 });
 
 noButton.addEventListener("click", () =>
-  vote(false).catch((error) => showError(error.message))
+  vote("no").catch((error) => showError(error.message))
+);
+
+maybeButton.addEventListener("click", () =>
+  vote("maybe").catch((error) => showError(error.message))
 );
 
 yesButton.addEventListener("click", () =>
-  vote(true).catch((error) => showError(error.message))
+  vote("yes").catch((error) => showError(error.message))
+);
+
+backChoiceButton.addEventListener("click", () =>
+  goBackChoice().catch((error) => showError(error.message))
 );
 
 reviewButton.addEventListener("click", () => {
-  state.index = 0;
-  renderApp();
+  goBackChoice().catch((error) => showError(error.message));
 });
 
 optionGrid.addEventListener("click", (event) => {
@@ -694,7 +766,6 @@ optionGrid.addEventListener("click", (event) => {
   if (!button) return;
 
   const kind = button.dataset.kind;
-
   if (button.dataset.custom === "true") {
     const label = prompt(kind === "area" ? "Add an area" : "Add an activity");
     if (!label?.trim()) return;
