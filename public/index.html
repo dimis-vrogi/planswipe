@@ -12,18 +12,40 @@
       <section id="loginPanel" class="hero-screen is-hidden">
         <div class="hero-nav">
           <img src="logo.png" alt="PlanSwipe logo">
-          <button id="openLoginButton" type="button">Login</button>
+          <div class="nav-actions">
+            <button class="language-button" id="languageButton" type="button">EL</button>
+            <button id="openLoginButton" type="button">Login</button>
+          </div>
         </div>
 
         <section class="hero-section">
           <div class="hero-copy">
             <img class="hero-logo" src="logo.png" alt="PlanSwipe">
             <p class="eyebrow">Group plans made easier</p>
-            <h1>For the indecisive groups, the tourists and those seeking for a new experiences</h1>
+            <h1>Find the plan your group can actually agree on.</h1>
             <p class="hero-description">
-              PlanSwipe helps groups agree on where to go and what to do by turning planning into shared choices, quick votes, and activity suggestions everyone can react to.
+              Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.
             </p>
-            <button class="primary-button hero-login-button" id="heroLoginButton" type="button">Login</button>
+            <div class="hero-actions">
+              <button class="primary-button hero-login-button" id="heroLoginButton" type="button">Login</button>
+              <span>Built for group chats that never decide.</span>
+            </div>
+          </div>
+
+          <div class="hero-preview" aria-hidden="true">
+            <div class="preview-card preview-main">
+              <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80" alt="">
+              <div>
+                <p>Dinner near the sea</p>
+                <h2>Glyfada seafood taverna</h2>
+                <span>4 friends said yes</span>
+              </div>
+            </div>
+            <div class="preview-stack">
+              <span>Center of Athens</span>
+              <span>Restaurants</span>
+              <span>Walking after dinner</span>
+            </div>
           </div>
 
           <div class="login-panel is-hidden" id="loginForm">
@@ -68,6 +90,7 @@
         </div>
 
         <div class="topbar-actions">
+          <button class="secondary-button" id="appLanguageButton" type="button">EL</button>
           <button class="secondary-button" id="resetButton" type="button">Leave Group</button>
           <div class="profile-wrap">
             <button class="profile-button" id="profileButton" type="button" aria-label="Open profile menu">
@@ -202,13 +225,18 @@
             <p class="eyebrow">Live choices</p>
             <h2>What you can do</h2>
           </div>
-          <button class="secondary-button" id="reviewButton" type="button">Change basics</button>
+          <div class="results-actions">
+            <button class="secondary-button" id="suggestionButton" type="button">AI Suggestions</button>
+            <button class="secondary-button" id="reviewButton" type="button">Change basics</button>
+          </div>
         </div>
 
+        <div class="suggestion-panel is-hidden" id="suggestionPanel"></div>
         <div class="result-list" id="resultList"></div>
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
   </body>
 </html>
