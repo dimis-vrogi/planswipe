@@ -1,3 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PlanSwipe</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+
+  <body>
+    <main class="app-shell">
+      <section id="loginPanel" class="hero-screen is-hidden">
+        <div class="hero-nav">
+          <img src="logo.png" alt="PlanSwipe logo">
+          <button id="openLoginButton" type="button">Login</button>
+        </div>
+
+        <section class="hero-section">
+          <div class="hero-copy">
+            <img class="hero-logo" src="logo.png" alt="PlanSwipe">
+            <p class="eyebrow">Group plans made easier</p>
+            <h1>For the indecisive groups, the tourists and those seeking for a new experiences</h1>
+            <p class="hero-description">
+              PlanSwipe helps groups agree on where to go and what to do by turning planning into shared choices, quick votes, and activity suggestions everyone can react to.
+            </p>
+            <button class="primary-button hero-login-button" id="heroLoginButton" type="button">Login</button>
+          </div>
+
+          <div class="login-panel is-hidden" id="loginForm">
+            <h2>Enter PlanSwipe</h2>
+            <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
+            <input id="loginEmail" type="email" placeholder="Email" autocomplete="email">
+            <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+
+            <button id="loginButton" type="button">Login</button>
+            <button id="registerButton" type="button">Create Account</button>
+          </div>
+        </section>
+
+        <section class="offer-section" aria-label="What PlanSwipe offers">
+          <div>
+            <p class="eyebrow">What PlanSwipe is</p>
+            <h2>A shared decision tool for real plans</h2>
+            <p>Instead of long group chats, everyone chooses the basics, swipes through options, and sees which activities have the strongest support.</p>
+          </div>
+
+          <div class="offer-grid">
+            <article>
+              <h3>Agree faster</h3>
+              <p>Pick an area and activity type together before looking at suggestions.</p>
             </article>
             <article>
               <h3>Discover options</h3>
