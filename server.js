@@ -682,7 +682,7 @@ try {
 
   const { data, error } = await resend.emails.send({
     from: "onboarding@resend.dev",
-    to: email,
+    to: "dimitris.vrongistinos@gmail.com",
     subject: "Verify your PlanSwipe account",
     html: `
       <h2>Welcome to PlanSwipe</h2>
