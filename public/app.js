@@ -78,6 +78,7 @@ const languageButton = document.querySelector("#languageButton");
 const appLanguageButton = document.querySelector("#appLanguageButton");
 const suggestionButton = document.querySelector("#suggestionButton");
 const suggestionPanel = document.querySelector("#suggestionPanel");
+const homeButton = document.querySelector("#homeButton");
 
 const pageContent = {
   inbox: {
@@ -1333,27 +1334,44 @@ async function getAiSuggestions() {
   `;
 }
 
+function goToHome() {
+  state.activePage = "";
+  leaveGroup();
+}
+
 async function boot() {
   applyLanguage();
   await configureSupabaseAuth();
-  const options = await api("/api/options");
-  state.areas = options.areas;
-  state.types = options.types;
 
-  // Handle email verification redirect from Supabase
-  if (state.supabaseSession && !isLoggedIn()) {
-    const username = state.supabaseSession.user?.user_metadata?.username || "";
-    const email = state.supabaseSession.user?.email || "";
-    if (username && email) {
+  // Handle email verification redirect from Supabase (URL hash with access_token)
+  if (state.supabaseClient && window.location.hash) {
+    const hash = window.location.hash;
+    if (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery")) {
       try {
-        const user = await syncSupabaseProfile(username, email);
-        setLoggedIn(user.username, user.email || email);
-        saveAccount(user);
+        const { data, error } = await state.supabaseClient.auth.getSession();
+        if (error) throw error;
+        state.supabaseSession = data.session;
+        if (data.session) {
+          const username = data.session.user?.user_metadata?.username || "";
+          const email = data.session.user?.email || "";
+          if (username && email) {
+            const user = await syncSupabaseProfile(username, email);
+            setLoggedIn(user.username, user.email || email);
+            saveAccount(user);
+          }
+        }
+        // Clean the URL hash
+        window.location.hash = "";
+        history.replaceState(null, "", window.location.pathname);
       } catch (error) {
-        console.warn("Supabase profile sync after verification:", error.message);
+        console.warn("Email verification handler:", error.message);
       }
     }
   }
+
+  const options = await api("/api/options");
+  state.areas = options.areas;
+  state.types = options.types;
 
   if (isLoggedIn()) {
     await loadAccount().catch(() => null);
@@ -1419,6 +1437,7 @@ registerButton.addEventListener("click", () =>
   });
 });
 
+homeButton.addEventListener("click", goToHome);
 resetButton.addEventListener("click", leaveGroup);
 logoutButton.addEventListener("click", logout);
 
