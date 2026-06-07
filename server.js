@@ -677,10 +677,6 @@ try {
   return;
 }
 
-console.log("Sending verification email to:", email);
-console.log("Using BASE_URL:", process.env.BASE_URL);
-console.log("ABOUT TO SEND EMAIL");
-console.log("API KEY EXISTS:", !!process.env.RESEND_API_KEY);
 try {
   const baseUrl = process.env.BASE_URL || `http://${host}:${port}`;
 
@@ -711,14 +707,6 @@ try {
   return sendJson(response, 500, {
     error: "Failed to send verification email"
   });
-}
-    
-} catch (err) {
-  console.error("Resend failed:", err);
-  sendJson(response, 500, {
-    error: "Failed to send verification email"
-  });
-  return;
 }
 
   sendJson(response, 201, {
