@@ -696,7 +696,7 @@ try {
   if (error) {
     console.error("Resend error:", error);
     return sendJson(response, 500, {
-      error: "Email sending failed"
+      error: "Email sending failed",
       debug: error
     });
   }
