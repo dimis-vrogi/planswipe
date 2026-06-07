@@ -1340,6 +1340,21 @@ async function boot() {
   state.areas = options.areas;
   state.types = options.types;
 
+  // Handle email verification redirect from Supabase
+  if (state.supabaseSession && !isLoggedIn()) {
+    const username = state.supabaseSession.user?.user_metadata?.username || "";
+    const email = state.supabaseSession.user?.email || "";
+    if (username && email) {
+      try {
+        const user = await syncSupabaseProfile(username, email);
+        setLoggedIn(user.username, user.email || email);
+        saveAccount(user);
+      } catch (error) {
+        console.warn("Supabase profile sync after verification:", error.message);
+      }
+    }
+  }
+
   if (isLoggedIn()) {
     await loadAccount().catch(() => null);
   }
