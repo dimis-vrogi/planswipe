@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
@@ -16,6 +17,11 @@ const supabase = supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : null;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!supabase) {
+  console.error("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env file.");
+  process.exit(1);
+}
 
 const areaOptions = [
   {
@@ -401,6 +407,7 @@ async function listFriends(username) {
 
 async function searchUsers(query, username) {
   requireSupabase();
+
   const cleanQuery = String(query || "").trim();
   if (!cleanQuery) return [];
 
@@ -654,10 +661,11 @@ function readBody(request) {
       try {
         resolve(body ? JSON.parse(body) : {});
       } catch (error) {
-        reject(error);
+        // Return empty body on invalid JSON instead of crashing
+        resolve({});
       }
     });
-    request.on("error", reject);
+    request.on("error", () => resolve({}));
   });
 }
 
@@ -942,7 +950,12 @@ function serveStatic(request, response) {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
     ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
     ".txt": "text/plain; charset=utf-8",
     ".cmd": "text/plain; charset=utf-8"
   };
@@ -978,81 +991,80 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/register") {
-  const body = await readBody(request);
+    const body = await readBody(request);
 
-  const username = String(body.username || "").trim();
-  const email = String(body.email || "").trim().toLowerCase();
-  const password = String(body.password || "");
+    const username = String(body.username || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
 
-  if (!username || !email || !password) {
-    sendJson(response, 400, {
-      error: "Username, email, and password required"
+    if (!username || !email || !password) {
+      sendJson(response, 400, {
+        error: "Username, email, and password required"
+      });
+      return;
+    }
+
+    if (!validEmail(email)) {
+      sendJson(response, 400, {
+        error: "Enter a valid email address"
+      });
+      return;
+    }
+
+    const existing = await findUserByUsername(username);
+
+    if (existing || await findUserByEmail(email)) {
+      sendJson(response, 400, {
+        error: "User already exists"
+      });
+      return;
+    }
+
+    await createUser(username, email, password);
+
+    sendJson(response, 201, {
+      success: true,
+      username,
+      email,
+      profile: defaultProfile(username)
     });
     return;
   }
 
-  if (!validEmail(email)) {
-    sendJson(response, 400, {
-      error: "Enter a valid email address"
-    });
-    return;
-  }
-
-  const existing = await findUserByUsername(username);
-
-  if (existing || await findUserByEmail(email)) {
-    sendJson(response, 400, {
-      error: "User already exists"
-    });
-    return;
-  }
-
-  await createUser(username, email, password);
-
-  sendJson(response, 201, {
-    success: true,
-    username,
-    email,
-    profile: defaultProfile(username)
-  });
-
-  return;
-}
   if (request.method === "POST" && url.pathname === "/api/login") {
-        const body = await readBody(request);
+    const body = await readBody(request);
 
-const username = String(body.username || "").trim();
-const email = String(body.email || "").trim().toLowerCase();
-const password = String(body.password || "");
+    const username = String(body.username || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
 
-if (!validEmail(email)) {
-  sendJson(response, 400, {
-    error: "Enter a valid email address"
-  });
-  return;
-}
+    if (!validEmail(email)) {
+      sendJson(response, 400, {
+        error: "Enter a valid email address"
+      });
+      return;
+    }
 
-const user = await findUserByUsername(username);
+    const user = await findUserByUsername(username);
 
-if (
-  !user ||
-  String(user.email || "").toLowerCase() !== email ||
-  user.password_hash !== hashPassword(password)
-) {
-  sendJson(response, 401, {
-    error: "Invalid credentials"
-  });
-  return;
-}
+    if (
+      !user ||
+      String(user.email || "").toLowerCase() !== email ||
+      user.password_hash !== hashPassword(password)
+    ) {
+      sendJson(response, 401, {
+        error: "Invalid credentials"
+      });
+      return;
+    }
 
-sendJson(response, 200, {
-  success: true,
-  username,
-  email: user.email,
-  profile: normalizeProfile(user.profile, user.username)
-});
-
-return;
+    sendJson(response, 200, {
+      success: true,
+      username,
+      email: user.email,
+      profile: normalizeProfile(user.profile, user.username)
+    });
+    return;
   }
 
   if (request.method === "GET" && url.pathname === "/api/account") {
@@ -1063,8 +1075,7 @@ return;
       sendJson(response, 404, { error: "User not found" });
       return;
     }
-    const row = viewer && viewer !== username ? await friendshipBetween(viewer, username) : null;
-    sendJson(response, 200, { user: publicUser(user, friendshipStatus(row, viewer)) });
+    sendJson(response, 200, { user: publicUser(user, "none") });
     return;
   }
 
@@ -1361,5 +1372,6 @@ const server = http.createServer(async (request, response) => {
 server.listen(port, host, () => {
   console.log(`PlanSwipe is running at http://127.0.0.1:${port}`);
   console.log(`On your Wi-Fi, friends can use http://YOUR-COMPUTER-IP:${port}`);
+  console.log("Mode: Supabase");
   console.log("Set GOOGLE_MAPS_API_KEY to use real Google Places results.");
 });
