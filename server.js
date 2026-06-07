@@ -185,6 +185,10 @@ function hashPassword(password) {
     .digest("hex");
 }
 
+function generateToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
 function requireSupabase() {
   if (!supabase) {
     throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
@@ -219,17 +223,24 @@ async function findUserByEmail(email) {
 
 async function createUser(username, email, password) {
   requireSupabase();
+
   const passwordHash = hashPassword(password);
+  const token = generateToken();
 
   const { error } = await supabase
     .from("users")
     .insert({
       username,
       email,
-      password_hash: passwordHash
+      password_hash: passwordHash,
+      email_verified: false,
+      verification_token: token,
+      verification_sent_at: Date.now()
     });
 
   if (error) throw error;
+
+  return token;
 }
 
 function id(prefix) {
@@ -654,16 +665,59 @@ async function handleApi(request, response) {
     return;
   }
 
-  await createUser(username, email, password);
+  const token = await createUser(username, email, password);
 
   sendJson(response, 201, {
+  success: true,
+  message: "Account created. Check your email to verify your account.",
+  username,
+  email,
+  debugToken: token
+});
+
+  return;
+}
+
+  if (request.method === "GET" && url.pathname === "/api/verify") {
+  const token = url.searchParams.get("token");
+
+  if (!token) {
+    sendJson(response, 400, { error: "Missing token" });
+    return;
+  }
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("verification_token", token)
+    .maybeSingle();
+
+  if (error || !user) {
+    sendJson(response, 400, { error: "Invalid or expired token" });
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({
+      email_verified: true,
+      verification_token: null
+    })
+    .eq("id", user.id);
+
+  if (updateError) {
+    sendJson(response, 500, { error: "Failed to verify email" });
+    return;
+  }
+
+  sendJson(response, 200, {
     success: true,
-    username,
-    email
+    message: "Email verified successfully"
   });
 
   return;
 }
+  
   if (request.method === "POST" && url.pathname === "/api/login") {
         const body = await readBody(request);
 
