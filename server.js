@@ -227,7 +227,7 @@ async function groupCode() {
 
   let code = "";
   do {
-    code = crypto.randomBytes(3).toString("hex").toUpperCase();
+    code = String(crypto.randomInt(0, 100000000)).padStart(8, "0");
   } while (await loadGroup(code));
   return code;
 }
@@ -333,7 +333,7 @@ function addMember(group, name) {
 }
 
 function countChoices(group, kind) {
-  const choices = group.choices[kind];
+  const choices = group.choices[kind] || {};
   const counts = {};
   Object.values(choices).forEach((optionId) => {
     counts[optionId] = (counts[optionId] || 0) + 1;
@@ -342,7 +342,7 @@ function countChoices(group, kind) {
 }
 
 function consensusOption(group, kind) {
-  const choices = group.choices[kind];
+  const choices = group.choices[kind] || {};
   if (group.members.length === 0) return null;
   if (Object.keys(choices).length < group.members.length) return null;
   const values = Object.values(choices);
@@ -350,13 +350,46 @@ function consensusOption(group, kind) {
   return values.every((value) => value === first) ? first : null;
 }
 
-function buildQuery(areaId, typeId) {
-  const area = areaOptions.find((option) => option.id === areaId);
-  const type = typeOptions.find((option) => option.id === typeId);
+function groupOptions(group, kind) {
+  const defaults = kind === "area" ? areaOptions : typeOptions;
+  return [...defaults, ...(group?.customOptions?.[kind] || [])];
+}
+
+function customOption(kind, label) {
+  const cleanLabel = String(label || "").trim().slice(0, 40);
+  if (!cleanLabel) return null;
+
+  const option = {
+    id: `custom_${kind}_${crypto.randomBytes(5).toString("hex")}`,
+    label: cleanLabel,
+    description: kind === "area"
+      ? "Custom area added by the group."
+      : "Custom activity added by the group."
+  };
+
+  if (kind === "area") {
+    option.queryArea = cleanLabel;
+  } else {
+    option.searchTerm = cleanLabel;
+    option.googleType = "";
+  }
+
+  return option;
+}
+
+function ensureCustomOptions(group) {
+  if (!group.customOptions) group.customOptions = { area: [], type: [] };
+  if (!Array.isArray(group.customOptions.area)) group.customOptions.area = [];
+  if (!Array.isArray(group.customOptions.type)) group.customOptions.type = [];
+}
+
+function buildQuery(areaId, typeId, group) {
+  const area = groupOptions(group, "area").find((option) => option.id === areaId);
+  const type = groupOptions(group, "type").find((option) => option.id === typeId);
   if (!area || !type) return null;
   return {
     textQuery: `${type.searchTerm} in ${area.queryArea}`,
-    includedType: type.googleType,
+    includedType: type.googleType || "",
     areaLabel: area.label,
     typeLabel: type.label
   };
@@ -382,7 +415,7 @@ async function googleTextSearch(query) {
     },
     body: JSON.stringify({
       textQuery: query.textQuery,
-      includedType: query.includedType,
+      ...(query.includedType ? { includedType: query.includedType } : {}),
       maxResultCount: 10,
       languageCode: "en"
     })
@@ -449,6 +482,46 @@ async function searchPlaces(areaId, typeId) {
   return { query: query.textQuery, source: "sample", places };
 }
 
+async function searchGroupPlaces(group, areaId, typeId) {
+  const query = buildQuery(areaId, typeId, group);
+  if (!query) return { query: "", source: "none", places: [] };
+
+  try {
+    const places = await googleTextSearch(query);
+    if (places?.length) {
+      return { query: query.textQuery, source: "google", places };
+    }
+  } catch (error) {
+    console.warn(error.message);
+  }
+
+  const places = mockPlaces
+    .filter((place) => place.area === areaId && place.type === typeId)
+    .sort((a, b) => b.rating - a.rating);
+
+  if (places.length) {
+    return { query: query.textQuery, source: "sample", places };
+  }
+
+  return {
+    query: query.textQuery,
+    source: "custom",
+    places: [
+      {
+        id: `custom-place-${areaId}-${typeId}`,
+        title: query.typeLabel,
+        category: query.typeLabel,
+        areaLabel: query.areaLabel,
+        description: `A custom group idea for ${query.areaLabel}.`,
+        time: "Plan together",
+        cost: "TBD",
+        rating: 4,
+        photoUrl: fallbackPhoto("")
+      }
+    ]
+  };
+}
+
 function summarizeGroup(group) {
   const areaConsensus = consensusOption(group, "area");
   const typeConsensus = consensusOption(group, "type");
@@ -486,6 +559,10 @@ function summarizeGroup(group) {
     choices: {
       area: group.choices.area,
       type: group.choices.type
+    },
+    options: {
+      area: groupOptions(group, "area"),
+      type: groupOptions(group, "type")
     },
     counts: {
       area: countChoices(group, "area"),
@@ -618,6 +695,7 @@ return;
       name: String(body.groupName || "Friday crew").trim().slice(0, 30) || "Friday crew",
       members: [],
       choices: { area: {}, type: {} },
+      customOptions: { area: [], type: [] },
       votes: {},
       search: null,
       places: [],
@@ -659,18 +737,31 @@ return;
       return;
     }
     const body = await readBody(request);
+    ensureCustomOptions(group);
     const kind = body.kind === "type" ? "type" : "area";
-    const validOptions = kind === "area" ? areaOptions : typeOptions;
-    if (!validOptions.some((option) => option.id === body.optionId)) {
+    let optionId = body.optionId;
+
+    if (body.customLabel) {
+      const option = customOption(kind, body.customLabel);
+      if (!option) {
+        sendJson(response, 400, { error: "Custom option required" });
+        return;
+      }
+      group.customOptions[kind].push(option);
+      optionId = option.id;
+    }
+
+    const validOptions = groupOptions(group, kind);
+    if (!validOptions.some((option) => option.id === optionId)) {
       sendJson(response, 400, { error: "Invalid option" });
       return;
     }
-    group.choices[kind][body.userId] = body.optionId;
+    group.choices[kind][body.userId] = optionId;
     const areaConsensus = consensusOption(group, "area");
     const typeConsensus = consensusOption(group, "type");
 
     if (areaConsensus && typeConsensus) {
-      const result = await searchPlaces(areaConsensus, typeConsensus);
+      const result = await searchGroupPlaces(group, areaConsensus, typeConsensus);
       group.search = { query: result.query, source: result.source };
       group.places = result.places;
     }
