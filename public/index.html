@@ -13,11 +13,18 @@
         <div class="login-panel">
           <h2>PlanSwipe</h2>
 
-          <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
-          <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+          <div class="login-entry" id="loginEntry">
+            <p>Log in or create an account to start planning with your group.</p>
+            <button id="openLoginButton" type="button">Login</button>
+          </div>
 
-          <button id="loginButton" type="button">Login</button>
-          <button id="registerButton" type="button">Create Account</button>
+          <div class="login-form is-hidden" id="loginForm">
+            <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
+            <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+
+            <button id="loginButton" type="button">Login</button>
+            <button id="registerButton" type="button">Create Account</button>
+          </div>
         </div>
       </section>
 
