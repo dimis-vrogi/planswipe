@@ -679,7 +679,11 @@ try {
 
 console.log("Sending verification email to:", email);
 console.log("Using BASE_URL:", process.env.BASE_URL);
-
+console.log("ABOUT TO SEND EMAIL");
+console.log("API KEY EXISTS:", !!process.env.RESEND_API_KEY);
+console.log("FROM:", process.env.FROM_EMAIL);
+console.log("TO:", email);
+    
 try {
   const result = await resend.emails.send({
     from: process.env.FROM_EMAIL,
