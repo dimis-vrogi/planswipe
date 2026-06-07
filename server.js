@@ -4,6 +4,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 console.log("Resend loaded successfully");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
@@ -668,6 +669,18 @@ async function handleApi(request, response) {
   }
 
   const token = await createUser(username, email, password);
+  await resend.emails.send({
+  from: process.env.FROM_EMAIL,
+  to: email,
+  subject: "Verify your PlanSwipe account",
+  html: `
+    <h2>Welcome to PlanSwipe</h2>
+    <p>Click below to verify your account:</p>
+    <a href="${process.env.BASE_URL}/api/verify?token=${token}">
+  Verify Email
+</a>
+  `
+});
 
   sendJson(response, 201, {
   success: true,
