@@ -8,7 +8,11 @@ const state = {
   pollTimer: null,
   setupMode: "",
   activePage: "",
-  loginOpen: false
+  loginOpen: false,
+  account: JSON.parse(localStorage.getItem("planswipe:account") || "null"),
+  language: localStorage.getItem("planswipe:language") || "en",
+  supabaseClient: null,
+  supabaseSession: null
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -70,46 +74,36 @@ const pageEyebrow = document.querySelector("#pageEyebrow");
 const pageTitle = document.querySelector("#pageTitle");
 const pageDemo = document.querySelector("#pageDemo");
 const closePageButton = document.querySelector("#closePageButton");
+const languageButton = document.querySelector("#languageButton");
+const appLanguageButton = document.querySelector("#appLanguageButton");
+const suggestionButton = document.querySelector("#suggestionButton");
+const suggestionPanel = document.querySelector("#suggestionPanel");
 
 const pageContent = {
   inbox: {
     title: "Inbox",
     eyebrow: "Messages",
-    cards: [
-      ["Group invite", "Maria invited you to join Athens Saturday with code 28469103."],
-      ["Group invite", "Nikos invited you to North Athens Games with code 73019485."],
-      ["Friend request", "Alex wants to add you as a planning friend."]
-    ]
+    dynamic: true
   },
   groups: {
     title: "My Groups",
     eyebrow: "Groups",
-    cards: [
-      ["Active groups", "Groups you created or joined will appear here."],
-      ["Saved codes", "Recent 8-digit group codes will live here."]
-    ]
+    dynamic: true
   },
   friends: {
     title: "Friends",
     eyebrow: "People",
-    cards: [
-      ["Maria P.", "Usually votes yes for restaurants and seaside walks."],
-      ["Nikos A.", "Favorite activities: games, escape rooms, late food."],
-      ["Alex K.", "Pending friend request."]
-    ]
+    dynamic: true
   },
   past: {
     title: "Past Activities",
     eyebrow: "History",
-    cards: [
-      ["Completed plans", "Past matches and finished activities will appear here."],
-      ["Highlights", "Photos, dates, and group members can be shown in this section later."]
-    ]
+    dynamic: true
   },
   personal: {
     title: "Personal Information",
     eyebrow: "Profile",
-    personal: true
+    dynamic: true
   },
   settings: {
     title: "Settings",
@@ -121,6 +115,175 @@ const pageContent = {
   }
 };
 
+const copy = {
+  en: {
+    login: "Login",
+    createAccount: "Create Account",
+    enterPlanswipe: "Enter PlanSwipe",
+    groupPlans: "Group plans",
+    leaveGroup: "Leave Group",
+    inbox: "Inbox",
+    groups: "My Groups",
+    friends: "Friends",
+    past: "Past Activities",
+    personal: "Personal Information",
+    settings: "Settings",
+    logout: "Logout",
+    heroEyebrow: "Group plans made easier",
+    heroTitle: "Find the plan your group can actually agree on.",
+    heroDescription: "Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.",
+    heroNote: "Built for group chats that never decide.",
+    startPlanning: "Start planning with your group",
+    startPlanningText: "Choose whether you are creating a new group or joining one that already exists.",
+    createGroup: "Create Group",
+    createGroupText: "Pick a group name and get a new 8-digit code.",
+    joinGroup: "Join Group",
+    joinGroupText: "Enter the 8-digit code from a friend.",
+    groupName: "Group name",
+    groupCodeLabel: "8-digit group code",
+    back: "Back",
+    backToApp: "Back to PlanSwipe",
+    currentGroup: "Current group",
+    stepArea: "Step 1 of 2",
+    stepType: "Step 2 of 2",
+    areaTitle: "Where do you want to go?",
+    typeTitle: "What kind of activity do you want?",
+    decisionHint: "Everyone needs to agree before the group moves to the next step.",
+    addArea: "Add area",
+    addActivity: "Add activity",
+    addAreaText: "Suggest a different neighborhood or place.",
+    addActivityText: "Suggest a different activity type.",
+    addOwn: "Add your own",
+    liveChoices: "Live choices",
+    resultsTitle: "What you can do",
+    aiSuggestions: "AI Suggestions",
+    changeBasics: "Change basics",
+    noStrongChoice: "No strong choice yet",
+    keepSwiping: "Keep swiping or wait for the rest of the group.",
+    noFriends: "No friends yet",
+    searchByUsername: "Search by username",
+    search: "Search",
+    requests: "Requests",
+    saveProfile: "Save Profile",
+    age: "Age",
+    bio: "Bio",
+    preferences: "Preferences",
+    logPastActivity: "Log Past Activity",
+    area: "Area",
+    activity: "Activity",
+    place: "Place",
+    saveActivity: "Save Activity",
+    suggestedPlaces: "Suggested places"
+  },
+  el: {
+    login: "Σύνδεση",
+    createAccount: "Δημιουργία λογαριασμού",
+    enterPlanswipe: "Μπες στο PlanSwipe",
+    groupPlans: "Ομαδικά σχέδια",
+    leaveGroup: "Έξοδος από ομάδα",
+    inbox: "Εισερχόμενα",
+    groups: "Οι ομάδες μου",
+    friends: "Φίλοι",
+    past: "Παλαιότερες δραστηριότητες",
+    personal: "Προσωπικά στοιχεία",
+    settings: "Ρυθμίσεις",
+    logout: "Αποσύνδεση",
+    heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
+    heroTitle: "Βρες το σχέδιο με το οποίο μπορεί να συμφωνήσει η παρέα.",
+    heroDescription: "Διαλέξτε μαζί τα βασικά, κάντε swipe σε ιδέες κοντά σας και αφήστε το PlanSwipe να αναδείξει τα μέρη που ταιριάζουν στην παρέα.",
+    heroNote: "Για ομαδικές συνομιλίες που δεν αποφασίζουν ποτέ.",
+    startPlanning: "Ξεκίνα να σχεδιάζεις με την ομάδα σου",
+    startPlanningText: "Διάλεξε αν θέλεις να δημιουργήσεις νέα ομάδα ή να μπεις σε υπάρχουσα.",
+    createGroup: "Δημιουργία ομάδας",
+    createGroupText: "Δώσε όνομα ομάδας και πάρε νέο 8ψήφιο κωδικό.",
+    joinGroup: "Συμμετοχή σε ομάδα",
+    joinGroupText: "Βάλε τον 8ψήφιο κωδικό από φίλο.",
+    groupName: "Όνομα ομάδας",
+    groupCodeLabel: "8ψήφιος κωδικός ομάδας",
+    back: "Πίσω",
+    backToApp: "Πίσω στο PlanSwipe",
+    currentGroup: "Τρέχουσα ομάδα",
+    stepArea: "Βήμα 1 από 2",
+    stepType: "Βήμα 2 από 2",
+    areaTitle: "Πού θέλετε να πάτε;",
+    typeTitle: "Τι είδους δραστηριότητα θέλετε;",
+    decisionHint: "Πρέπει να συμφωνήσουν όλοι πριν προχωρήσει η ομάδα.",
+    addArea: "Προσθήκη περιοχής",
+    addActivity: "Προσθήκη δραστηριότητας",
+    addAreaText: "Πρότεινε άλλη γειτονιά ή μέρος.",
+    addActivityText: "Πρότεινε άλλο είδος δραστηριότητας.",
+    addOwn: "Πρόσθεσε δικό σου",
+    liveChoices: "Ζωντανές επιλογές",
+    resultsTitle: "Τι μπορείτε να κάνετε",
+    aiSuggestions: "Προτάσεις AI",
+    changeBasics: "Αλλαγή βασικών",
+    noStrongChoice: "Δεν υπάρχει δυνατή επιλογή ακόμα",
+    keepSwiping: "Συνεχίστε το swipe ή περιμένετε την υπόλοιπη ομάδα.",
+    noFriends: "Δεν έχεις φίλους ακόμα",
+    searchByUsername: "Αναζήτηση με username",
+    search: "Αναζήτηση",
+    requests: "Αιτήματα",
+    saveProfile: "Αποθήκευση προφίλ",
+    age: "Ηλικία",
+    bio: "Βιογραφικό",
+    preferences: "Προτιμήσεις",
+    logPastActivity: "Καταχώριση δραστηριότητας",
+    area: "Περιοχή",
+    activity: "Δραστηριότητα",
+    place: "Μέρος",
+    saveActivity: "Αποθήκευση δραστηριότητας",
+    suggestedPlaces: "Προτεινόμενα μέρη"
+  }
+};
+
+function t(key) {
+  return copy[state.language]?.[key] || copy.en[key] || key;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.language;
+  languageButton.textContent = state.language === "en" ? "EL" : "EN";
+  appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
+  openLoginButton.textContent = t("login");
+  heroLoginButton.textContent = t("login");
+  loginButton.textContent = t("login");
+  registerButton.textContent = t("createAccount");
+  loginForm.querySelector("h2").textContent = t("enterPlanswipe");
+  document.querySelector(".hero-copy .eyebrow").textContent = t("heroEyebrow");
+  document.querySelector(".hero-copy h1").textContent = t("heroTitle");
+  document.querySelector(".hero-description").textContent = t("heroDescription");
+  document.querySelector(".hero-actions span").textContent = t("heroNote");
+  document.querySelector(".topbar .eyebrow").textContent = t("groupPlans");
+  resetButton.textContent = t("leaveGroup");
+  closePageButton.textContent = t("backToApp");
+  suggestionButton.textContent = t("aiSuggestions");
+  reviewButton.textContent = t("changeBasics");
+  document.querySelector("#setupPanel h2").textContent = t("startPlanning");
+  document.querySelector("#setupPanel .setup-intro p").textContent = t("startPlanningText");
+  showCreateButton.querySelector("strong").textContent = t("createGroup");
+  showCreateButton.querySelector("span").textContent = t("createGroupText");
+  showJoinButton.querySelector("strong").textContent = t("joinGroup");
+  showJoinButton.querySelector("span").textContent = t("joinGroupText");
+  createForm.querySelector(".field span").textContent = t("groupName");
+  joinForm.querySelector(".field span").textContent = t("groupCodeLabel");
+  createButton.textContent = t("createGroup");
+  joinButton.textContent = t("joinGroup");
+  backFromCreateButton.textContent = t("back");
+  backFromJoinButton.textContent = t("back");
+  const menuLabels = ["inbox", "groups", "friends", "past", "personal", "settings"];
+  profileMenu.querySelectorAll("button[data-page]").forEach((button, index) => {
+    button.textContent = t(menuLabels[index]);
+  });
+  logoutButton.textContent = t("logout");
+}
+
+function toggleLanguage() {
+  state.language = state.language === "en" ? "el" : "en";
+  localStorage.setItem("planswipe:language", state.language);
+  applyLanguage();
+  renderApp();
+}
+
 function setVisible(element, visible) {
   element.classList.toggle("is-hidden", !visible);
 }
@@ -129,9 +292,31 @@ function isLoggedIn() {
   return Boolean(localStorage.getItem("planswipe:login"));
 }
 
+function currentUsername() {
+  return localStorage.getItem("planswipe:login") || "";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function validEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
 async function api(path, options = {}) {
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (state.supabaseSession?.access_token) {
+    headers.Authorization = `Bearer ${state.supabaseSession.access_token}`;
+  }
+
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...options,
     body: options.body ? JSON.stringify(options.body) : undefined
   });
@@ -156,7 +341,75 @@ function setLoggedIn(username, email) {
   profileInitial.textContent = initials(username) || "P";
 }
 
+async function configureSupabaseAuth() {
+  try {
+    const config = await api("/api/config");
+    if (config.supabaseUrl && config.supabaseAnonKey && window.supabase) {
+      state.supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+      const { data } = await state.supabaseClient.auth.getSession();
+      state.supabaseSession = data.session || null;
+      state.supabaseClient.auth.onAuthStateChange((_event, session) => {
+        state.supabaseSession = session || null;
+      });
+    }
+  } catch (error) {
+    console.warn(error.message);
+  }
+}
+
+async function syncSupabaseProfile(username, email) {
+  const data = await api("/api/auth/profile", {
+    method: "POST",
+    body: {
+      username,
+      email
+    }
+  });
+  setLoggedIn(data.user.username, data.user.email || email);
+  saveAccount(data.user);
+  return data.user;
+}
+
+function saveAccount(user) {
+  state.account = user;
+  localStorage.setItem("planswipe:account", JSON.stringify(user));
+  if (user?.profile?.picture) {
+    profileInitial.style.backgroundImage = `url("${user.profile.picture}")`;
+    profileInitial.textContent = "";
+  } else {
+    profileInitial.style.backgroundImage = "";
+    profileInitial.textContent = initials(user?.username || currentUsername()) || "P";
+  }
+}
+
+async function loadAccount() {
+  if (!isLoggedIn()) return null;
+  const data = await api(`/api/account?username=${encodeURIComponent(currentUsername())}&viewer=${encodeURIComponent(currentUsername())}`);
+  saveAccount(data.user);
+  return data.user;
+}
+
 async function login() {
+  if (!validEmail(loginEmail.value)) {
+    throw new Error("Enter a valid email address.");
+  }
+
+  if (state.supabaseClient) {
+    const { data, error } = await state.supabaseClient.auth.signInWithPassword({
+      email: loginEmail.value.trim(),
+      password: loginPassword.value
+    });
+    if (error) throw new Error(error.message);
+    state.supabaseSession = data.session;
+    await syncSupabaseProfile(loginUsername.value.trim(), data.user.email || loginEmail.value.trim());
+    loginUsername.value = "";
+    loginEmail.value = "";
+    loginPassword.value = "";
+    state.loginOpen = false;
+    renderApp();
+    return;
+  }
+
   const data = await api("/api/login", {
     method: "POST",
     body: {
@@ -167,6 +420,11 @@ async function login() {
   });
 
   setLoggedIn(data.username, data.email || loginEmail.value.trim());
+  saveAccount({
+    username: data.username,
+    email: data.email || loginEmail.value.trim(),
+    profile: data.profile
+  });
   loginUsername.value = "";
   loginEmail.value = "";
   loginPassword.value = "";
@@ -179,12 +437,44 @@ async function registerUser() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value;
 
+  if (!validEmail(email)) {
+    throw new Error("Enter a valid email address.");
+  }
+
+  if (state.supabaseClient) {
+    const { data, error } = await state.supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
+    });
+    if (error) throw new Error(error.message);
+    state.supabaseSession = data.session;
+    if (!data.session) {
+      alert("Check your email to confirm your account, then log in.");
+      return;
+    }
+    await syncSupabaseProfile(username, data.user.email || email);
+    loginUsername.value = "";
+    loginEmail.value = "";
+    loginPassword.value = "";
+    state.loginOpen = false;
+    renderApp();
+    return;
+  }
+
   const data = await api("/api/register", {
     method: "POST",
     body: { username, email, password }
   });
 
   setLoggedIn(data.username || username, data.email || email);
+  saveAccount({
+    username: data.username || username,
+    email: data.email || email,
+    profile: data.profile
+  });
   loginUsername.value = "";
   loginEmail.value = "";
   loginPassword.value = "";
@@ -215,10 +505,10 @@ function optionScore(kind, id) {
 function renderMembers() {
   memberRow.innerHTML = (state.group.members || [])
     .map((member) => `
-      <span class="member-chip">
-        <span class="avatar">${initials(member.name)}</span>
-        ${member.name}${member.id === state.user.id ? " (you)" : ""}
-      </span>
+      <button class="member-chip" type="button" data-username="${escapeHtml(member.username || member.name)}">
+        <span class="avatar">${member.profile?.picture ? `<img src="${escapeHtml(member.profile.picture)}" alt="">` : escapeHtml(initials(member.name))}</span>
+        ${escapeHtml(member.name)}${member.id === state.user.id ? " (you)" : ""}
+      </button>
     `)
     .join("");
 }
@@ -352,56 +642,245 @@ function renderStatus() {
   statusPanel.textContent = `Search from ${source}: "${state.group.search?.query || ""}"`;
 }
 
-function preferenceOptions(title, items, placeholder) {
+function preferenceList(title, key, items, placeholder) {
   return `
     <div class="preference-box">
-      <h3>${title}</h3>
+      <h3>${escapeHtml(title)}</h3>
       <div class="pill-row">
-        ${items.map((item) => `<label><input type="checkbox"> ${item}</label>`).join("")}
+        ${(items || []).map((item) => `
+          <span class="preference-pill">${escapeHtml(item)}</span>
+        `).join("") || `<span class="muted-text">Nothing saved yet.</span>`}
       </div>
       <div class="inline-add">
-        <input type="text" placeholder="${placeholder}">
-        <button type="button">Add</button>
+        <input type="text" data-pref-input="${key}" placeholder="${escapeHtml(placeholder)}">
+        <button type="button" data-pref-add="${key}">Add</button>
       </div>
     </div>
   `;
 }
 
-function renderPersonalInformation() {
+function profileImage(user, sizeClass = "profile-preview") {
+  const picture = user?.profile?.picture || "";
+  if (picture) {
+    return `<span class="${sizeClass} image-avatar" style="background-image:url('${escapeHtml(picture)}')"></span>`;
+  }
+  return `<span class="${sizeClass}">${escapeHtml(initials(user?.username || currentUsername()) || "P")}</span>`;
+}
+
+async function renderPersonalInformation() {
+  const account = await loadAccount();
+  const profile = account.profile || {};
+  const preferences = profile.preferences || {};
+
   pageDemo.innerHTML = `
     <form class="personal-form">
       <section>
         <h3>My Profile</h3>
         <label class="profile-upload">
-          <span class="profile-preview">${profileInitial.textContent}</span>
+          ${profileImage(account)}
           <span>Edit profile picture</span>
-          <input type="file" accept="image/*">
+          <input id="profilePictureInput" type="file" accept="image/*">
         </label>
         <label class="field">
           <span>Username</span>
-          <input type="text" value="${localStorage.getItem("planswipe:login") || ""}">
+          <input type="text" value="${escapeHtml(account.username)}" disabled>
         </label>
         <label class="field">
           <span>Email</span>
-          <input type="email" value="${localStorage.getItem("planswipe:email") || ""}">
+          <input type="email" value="${escapeHtml(account.email || "")}" disabled>
+        </label>
+        <label class="field">
+          <span>${t("age")}</span>
+          <input id="profileAge" type="number" min="13" max="120" value="${escapeHtml(profile.age || "")}">
         </label>
         <label class="field">
           <span>Password</span>
           <input type="password" placeholder="Email authentication required to change password" disabled>
         </label>
         <label class="field">
-          <span>Bio</span>
-          <textarea rows="5" placeholder="Tell friends what kind of plans you like."></textarea>
+          <span>${t("bio")}</span>
+          <textarea id="profileBio" rows="5" placeholder="Tell friends what kind of plans you like.">${escapeHtml(profile.bio || "")}</textarea>
         </label>
+        <button class="primary-button" type="button" id="saveProfileButton">${t("saveProfile")}</button>
       </section>
 
       <section>
-        <h3>Preferences</h3>
-        ${preferenceOptions("Favourite Areas", ["Center of Athens", "Athens seaside", "North Athens"], "Add another area")}
-        ${preferenceOptions("Favourite Activities", ["Restaurants", "Games", "Walking"], "Add another activity")}
-        ${preferenceOptions("Favourite Places", ["Psyrri meze spot", "Flisvos seaside walk", "Syntagma sushi"], "Add another place")}
+        <h3>${t("preferences")}</h3>
+        ${preferenceList("Favourite Areas", "areas", preferences.areas, "Add another area")}
+        ${preferenceList("Favourite Activities", "activities", preferences.activities, "Add another activity")}
+        ${preferenceList("Favourite Places", "places", preferences.places, "Add another place")}
       </section>
     </form>
+  `;
+}
+
+function userCard(user, action = "") {
+  const preferences = user.profile?.preferences || {};
+  const preferenceText = [
+    ...(preferences.areas || []),
+    ...(preferences.activities || []),
+    ...(preferences.places || [])
+  ].slice(0, 4).join(", ");
+
+  return `
+    <article class="demo-card user-card">
+      <div class="user-card-head">
+        ${profileImage(user, "small-profile-preview")}
+        <div>
+          <h3>${escapeHtml(user.username)}</h3>
+          <p>${escapeHtml(user.profile?.bio || "No bio yet.")}</p>
+        </div>
+      </div>
+      <p>${escapeHtml(preferenceText || "No preferences saved yet.")}</p>
+      ${action}
+    </article>
+  `;
+}
+
+async function renderFriendsPage() {
+  pageDemo.innerHTML = `
+    <section class="wide-panel">
+      <div class="inline-add">
+        <input id="friendSearchInput" type="text" placeholder="Search by username">
+        <button id="friendSearchButton" type="button">Search</button>
+      </div>
+      <div id="friendSearchResults" class="demo-grid"></div>
+    </section>
+    <section class="wide-panel">
+      <h3>Friends</h3>
+      <div id="friendList" class="demo-grid"></div>
+    </section>
+    <section class="wide-panel">
+      <h3>Requests</h3>
+      <div id="requestList" class="demo-grid"></div>
+    </section>
+  `;
+
+  await refreshFriendsPage();
+}
+
+async function refreshFriendsPage() {
+  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
+  const friendList = document.querySelector("#friendList");
+  const requestList = document.querySelector("#requestList");
+  if (!friendList || !requestList) return;
+
+  friendList.innerHTML = data.friends.length
+    ? data.friends.map((user) => userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`)).join("")
+    : `<article class="demo-card"><h3>No friends yet</h3><p>Search by username or add someone from your group.</p></article>`;
+
+  const requests = [
+    ...data.incoming.map((user) => userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept</button>`)),
+    ...data.outgoing.map((user) => userCard(user, `<span class="request-status">Request sent</span>`))
+  ];
+  requestList.innerHTML = requests.length
+    ? requests.join("")
+    : `<article class="demo-card"><h3>No pending requests</h3><p>Friend requests will appear here.</p></article>`;
+}
+
+async function renderGroupsPage() {
+  const data = await api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`);
+  pageDemo.innerHTML = data.groups.length
+    ? data.groups.map((group) => `
+      <article class="demo-card">
+        <h3>${escapeHtml(group.name)}</h3>
+        <p>Code ${escapeHtml(group.code)} | ${group.memberCount} member${group.memberCount === 1 ? "" : "s"}</p>
+        <button class="primary-button" type="button" data-open-group="${escapeHtml(group.code)}">Open Group</button>
+      </article>
+    `).join("")
+    : `<article class="demo-card"><h3>No saved groups yet</h3><p>Create or join a group and it will appear here.</p></article>`;
+}
+
+async function renderInboxPage() {
+  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
+  pageDemo.innerHTML = data.incoming.length
+    ? data.incoming.map((user) => userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept</button>`)).join("")
+    : `<article class="demo-card"><h3>Inbox is clear</h3><p>Friend requests will appear here.</p></article>`;
+}
+
+async function renderPastPage() {
+  const account = await loadAccount();
+  const activities = account.profile?.pastActivities || [];
+  pageDemo.innerHTML = `
+    <section class="wide-panel">
+      <button class="primary-button" type="button" id="showPastActivityForm">${t("logPastActivity")}</button>
+      <form class="setup-form is-hidden" id="pastActivityForm">
+        <label class="field">
+          <span>${t("area")}</span>
+          <input id="pastAreaInput" type="text" placeholder="Athens seaside">
+        </label>
+        <label class="field">
+          <span>${t("activity")}</span>
+          <input id="pastActivityInput" type="text" placeholder="Dinner">
+        </label>
+        <label class="field">
+          <span>${t("place")}</span>
+          <input id="pastPlaceInput" type="text" placeholder="Restaurant name">
+        </label>
+        <button class="primary-button" type="button" id="savePastActivityButton">${t("saveActivity")}</button>
+      </form>
+    </section>
+    ${activities.length
+      ? activities.map((activity) => `
+        <article class="demo-card">
+          <h3>${escapeHtml(activity.place)}</h3>
+          <p>${escapeHtml(activity.area)} | ${escapeHtml(activity.activity)}</p>
+        </article>
+      `).join("")
+      : `<article class="demo-card"><h3>No past activities yet</h3><p>Log places you have already tried so recommendations can learn from them.</p></article>`}
+  `;
+}
+
+async function savePastActivity() {
+  const area = document.querySelector("#pastAreaInput")?.value.trim();
+  const activity = document.querySelector("#pastActivityInput")?.value.trim();
+  const place = document.querySelector("#pastPlaceInput")?.value.trim();
+  if (!area || !activity || !place) {
+    showError("Area, activity, and place are required.");
+    return;
+  }
+
+  const profile = state.account?.profile || {};
+  const pastActivities = [
+    { area, activity, place, loggedAt: Date.now() },
+    ...(profile.pastActivities || [])
+  ].slice(0, 50);
+
+  const data = await api("/api/account", {
+    method: "PATCH",
+    body: {
+      username: currentUsername(),
+      profile: { ...profile, pastActivities }
+    }
+  });
+
+  saveAccount(data.user);
+  await renderPastPage();
+}
+
+async function renderAccountProfile(username) {
+  const data = await api(`/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(currentUsername())}`);
+  const user = data.user;
+  const preferences = user.profile?.preferences || {};
+  pageEyebrow.textContent = "Profile";
+  pageTitle.textContent = user.username;
+  const friendAction = user.username === currentUsername()
+    ? ""
+    : user.friendStatus === "friends"
+      ? `<span class="request-status">Friends</span>`
+      : user.friendStatus === "incoming"
+        ? `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`
+        : user.friendStatus === "requested"
+          ? `<span class="request-status">Request sent</span>`
+          : `<button class="primary-button" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
+  pageDemo.innerHTML = `
+    ${userCard(user, friendAction)}
+    <section class="wide-panel">
+      <h3>Preferences</h3>
+      ${preferenceList("Favourite Areas", "readonly-areas", preferences.areas, "")}
+      ${preferenceList("Favourite Activities", "readonly-activities", preferences.activities, "")}
+      ${preferenceList("Favourite Places", "readonly-places", preferences.places, "")}
+    </section>
   `;
 }
 
@@ -412,8 +891,33 @@ function renderProfilePage() {
   pageEyebrow.textContent = content.eyebrow;
   pageTitle.textContent = content.title;
 
-  if (content.personal) {
-    renderPersonalInformation();
+  if (state.activePage === "personal") {
+    renderPersonalInformation().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage === "friends") {
+    renderFriendsPage().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage === "groups") {
+    renderGroupsPage().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage === "inbox") {
+    renderInboxPage().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage === "past") {
+    renderPastPage().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage.startsWith("profile:")) {
+    renderAccountProfile(state.activePage.slice("profile:".length)).catch((error) => showError(error.message));
     return;
   }
 
@@ -448,7 +952,13 @@ function renderApp() {
 
   setVisible(loginPanel, false);
   setVisible(topbar, true);
-  profileInitial.textContent = initials(localStorage.getItem("planswipe:login")) || "P";
+  if (state.account?.profile?.picture) {
+    profileInitial.style.backgroundImage = `url("${state.account.profile.picture}")`;
+    profileInitial.textContent = "";
+  } else {
+    profileInitial.style.backgroundImage = "";
+    profileInitial.textContent = initials(currentUsername()) || "P";
+  }
   setVisible(resetButton, Boolean(state.group && state.user));
 
   if (state.activePage) {
@@ -537,11 +1047,12 @@ function saveSession(user, group) {
 }
 
 async function createGroup() {
-  const userName = localStorage.getItem("planswipe:login") || "Friend";
+  const username = currentUsername() || "Friend";
   const data = await api("/api/groups", {
     method: "POST",
     body: {
-      userName,
+      username,
+      profile: state.account?.profile,
       groupName: groupInput.value.trim()
     }
   });
@@ -550,7 +1061,7 @@ async function createGroup() {
 }
 
 async function joinGroup() {
-  const userName = localStorage.getItem("planswipe:login") || "Friend";
+  const username = currentUsername() || "Friend";
   const code = codeInput.value.trim();
 
   if (!/^\d{8}$/.test(code)) {
@@ -560,7 +1071,10 @@ async function joinGroup() {
 
   const data = await api(`/api/groups/${code}/join`, {
     method: "POST",
-    body: { userName }
+    body: {
+      username,
+      profile: state.account?.profile
+    }
   });
 
   saveSession(data.user, data.group);
@@ -632,11 +1146,17 @@ function leaveGroup() {
 }
 
 function logout() {
+  if (state.supabaseClient) {
+    state.supabaseClient.auth.signOut().catch((error) => console.warn(error.message));
+  }
+  state.supabaseSession = null;
   leaveGroup();
   state.activePage = "";
   state.loginOpen = false;
   localStorage.removeItem("planswipe:login");
   localStorage.removeItem("planswipe:email");
+  localStorage.removeItem("planswipe:account");
+  state.account = null;
   renderApp();
 }
 
@@ -650,10 +1170,179 @@ function showError(message) {
   statusPanel.textContent = message;
 }
 
+async function saveProfile() {
+  const bio = document.querySelector("#profileBio")?.value || "";
+  const ageValue = document.querySelector("#profileAge")?.value || "";
+  const age = ageValue ? Number(ageValue) : "";
+  const profile = {
+    ...(state.account?.profile || {}),
+    bio,
+    age,
+    preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] }
+  };
+
+  const data = await api("/api/account", {
+    method: "PATCH",
+    body: {
+      username: currentUsername(),
+      profile
+    }
+  });
+
+  saveAccount(data.user);
+  await renderPersonalInformation();
+}
+
+async function addPreference(key) {
+  const input = document.querySelector(`[data-pref-input="${key}"]`);
+  const value = input?.value.trim();
+  if (!value || !["areas", "activities", "places"].includes(key)) return;
+
+  const profile = state.account?.profile || {};
+  const preferences = {
+    areas: [...(profile.preferences?.areas || [])],
+    activities: [...(profile.preferences?.activities || [])],
+    places: [...(profile.preferences?.places || [])]
+  };
+
+  if (!preferences[key].some((item) => item.toLowerCase() === value.toLowerCase())) {
+    preferences[key].push(value);
+  }
+
+  const data = await api("/api/account", {
+    method: "PATCH",
+    body: {
+      username: currentUsername(),
+      profile: { ...profile, preferences }
+    }
+  });
+
+  saveAccount(data.user);
+  await renderPersonalInformation();
+}
+
+async function updateProfilePicture(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  const picture = await new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const profile = {
+    ...(state.account?.profile || {}),
+    picture,
+    preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] }
+  };
+
+  const data = await api("/api/account", {
+    method: "PATCH",
+    body: {
+      username: currentUsername(),
+      profile
+    }
+  });
+
+  saveAccount(data.user);
+  await renderPersonalInformation();
+}
+
+async function requestFriend(username) {
+  await api("/api/friends/request", {
+    method: "POST",
+    body: {
+      fromUsername: currentUsername(),
+      toUsername: username
+    }
+  });
+  if (state.activePage === "friends") await refreshFriendsPage();
+  else await renderAccountProfile(username);
+}
+
+async function acceptFriend(username) {
+  await api("/api/friends/accept", {
+    method: "POST",
+    body: {
+      username: currentUsername(),
+      requester: username
+    }
+  });
+  if (state.activePage === "friends") await refreshFriendsPage();
+  else if (state.activePage === "inbox") await renderInboxPage();
+}
+
+async function searchFriends() {
+  const input = document.querySelector("#friendSearchInput");
+  const results = document.querySelector("#friendSearchResults");
+  const query = input?.value.trim() || "";
+  if (!results || !query) return;
+
+  const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
+  results.innerHTML = data.users.length
+    ? data.users.map((user) => {
+      if (user.friendStatus === "friends") {
+        return userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`);
+      }
+      if (user.friendStatus === "incoming") {
+        return userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`);
+      }
+      if (user.friendStatus === "requested") {
+        return userCard(user, `<span class="request-status">Request sent</span>`);
+      }
+      return userCard(user, `<button class="primary-button" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
+    }).join("")
+    : `<article class="demo-card"><h3>No users found</h3><p>Try another username.</p></article>`;
+}
+
+function selectedOptionLabel(kind, optionId) {
+  return optionsFor(kind).find((option) => option.id === optionId)?.label || optionId || "";
+}
+
+async function getAiSuggestions() {
+  if (!state.group) return;
+  const areaId = consensus("area") || selected("area");
+  const typeId = consensus("type") || selected("type");
+  if (!areaId || !typeId) {
+    showError("Choose an area and activity first.");
+    return;
+  }
+
+  setVisible(suggestionPanel, true);
+  suggestionPanel.innerHTML = `<p>${t("suggestedPlaces")}...</p>`;
+
+  const data = await api("/api/suggestions", {
+    method: "POST",
+    body: {
+      username: currentUsername(),
+      area: selectedOptionLabel("area", areaId),
+      activity: selectedOptionLabel("type", typeId)
+    }
+  });
+
+  suggestionPanel.innerHTML = `
+    <h3>${t("suggestedPlaces")}</h3>
+    <div class="suggestion-list">
+      ${(data.suggestions || []).map((item) => `
+        <article class="suggestion-card">
+          <h4>${escapeHtml(item.place || item.name || "Suggestion")}</h4>
+          <p>${escapeHtml(item.reason || item.description || "")}</p>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
 async function boot() {
+  applyLanguage();
+  await configureSupabaseAuth();
   const options = await api("/api/options");
   state.areas = options.areas;
   state.types = options.types;
+
+  if (isLoggedIn()) {
+    await loadAccount().catch(() => null);
+  }
 
   if (isLoggedIn() && state.user && state.groupCode) {
     startPolling();
@@ -735,10 +1424,88 @@ closePageButton.addEventListener("click", () => {
   renderApp();
 });
 
+pageDemo.addEventListener("click", (event) => {
+  const addButton = event.target.closest("[data-add-friend]");
+  if (addButton) {
+    requestFriend(addButton.dataset.addFriend).catch((error) => showError(error.message));
+    return;
+  }
+
+  const acceptButton = event.target.closest("[data-accept-friend]");
+  if (acceptButton) {
+    acceptFriend(acceptButton.dataset.acceptFriend).catch((error) => showError(error.message));
+    return;
+  }
+
+  const viewButton = event.target.closest("[data-view-profile]");
+  if (viewButton) {
+    state.activePage = `profile:${viewButton.dataset.viewProfile}`;
+    renderApp();
+    return;
+  }
+
+  const openGroupButton = event.target.closest("[data-open-group]");
+  if (openGroupButton) {
+    codeInput.value = openGroupButton.dataset.openGroup;
+    state.activePage = "";
+    joinGroup().catch((error) => showError(error.message));
+    return;
+  }
+
+  const saveButton = event.target.closest("#saveProfileButton");
+  if (saveButton) {
+    saveProfile().catch((error) => showError(error.message));
+    return;
+  }
+
+  const prefButton = event.target.closest("[data-pref-add]");
+  if (prefButton) {
+    addPreference(prefButton.dataset.prefAdd).catch((error) => showError(error.message));
+    return;
+  }
+
+  const searchButton = event.target.closest("#friendSearchButton");
+  if (searchButton) {
+    searchFriends().catch((error) => showError(error.message));
+    return;
+  }
+
+  const showPastFormButton = event.target.closest("#showPastActivityForm");
+  if (showPastFormButton) {
+    document.querySelector("#pastActivityForm")?.classList.toggle("is-hidden");
+    return;
+  }
+
+  const savePastButton = event.target.closest("#savePastActivityButton");
+  if (savePastButton) {
+    savePastActivity().catch((error) => showError(error.message));
+  }
+});
+
+pageDemo.addEventListener("change", (event) => {
+  if (event.target.id === "profilePictureInput") {
+    updateProfilePicture(event.target.files?.[0]).catch((error) => showError(error.message));
+  }
+});
+
+pageDemo.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.id === "friendSearchInput") {
+    event.preventDefault();
+    searchFriends().catch((error) => showError(error.message));
+  }
+});
+
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".profile-wrap")) {
     profileMenu.classList.add("is-hidden");
   }
+});
+
+memberRow.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-username]");
+  if (!button) return;
+  state.activePage = `profile:${button.dataset.username}`;
+  renderApp();
 });
 
 noButton.addEventListener("click", () =>
@@ -759,6 +1526,14 @@ backChoiceButton.addEventListener("click", () =>
 
 reviewButton.addEventListener("click", () => {
   goBackChoice().catch((error) => showError(error.message));
+});
+
+suggestionButton.addEventListener("click", () =>
+  getAiSuggestions().catch((error) => showError(error.message))
+);
+
+[languageButton, appLanguageButton].forEach((button) => {
+  button.addEventListener("click", toggleLanguage);
 });
 
 optionGrid.addEventListener("click", (event) => {
