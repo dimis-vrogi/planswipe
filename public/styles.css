@@ -857,6 +857,7 @@ h3 {
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(25, 31, 42, 0.18);
+  position: relative;
 }
 
 .profile-menu {
@@ -1001,12 +1002,172 @@ h3 {
   .demo-grid {
     grid-template-columns: 1fr;
   }
-
-  .profile-menu {
-    right: 0;
-  }
 }
 
-.is-hidden {
-  display: none !important;
+/* Notification badge on profile button */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 850;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(201, 59, 73, 0.4);
+}
+
+/* Button click visual feedback */
+button:active {
+  transform: scale(0.95);
+  transition: transform 0.08s ease;
+}
+
+.choice-button:active {
+  transform: scale(0.92);
+}
+
+/* Menu items with notification count */
+.profile-menu button .notif-count {
+  margin-left: auto;
+  color: var(--red);
+  font-weight: 850;
+  font-size: 0.85rem;
+}
+
+.profile-menu button.has-notif {
+  font-weight: 900;
+}
+
+/* Liked places card */
+.liked-place-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.liked-place-card h3 {
+  font-size: 1rem;
+}
+
+.liked-place-card .vote-tag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.liked-place-card .vote-tag.yes {
+  background: rgba(22, 122, 91, 0.15);
+  color: var(--green);
+}
+
+.liked-place-card .vote-tag.maybe {
+  background: rgba(246, 216, 137, 0.4);
+  color: #7a5a00;
+}
+
+/* Settings toggle */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-toggle:last-child {
+  border-bottom: 0;
+}
+
+.settings-toggle label {
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.settings-toggle input[type="checkbox"] {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #eef1f4;
+  cursor: pointer;
+  appearance: auto;
+}
+
+/* Group card with exit button */
+.group-card {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.group-card h3 {
+  font-size: 1.05rem;
+}
+
+.group-card .group-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.group-card .group-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Continue browsing button */
+.continue-button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border: 2px dashed var(--green);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green);
+  font-weight: 850;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.continue-button:hover {
+  background: rgba(22, 122, 91, 0.06);
+}
+
+/* Danger button for removing friend / exiting group */
+.danger-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.group-section-title {
+  margin: 16px 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 850;
+  color: var(--ink);
+  grid-column: 1 / -1;
 }
