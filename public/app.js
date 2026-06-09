@@ -471,7 +471,6 @@ async function login() {
     loginEmail.value = "";
     loginPassword.value = "";
     state.loginOpen = false;
-    state.showHero = true;
     renderApp();
     return;
   }
@@ -495,7 +494,6 @@ async function login() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
-  state.showHero = true;
   renderApp();
 }
 
@@ -527,7 +525,6 @@ async function registerUser() {
     loginEmail.value = "";
     loginPassword.value = "";
     state.loginOpen = false;
-    state.showHero = true;
     renderApp();
     return;
   }
@@ -547,7 +544,6 @@ async function registerUser() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
-  state.showHero = true;
   renderApp();
 }
 
