@@ -1100,6 +1100,94 @@ async function handleApi(request, response) {
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/api/notifications") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    if (!username) {
+      sendJson(response, 400, { error: "Username required" });
+      return;
+    }
+    const friends = await listFriends(username);
+    const pendingFriendRequests = friends.incoming.length;
+    sendJson(response, 200, {
+      total: pendingFriendRequests,
+      friendRequests: pendingFriendRequests,
+      groupInvites: 0,
+      messages: 0
+    });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/liked-places") {
+    const username = String(url.searchParams.get("username") || "").trim();
+    if (!username) {
+      sendJson(response, 400, { error: "Username required" });
+      return;
+    }
+    const { data, error } = await supabase
+      .from("groups")
+      .select("data")
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+
+    const likedPlaces = [];
+    (data || []).forEach((row) => {
+      const group = row.data;
+      const member = (group.members || []).find((item) => item.username === username || item.name === username);
+      if (!member) return;
+      const votes = group.votes?.[member.id] || {};
+      Object.entries(votes).forEach(([placeId, vote]) => {
+        const value = vote === true ? "yes" : vote === false ? "no" : vote;
+        if (value !== "yes" && value !== "maybe") return;
+        const place = (group.places || []).find((item) => item.id === placeId);
+        if (place) {
+          likedPlaces.push({
+            place: place.title,
+            area: place.areaLabel,
+            activity: place.category,
+            vote: value,
+            groupName: group.name,
+            groupCode: group.code
+          });
+        }
+      });
+    });
+
+    sendJson(response, 200, { places: likedPlaces });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/groups/exit") {
+    const body = await readBody(request);
+    const username = String(body.username || "").trim();
+    const groupCode = String(body.groupCode || "").trim();
+    if (!username || !groupCode) {
+      sendJson(response, 400, { error: "Username and groupCode required" });
+      return;
+    }
+    const group = await loadGroup(groupCode);
+    if (!group) {
+      sendJson(response, 404, { error: "Group not found" });
+      return;
+    }
+    const memberIndex = (group.members || []).findIndex((m) => m.username === username || m.name === username);
+    if (memberIndex === -1) {
+      sendJson(response, 400, { error: "User is not a member of this group" });
+      return;
+    }
+    const memberToRemove = group.members[memberIndex];
+    const removedId = memberToRemove.id;
+    group.members.splice(memberIndex, 1);
+    if (removedId) {
+      if (group.choices?.area) delete group.choices.area[removedId];
+      if (group.choices?.type) delete group.choices.type[removedId];
+      if (group.votes) delete group.votes[removedId];
+    }
+    group.updatedAt = Date.now();
+    await saveGroup(group);
+    sendJson(response, 200, { status: "exited", group: summarizeGroup(group) });
+    return;
+  }
+
   if (request.method === "GET" && url.pathname === "/api/friends") {
     const username = String(url.searchParams.get("username") || "").trim();
     sendJson(response, 200, await listFriends(username));
@@ -1146,6 +1234,28 @@ async function handleApi(request, response) {
     }
 
     sendJson(response, 201, { status: "requested" });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/friends/remove") {
+    const body = await readBody(request);
+    const username = String(body.username || "").trim();
+    const friendUsername = String(body.friendUsername || "").trim();
+    if (!username || !friendUsername) {
+      sendJson(response, 400, { error: "Both usernames required" });
+      return;
+    }
+    const existing = await friendshipBetween(username, friendUsername);
+    if (!existing) {
+      sendJson(response, 404, { error: "Friendship not found" });
+      return;
+    }
+    const { error } = await supabase
+      .from("friend_requests")
+      .delete()
+      .eq("id", existing.id);
+    if (error) throw error;
+    sendJson(response, 200, { status: "removed" });
     return;
   }
 
