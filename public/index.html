@@ -96,11 +96,12 @@
           <div class="profile-wrap">
             <button class="profile-button" id="profileButton" type="button" aria-label="Open profile menu">
               <span id="profileInitial">P</span>
+              <span class="notification-badge is-hidden" id="notificationBadge">0</span>
             </button>
             <nav class="profile-menu is-hidden" id="profileMenu" aria-label="Profile menu">
-              <button type="button" data-page="inbox">Inbox</button>
               <button type="button" data-page="groups">My Groups</button>
               <button type="button" data-page="friends">Friends</button>
+              <button type="button" data-page="likedplaces">Liked Places</button>
               <button type="button" data-page="past">Past Activities</button>
               <button type="button" data-page="personal">Personal Information</button>
               <button type="button" data-page="settings">Settings</button>
@@ -158,7 +159,7 @@
             <p class="eyebrow" id="pageEyebrow">Profile</p>
             <h2 id="pageTitle">Inbox</h2>
           </div>
-          <button class="secondary-button" id="closePageButton" type="button">Back to PlanSwipe</button>
+          <button class="secondary-button" id="closePageButton" type="button">Exit Group</button>
         </div>
         <div class="demo-grid" id="pageDemo"></div>
       </section>
