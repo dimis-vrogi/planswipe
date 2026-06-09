@@ -12,7 +12,12 @@ const state = {
   account: JSON.parse(localStorage.getItem("planswipe:account") || "null"),
   language: localStorage.getItem("planswipe:language") || "en",
   supabaseClient: null,
-  supabaseSession: null
+  supabaseSession: null,
+  showHero: false,
+  notifications: { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 },
+  exitedGroups: JSON.parse(localStorage.getItem("planswipe:exitedGroups") || "[]"),
+  aiPlacesBatch: [],
+  aiBatchIndex: 0
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -70,6 +75,7 @@ const topbar = document.querySelector("#topbar");
 const profileButton = document.querySelector("#profileButton");
 const profileMenu = document.querySelector("#profileMenu");
 const profileInitial = document.querySelector("#profileInitial");
+const notificationBadge = document.querySelector("#notificationBadge");
 const pageEyebrow = document.querySelector("#pageEyebrow");
 const pageTitle = document.querySelector("#pageTitle");
 const pageDemo = document.querySelector("#pageDemo");
@@ -81,9 +87,9 @@ const suggestionPanel = document.querySelector("#suggestionPanel");
 const homeButton = document.querySelector("#homeButton");
 
 const pageContent = {
-  inbox: {
-    title: "Inbox",
-    eyebrow: "Messages",
+  likedplaces: {
+    title: "Liked Places",
+    eyebrow: "History",
     dynamic: true
   },
   groups: {
@@ -109,10 +115,7 @@ const pageContent = {
   settings: {
     title: "Settings",
     eyebrow: "Account",
-    cards: [
-      ["Notifications", "Notification preferences will appear here."],
-      ["Privacy", "Account privacy and session controls can be added here."]
-    ]
+    dynamic: true
   }
 };
 
@@ -123,7 +126,9 @@ const copy = {
     enterPlanswipe: "Enter PlanSwipe",
     groupPlans: "Group plans",
     leaveGroup: "Leave Group",
-    inbox: "Inbox",
+    exitGroup: "Exit Group",
+    home: "Home",
+    likedPlaces: "Liked Places",
     groups: "My Groups",
     friends: "Friends",
     past: "Past Activities",
@@ -143,7 +148,6 @@ const copy = {
     groupName: "Group name",
     groupCodeLabel: "8-digit group code",
     back: "Back",
-    backToApp: "Back to PlanSwipe",
     currentGroup: "Current group",
     stepArea: "Step 1 of 2",
     stepType: "Step 2 of 2",
@@ -174,66 +178,119 @@ const copy = {
     activity: "Activity",
     place: "Place",
     saveActivity: "Save Activity",
-    suggestedPlaces: "Suggested places"
+    suggestedPlaces: "Suggested places",
+    noLikedPlaces: "No liked places yet",
+    notifications: "Notifications",
+    friendRequestNotif: "Friend request alerts",
+    groupInviteNotif: "Group invite alerts",
+    privacy: "Privacy",
+    showOnlineStatus: "Show online status",
+    showProfilePublicly: "Show profile publicly",
+    saveSettings: "Save Settings",
+    settingsSaved: "Settings saved",
+    removeFriend: "Remove Friend",
+    removeFriendConfirm: "Remove this friend?",
+    activeGroups: "Active Groups",
+    pastGroups: "Past Groups",
+    noActiveGroups: "No active groups",
+    noPastGroups: "No past groups",
+    you: "you",
+    friends_: "Friends",
+    requestSent: "Request sent",
+    noPending: "No pending requests",
+    inboxClear: "No notifications",
+    noPastActivities: "No past activities yet",
+    continueBrowsing: "Would you like to continue browsing places?",
+    noMoreSuggestions: "No more suggestions available",
+    aiGenerating: "Getting AI suggestions...",
+    exitGroupPermanent: "Exit Group Permanently",
+    confirmExitGroup: "Are you sure you want to permanently leave this group?"
   },
   el: {
-    login: "Σύνδεση",
-    createAccount: "Δημιουργία λογαριασμού",
-    enterPlanswipe: "Μπες στο PlanSwipe",
-    groupPlans: "Ομαδικά σχέδια",
-    leaveGroup: "Έξοδος από ομάδα",
-    inbox: "Εισερχόμενα",
-    groups: "Οι ομάδες μου",
-    friends: "Φίλοι",
-    past: "Παλαιότερες δραστηριότητες",
-    personal: "Προσωπικά στοιχεία",
-    settings: "Ρυθμίσεις",
-    logout: "Αποσύνδεση",
-    heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
-    heroTitle: "Βρες το σχέδιο με το οποίο μπορεί να συμφωνήσει η παρέα.",
-    heroDescription: "Διαλέξτε μαζί τα βασικά, κάντε swipe σε ιδέες κοντά σας και αφήστε το PlanSwipe να αναδείξει τα μέρη που ταιριάζουν στην παρέα.",
-    heroNote: "Για ομαδικές συνομιλίες που δεν αποφασίζουν ποτέ.",
-    startPlanning: "Ξεκίνα να σχεδιάζεις με την ομάδα σου",
-    startPlanningText: "Διάλεξε αν θέλεις να δημιουργήσεις νέα ομάδα ή να μπεις σε υπάρχουσα.",
-    createGroup: "Δημιουργία ομάδας",
-    createGroupText: "Δώσε όνομα ομάδας και πάρε νέο 8ψήφιο κωδικό.",
-    joinGroup: "Συμμετοχή σε ομάδα",
-    joinGroupText: "Βάλε τον 8ψήφιο κωδικό από φίλο.",
-    groupName: "Όνομα ομάδας",
-    groupCodeLabel: "8ψήφιος κωδικός ομάδας",
-    back: "Πίσω",
-    backToApp: "Πίσω στο PlanSwipe",
-    currentGroup: "Τρέχουσα ομάδα",
-    stepArea: "Βήμα 1 από 2",
-    stepType: "Βήμα 2 από 2",
-    areaTitle: "Πού θέλετε να πάτε;",
-    typeTitle: "Τι είδους δραστηριότητα θέλετε;",
-    decisionHint: "Πρέπει να συμφωνήσουν όλοι πριν προχωρήσει η ομάδα.",
-    addArea: "Προσθήκη περιοχής",
-    addActivity: "Προσθήκη δραστηριότητας",
-    addAreaText: "Πρότεινε άλλη γειτονιά ή μέρος.",
-    addActivityText: "Πρότεινε άλλο είδος δραστηριότητας.",
-    addOwn: "Πρόσθεσε δικό σου",
-    liveChoices: "Ζωντανές επιλογές",
-    resultsTitle: "Τι μπορείτε να κάνετε",
-    aiSuggestions: "Προτάσεις AI",
-    changeBasics: "Αλλαγή βασικών",
-    noStrongChoice: "Δεν υπάρχει δυνατή επιλογή ακόμα",
-    keepSwiping: "Συνεχίστε το swipe ή περιμένετε την υπόλοιπη ομάδα.",
-    noFriends: "Δεν έχεις φίλους ακόμα",
-    searchByUsername: "Αναζήτηση με username",
-    search: "Αναζήτηση",
-    requests: "Αιτήματα",
-    saveProfile: "Αποθήκευση προφίλ",
-    age: "Ηλικία",
-    bio: "Βιογραφικό",
-    preferences: "Προτιμήσεις",
-    logPastActivity: "Καταχώριση δραστηριότητας",
-    area: "Περιοχή",
-    activity: "Δραστηριότητα",
-    place: "Μέρος",
-    saveActivity: "Αποθήκευση δραστηριότητας",
-    suggestedPlaces: "Προτεινόμενα μέρη"
+    login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
+    createAccount: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    enterPlanswipe: "\u039c\u03c0\u03b5\u03c2 \u03c3\u03c4\u03bf PlanSwipe",
+    groupPlans: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1",
+    leaveGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
+    exitGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2",
+    home: "\u0391\u03c1\u03c7\u03b9\u03ba\u03ae",
+    likedPlaces: "\u039c\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c3\u03bf\u03c5 \u03ac\u03c1\u03b5\u03c3\u03b1\u03bd",
+    groups: "\u039f\u03b9 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2 \u03bc\u03bf\u03c5",
+    friends: "\u03a6\u03af\u03bb\u03bf\u03b9",
+    past: "\u03a0\u03b1\u03bb\u03b1\u03b9\u03cc\u03c4\u03b5\u03c1\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
+    personal: "\u03a0\u03c1\u03bf\u03c3\u03c9\u03c0\u03b9\u03ba\u03ac \u03c3\u03c4\u03bf\u03b9\u03c7\u03b5\u03af\u03b1",
+    settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2",
+    logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
+    heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
+    heroTitle: "\u0392\u03c1\u03b5\u03c2 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03bc\u03b5 \u03c4\u03bf \u03bf\u03c0\u03bf\u03af\u03bf \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
+    heroDescription: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03bc\u03b1\u03b6\u03af \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03bf\u03bd\u03c4\u03ac \u03c3\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03c3\u03c4\u03b7\u03bd \u03c0\u03b1\u03c1\u03ad\u03b1.",
+    heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd \u03c0\u03bf\u03c4\u03ad.",
+    startPlanning: "\u039e\u03b5\u03ba\u03af\u03bd\u03b1 \u03bd\u03b1 \u03c3\u03c7\u03b5\u03b4\u03b9\u03ac\u03b6\u03b5\u03b9\u03c2 \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03bf\u03c5",
+    startPlanningText: "\u0394\u03b9\u03ac\u03bb\u03b5\u03be\u03b5 \u03b1\u03bd \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03ae\u03c3\u03b5\u03b9\u03c2 \u03bd\u03ad\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ae \u03bd\u03b1 \u03bc\u03c0\u03b5\u03b9\u03c2 \u03c3\u03b5 \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03c3\u03b1.",
+    createGroup: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+    createGroupText: "\u0394\u03ce\u03c3\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03c0\u03ac\u03c1\u03b5 \u03bd\u03ad\u03bf 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc.",
+    joinGroup: "\u03a3\u03c5\u03bc\u03bc\u03b5\u03c4\u03bf\u03c7\u03ae \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1",
+    joinGroupText: "\u0392\u03ac\u03bb\u03b5 \u03c4\u03bf\u03bd 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03b1\u03c0\u03cc \u03c6\u03af\u03bb\u03bf.",
+    groupName: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+    groupCodeLabel: "8\u03c8\u03ae\u03c6\u03b9\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+    back: "\u03a0\u03af\u03c3\u03c9",
+    currentGroup: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1",
+    stepArea: "\u0392\u03ae\u03bc\u03b1 1 \u03b1\u03c0\u03cc 2",
+    stepType: "\u0392\u03ae\u03bc\u03b1 2 \u03b1\u03c0\u03cc 2",
+    areaTitle: "\u03a0\u03bf\u03cd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03ac\u03c4\u03b5;",
+    typeTitle: "\u03a4\u03b9 \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5;",
+    decisionHint: "\u03a0\u03c1\u03ad\u03c0\u03b5\u03b9 \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03bf\u03c5\u03bd \u03cc\u03bb\u03bf\u03b9 \u03c0\u03c1\u03b9\u03bd \u03c0\u03c1\u03bf\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
+    addArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
+    addActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    addAreaText: "\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03bc\u03ad\u03c1\u03bf\u03c2.",
+    addActivityText: "\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
+    addOwn: "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5",
+    liveChoices: "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
+    resultsTitle: "\u03a4\u03b9 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af\u03c4\u03b5 \u03bd\u03b1 \u03ba\u03ac\u03bd\u03b5\u03c4\u03b5",
+    aiSuggestions: "\u03a0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 AI",
+    changeBasics: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03b2\u03b1\u03c3\u03b9\u03ba\u03ce\u03bd",
+    noStrongChoice: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b4\u03c5\u03bd\u03b1\u03c4\u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae \u03b1\u03ba\u03cc\u03bc\u03b1",
+    keepSwiping: "\u03a3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03c4\u03b5 \u03c4\u03bf swipe \u03ae \u03c0\u03b5\u03c1\u03b9\u03bc\u03ad\u03bd\u03b5\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c5\u03c0\u03cc\u03bb\u03bf\u03b9\u03c0\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
+    noFriends: "\u0394\u03b5\u03bd \u03ad\u03c7\u03b5\u03b9\u03c2 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03b1\u03ba\u03cc\u03bc\u03b1",
+    searchByUsername: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03bc\u03b5 username",
+    search: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7",
+    requests: "\u0391\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1",
+    saveProfile: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1",
+    bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc",
+    preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
+    logPastActivity: "\u039a\u03b1\u03c4\u03b1\u03c7\u03ce\u03c1\u03b9\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    area: "\u03a0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae",
+    activity: "\u0394\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1",
+    place: "\u039c\u03ad\u03c1\u03bf\u03c2",
+    saveActivity: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    suggestedPlaces: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03b9\u03bd\u03cc\u03bc\u03b5\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7",
+    noLikedPlaces: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c3\u03bf\u03c5 \u03ac\u03c1\u03b5\u03c3\u03b1\u03bd",
+    notifications: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
+    friendRequestNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03b1\u03b9\u03c4\u03b7\u03bc\u03ac\u03c4\u03c9\u03bd \u03c6\u03b9\u03bb\u03af\u03b1\u03c2",
+    groupInviteNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd",
+    privacy: "\u0391\u03c0\u03cc\u03c1\u03c1\u03b7\u03c4\u03bf",
+    showOnlineStatus: "\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 online \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2",
+    showProfilePublicly: "\u0394\u03b7\u03bc\u03cc\u03c3\u03b9\u03bf \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    saveSettings: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c9\u03bd",
+    settingsSaved: "\u039f\u03b9 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b1\u03bd",
+    removeFriend: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03c6\u03af\u03bb\u03bf\u03c5",
+    removeFriendConfirm: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03b1\u03c5\u03c4\u03bf\u03cd \u03c4\u03bf\u03c5 \u03c6\u03af\u03bb\u03bf\u03c5;",
+    activeGroups: "\u0395\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    pastGroups: "\u03a0\u03c1\u03ce\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    noActiveGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    noPastGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03c0\u03c1\u03ce\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    you: "\u03b5\u03c3\u03cd",
+    friends_: "\u03a6\u03af\u03bb\u03bf\u03b9",
+    requestSent: "\u03a4\u03bf \u03b1\u03af\u03c4\u03b7\u03bc\u03b1 \u03c3\u03c4\u03ac\u03bb\u03b8\u03b7\u03ba\u03b5",
+    noPending: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03ba\u03ba\u03c1\u03b5\u03bc\u03ae \u03b1\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1",
+    inboxClear: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
+    noPastActivities: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c0\u03b1\u03bb\u03b1\u03b9\u03cc\u03c4\u03b5\u03c1\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
+    continueBrowsing: "\u0398\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03c3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03b2\u03bb\u03ad\u03c0\u03b5\u03b9\u03c2 \u03bc\u03ad\u03c1\u03b7;",
+    noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b5\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2",
+    aiGenerating: "\u039b\u03ae\u03c8\u03b7 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd AI...",
+    exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
+    confirmExitGroup: "\u0395\u03af\u03c3\u03b1\u03b9 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03c2 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03b9\u03c2 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1 \u03b1\u03c0\u03cc \u03b1\u03c5\u03c4\u03ae\u03bd \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1;"
   }
 };
 
@@ -256,7 +313,7 @@ function applyLanguage() {
   document.querySelector(".hero-actions span").textContent = t("heroNote");
   document.querySelector(".topbar .eyebrow").textContent = t("groupPlans");
   resetButton.textContent = t("leaveGroup");
-  closePageButton.textContent = t("backToApp");
+  closePageButton.textContent = t("exitGroup");
   suggestionButton.textContent = t("aiSuggestions");
   reviewButton.textContent = t("changeBasics");
   document.querySelector("#setupPanel h2").textContent = t("startPlanning");
@@ -271,9 +328,13 @@ function applyLanguage() {
   joinButton.textContent = t("joinGroup");
   backFromCreateButton.textContent = t("back");
   backFromJoinButton.textContent = t("back");
-  const menuLabels = ["inbox", "groups", "friends", "past", "personal", "settings"];
-  profileMenu.querySelectorAll("button[data-page]").forEach((button, index) => {
-    button.textContent = t(menuLabels[index]);
+  homeButton.textContent = t("home");
+  const menuLabels = ["groups", "friends", "likedplaces", "past", "personal", "settings"];
+  const menuButtons = profileMenu.querySelectorAll("button[data-page]");
+  menuButtons.forEach((button, index) => {
+    const pageKey = button.dataset.page;
+    const labelKey = pageKey === "likedplaces" ? "likedPlaces" : pageKey;
+    button.textContent = t(labelKey);
   });
   logoutButton.textContent = t("logout");
 }
@@ -297,13 +358,16 @@ function currentUsername() {
   return localStorage.getItem("planswipe:login") || "";
 }
 
+/*
+ * escapeHtml - escapes special HTML characters
+ * Note: The entity replacements must use the actual HTML entity strings,
+ * not their Unicode equivalents. The formatter may try to convert these;
+ * keep them as valid HTML entities.
+ */
 function escapeHtml(value) {
+  var m = function(c) { return "&#" + c.charCodeAt(0) + ";"; };
   return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/[&<>"']/g, m);
 }
 
 function validEmail(email) {
@@ -508,7 +572,7 @@ function renderMembers() {
     .map((member) => `
       <button class="member-chip" type="button" data-username="${escapeHtml(member.username || member.name)}">
         <span class="avatar">${member.profile?.picture ? `<img src="${escapeHtml(member.profile.picture)}" alt="">` : escapeHtml(initials(member.name))}</span>
-        ${escapeHtml(member.name)}${member.id === state.user.id ? " (you)" : ""}
+        ${escapeHtml(member.name)}${member.id === state.user.id ? ` (${t("you")})` : ""}
       </button>
     `)
     .join("");
@@ -525,11 +589,9 @@ function renderDecisionStep(kind) {
   const options = optionsFor(kind);
   const chosen = selected(kind);
 
-  decisionStep.textContent = isAreaStep ? "Step 1 of 2" : "Step 2 of 2";
-  decisionTitle.textContent = isAreaStep
-    ? "Where do you want to go?"
-    : "What kind of activity do you want?";
-  decisionHint.textContent = "Everyone needs to agree before the group moves to the next step.";
+  decisionStep.textContent = isAreaStep ? t("stepArea") : t("stepType");
+  decisionTitle.textContent = isAreaStep ? t("areaTitle") : t("typeTitle");
+  decisionHint.textContent = t("decisionHint");
   setVisible(backChoiceButton, kind === "type" || Boolean(chosen));
 
   const optionCards = options
@@ -539,7 +601,7 @@ function renderDecisionStep(kind) {
 
       return `
         <button class="option-card${selectedClass}" type="button" data-kind="${kind}" data-id="${option.id}">
-          <span class="option-score">${score}/${memberCount()} voted</span>
+          <span class="option-score">${score}/${memberCount()} ${t("liveChoices")}</span>
           <span>
             <h3>${option.label}</h3>
             <p>${option.description}</p>
@@ -552,17 +614,18 @@ function renderDecisionStep(kind) {
   optionGrid.innerHTML = `
     ${optionCards}
     <button class="option-card add-option-card" type="button" data-kind="${kind}" data-custom="true">
-      <span class="option-score">Add your own</span>
+      <span class="option-score">${t("addOwn")}</span>
       <span>
-        <h3>${isAreaStep ? "Add area" : "Add activity"}</h3>
-        <p>${isAreaStep ? "Suggest a different neighborhood or place." : "Suggest a different activity type."}</p>
+        <h3>${isAreaStep ? t("addArea") : t("addActivity")}</h3>
+        <p>${isAreaStep ? t("addAreaText") : t("addActivityText")}</p>
       </span>
     </button>
   `;
 }
 
 function renderCard() {
-  const place = state.group.places?.[state.index];
+  const places = [...(state.group.places || []), ...(state.aiPlacesBatch || [])];
+  const place = places[state.index];
 
   if (!place) {
     setVisible(swipeLayout, false);
@@ -572,7 +635,7 @@ function renderCard() {
   }
 
   activityCard.classList.remove("swipe-yes", "swipe-no");
-  activityPhoto.src = place.photoUrl;
+  activityPhoto.src = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt = place.title;
   activityCategory.textContent = `${place.category} | ${Number(place.rating || 4).toFixed(1)} rating`;
   activityTitle.textContent = place.title;
@@ -580,18 +643,31 @@ function renderCard() {
   activityArea.textContent = place.areaLabel;
   activityTime.textContent = place.time;
   activityCost.textContent = place.cost;
+
+  // Show continue button if we're past AI suggestions
+  if (state.index >= (state.group.places?.length || 0) + (state.aiPlacesBatch?.length || 0) - 1 && state.aiPlacesBatch.length > 0) {
+    const continueBtn = document.querySelector(".continue-button");
+    if (!continueBtn) {
+      const btn = document.createElement("button");
+      btn.className = "continue-button";
+      btn.textContent = t("continueBrowsing");
+      btn.addEventListener("click", () => loadMoreAiSuggestions());
+      activityCard.parentElement.appendChild(btn);
+    }
+  }
 }
 
 function renderResults() {
+  const allPlaces = [...(state.group.places || []), ...(state.aiPlacesBatch || [])];
   const matches = state.group.matches || [];
 
-  if (!matches.length) {
+  if (!matches.length && !allPlaces.length) {
     resultList.innerHTML = `
       <article class="result-card">
         <div class="result-icon"></div>
         <div>
-          <h3>No strong choice yet</h3>
-          <p>Keep swiping or wait for the rest of the group.</p>
+          <h3>${t("noStrongChoice")}</h3>
+          <p>${t("keepSwiping")}</p>
         </div>
         <strong class="result-score">0%</strong>
       </article>
@@ -599,7 +675,39 @@ function renderResults() {
     return;
   }
 
-  resultList.innerHTML = matches
+  // Build matches from all places including AI suggestions
+  const votesByPlace = {};
+  if (state.group.votes) {
+    Object.values(state.group.votes).forEach((userVotes) => {
+      Object.entries(userVotes).forEach(([placeId, vote]) => {
+        const value = vote === true ? "yes" : vote === false ? "no" : vote;
+        if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, maybe: 0, no: 0 };
+        if (value === "yes") votesByPlace[placeId].yes += 1;
+        else if (value === "maybe") votesByPlace[placeId].maybe += 1;
+        else votesByPlace[placeId].no += 1;
+      });
+    });
+  }
+
+  const allMatches = allPlaces
+    .map((place) => {
+      const votes = votesByPlace[place.id] || { yes: 0, maybe: 0, no: 0 };
+      const total = state.group.members.length || 1;
+      const percent = Math.round((votes.yes / total) * 100);
+      return {
+        ...place,
+        yes: votes.yes,
+        maybe: votes.maybe,
+        no: votes.no,
+        total,
+        percent,
+        score: percent
+      };
+    })
+    .filter((place) => place.yes > 0 || place.maybe > 0)
+    .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
+
+  resultList.innerHTML = allMatches
     .map((item) => `
       <article class="result-card">
         <img class="result-icon" src="${item.photoUrl}" alt="">
@@ -611,6 +719,68 @@ function renderResults() {
       </article>
     `)
     .join("");
+
+  if (state.aiPlacesBatch.length > 0) {
+    resultList.insertAdjacentHTML("afterend", `<button class="continue-button" id="continueBrowseBtn">${t("continueBrowsing")}</button>`);
+    const contBtn = document.querySelector("#continueBrowseBtn");
+    if (contBtn) {
+      contBtn.addEventListener("click", () => loadMoreAiSuggestions());
+    }
+  }
+}
+
+async function loadMoreAiSuggestions() {
+  if (!state.group) return;
+  const areaId = state.group.consensus?.area || Object.values(state.group.choices?.area || {})[0];
+  const typeId = state.group.consensus?.type || Object.values(state.group.choices?.type || {})[0];
+  if (!areaId || !typeId) {
+    showError("Choose an area and activity first.");
+    return;
+  }
+
+  const areaLabel = state.group.options?.area?.find((o) => o.id === areaId)?.label || "";
+  const typeLabel = state.group.options?.type?.find((o) => o.id === typeId)?.label || "";
+  if (!areaLabel || !typeLabel) return;
+
+  try {
+    const data = await api("/api/suggestions", {
+      method: "POST",
+      body: {
+        username: currentUsername(),
+        area: areaLabel,
+        activity: typeLabel
+      }
+    });
+
+    if (!data.suggestions || !data.suggestions.length) {
+      showError(t("noMoreSuggestions"));
+      return;
+    }
+
+    const newPlaces = data.suggestions.map((s, i) => ({
+      id: `ai_${Date.now()}_${i}`,
+      title: s.place || "Suggestion",
+      category: typeLabel,
+      areaLabel: areaLabel,
+      description: s.reason || "AI suggested place",
+      time: "Anytime",
+      cost: "$$",
+      rating: 4,
+      photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
+    }));
+
+    if (!state.group.places) state.group.places = [];
+    state.group.places = [...state.group.places, ...newPlaces];
+    state.index = state.group.places.length - newPlaces.length;
+
+    // Remove continue button if present
+    const contBtn = document.querySelector(".continue-button");
+    if (contBtn) contBtn.remove();
+
+    renderApp();
+  } catch (error) {
+    showError(error.message);
+  }
 }
 
 function renderStatus() {
@@ -625,7 +795,7 @@ function renderStatus() {
   setVisible(statusPanel, true);
 
   if (!areaReady) {
-    statusPanel.textContent = "Waiting for everyone to agree on an area.";
+    statusPanel.textContent = t("decisionHint");
     return;
   }
 
@@ -729,10 +899,10 @@ function userCard(user, action = "") {
         ${profileImage(user, "small-profile-preview")}
         <div>
           <h3>${escapeHtml(user.username)}</h3>
-          <p>${escapeHtml(user.profile?.bio || "No bio yet.")}</p>
+          <p>${escapeHtml(user.profile?.bio || t("noFriends"))}</p>
         </div>
       </div>
-      <p>${escapeHtml(preferenceText || "No preferences saved yet.")}</p>
+      <p>${escapeHtml(preferenceText || t("noFriends"))}</p>
       ${action}
     </article>
   `;
@@ -742,17 +912,17 @@ async function renderFriendsPage() {
   pageDemo.innerHTML = `
     <section class="wide-panel">
       <div class="inline-add">
-        <input id="friendSearchInput" type="text" placeholder="Search by username">
-        <button id="friendSearchButton" type="button">Search</button>
+        <input id="friendSearchInput" type="text" placeholder="${t("searchByUsername")}">
+        <button id="friendSearchButton" type="button">${t("search")}</button>
       </div>
       <div id="friendSearchResults" class="demo-grid"></div>
     </section>
     <section class="wide-panel">
-      <h3>Friends</h3>
+      <h3>${t("friends")}</h3>
       <div id="friendList" class="demo-grid"></div>
     </section>
     <section class="wide-panel">
-      <h3>Requests</h3>
+      <h3>${t("requests")}</h3>
       <div id="requestList" class="demo-grid"></div>
     </section>
   `;
@@ -767,36 +937,86 @@ async function refreshFriendsPage() {
   if (!friendList || !requestList) return;
 
   friendList.innerHTML = data.friends.length
-    ? data.friends.map((user) => userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`)).join("")
-    : `<article class="demo-card"><h3>No friends yet</h3><p>Search by username or add someone from your group.</p></article>`;
+    ? data.friends.map((user) => userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">${t("personal")}</button>`)).join("")
+    : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const requests = [
     ...data.incoming.map((user) => userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept</button>`)),
-    ...data.outgoing.map((user) => userCard(user, `<span class="request-status">Request sent</span>`))
+    ...data.outgoing.map((user) => userCard(user, `<span class="request-status">${t("requestSent")}</span>`))
   ];
   requestList.innerHTML = requests.length
     ? requests.join("")
-    : `<article class="demo-card"><h3>No pending requests</h3><p>Friend requests will appear here.</p></article>`;
+    : `<article class="demo-card"><h3>${t("noPending")}</h3><p>${t("friends_")}</p></article>`;
 }
 
 async function renderGroupsPage() {
   const data = await api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`);
-  pageDemo.innerHTML = data.groups.length
-    ? data.groups.map((group) => `
-      <article class="demo-card">
+  const allGroups = data.groups || [];
+  const exitedCodes = state.exitedGroups || [];
+
+  const activeGroups = allGroups.filter((g) => !exitedCodes.includes(g.code));
+  const pastGroups = allGroups.filter((g) => exitedCodes.includes(g.code));
+
+  let html = `<h3 class="group-section-title">${t("activeGroups")}</h3>`;
+
+  if (activeGroups.length) {
+    html += activeGroups.map((group) => `
+      <article class="group-card">
         <h3>${escapeHtml(group.name)}</h3>
-        <p>Code ${escapeHtml(group.code)} | ${group.memberCount} member${group.memberCount === 1 ? "" : "s"}</p>
-        <button class="primary-button" type="button" data-open-group="${escapeHtml(group.code)}">Open Group</button>
+        <p class="group-meta">Code ${escapeHtml(group.code)} | ${group.memberCount} member${group.memberCount === 1 ? "" : "s"}</p>
+        <div class="group-actions">
+          <button class="primary-button" type="button" data-open-group="${escapeHtml(group.code)}">Open</button>
+          <button class="danger-button" type="button" data-exit-group="${escapeHtml(group.code)}">${t("exitGroupPermanent")}</button>
+        </div>
       </article>
-    `).join("")
-    : `<article class="demo-card"><h3>No saved groups yet</h3><p>Create or join a group and it will appear here.</p></article>`;
+    `).join("");
+  } else {
+    html += `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
+  }
+
+  html += `<h3 class="group-section-title">${t("pastGroups")}</h3>`;
+
+  if (pastGroups.length) {
+    html += pastGroups.map((group) => `
+      <article class="group-card">
+        <h3>${escapeHtml(group.name)}</h3>
+        <p class="group-meta">Code ${escapeHtml(group.code)} | ${t("pastGroups")}</p>
+        <div class="group-actions">
+          <button class="secondary-button" type="button" data-open-group="${escapeHtml(group.code)}">${t("home")}</button>
+        </div>
+      </article>
+    `).join("");
+  } else {
+    html += `<article class="demo-card"><h3>${t("noPastGroups")}</h3></article>`;
+  }
+
+  pageDemo.innerHTML = html;
 }
 
-async function renderInboxPage() {
-  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
-  pageDemo.innerHTML = data.incoming.length
-    ? data.incoming.map((user) => userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept</button>`)).join("")
-    : `<article class="demo-card"><h3>Inbox is clear</h3><p>Friend requests will appear here.</p></article>`;
+async function renderLikedPlacesPage() {
+  pageEyebrow.textContent = t("likedPlaces");
+  pageTitle.textContent = t("likedPlaces");
+
+  try {
+    const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
+    const places = data.places || [];
+
+    if (!places.length) {
+      pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+      return;
+    }
+
+    pageDemo.innerHTML = places.map((item) => `
+      <div class="liked-place-card">
+        <h3>${escapeHtml(item.place)}</h3>
+        <p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p>
+        <span class="vote-tag ${item.vote}">${item.vote}</span>
+        <span class="group-meta">${escapeHtml(item.groupName || "")}</span>
+      </div>
+    `).join("");
+  } catch (error) {
+    pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+  }
 }
 
 async function renderPastPage() {
@@ -828,7 +1048,7 @@ async function renderPastPage() {
           <p>${escapeHtml(activity.area)} | ${escapeHtml(activity.activity)}</p>
         </article>
       `).join("")
-      : `<article class="demo-card"><h3>No past activities yet</h3><p>Log places you have already tried so recommendations can learn from them.</p></article>`}
+      : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}
   `;
 }
 
@@ -863,26 +1083,93 @@ async function renderAccountProfile(username) {
   const data = await api(`/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(currentUsername())}`);
   const user = data.user;
   const preferences = user.profile?.preferences || {};
-  pageEyebrow.textContent = "Profile";
+  pageEyebrow.textContent = t("personal");
   pageTitle.textContent = user.username;
   const friendAction = user.username === currentUsername()
     ? ""
     : user.friendStatus === "friends"
-      ? `<span class="request-status">Friends</span>`
+      ? `<span class="request-status">${t("friends_")}</span>`
       : user.friendStatus === "incoming"
         ? `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`
         : user.friendStatus === "requested"
-          ? `<span class="request-status">Request sent</span>`
+          ? `<span class="request-status">${t("requestSent")}</span>`
           : `<button class="primary-button" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
+
+  const removeAction = user.friendStatus === "friends" && user.username !== currentUsername()
+    ? `<button class="danger-button" type="button" data-remove-friend="${escapeHtml(user.username)}">${t("removeFriend")}</button>`
+    : "";
+
   pageDemo.innerHTML = `
     ${userCard(user, friendAction)}
+    ${removeAction ? `<section class="wide-panel">${removeAction}</section>` : ""}
     <section class="wide-panel">
-      <h3>Preferences</h3>
+      <h3>${t("preferences")}</h3>
       ${preferenceList("Favourite Areas", "readonly-areas", preferences.areas, "")}
       ${preferenceList("Favourite Activities", "readonly-activities", preferences.activities, "")}
       ${preferenceList("Favourite Places", "readonly-places", preferences.places, "")}
     </section>
   `;
+}
+
+async function renderSettingsPage() {
+  const profile = state.account?.profile || {};
+  const settings = profile.settings || {};
+
+  pageEyebrow.textContent = t("settings");
+  pageTitle.textContent = t("settings");
+
+  pageDemo.innerHTML = `
+    <section class="wide-panel personal-form">
+      <h3>${t("notifications")}</h3>
+      <div class="settings-toggle">
+        <label for="notifFriendReq">${t("friendRequestNotif")}</label>
+        <input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}>
+      </div>
+      <div class="settings-toggle">
+        <label for="notifGroupInvite">${t("groupInviteNotif")}</label>
+        <input type="checkbox" id="notifGroupInvite" ${settings.groupInviteNotif !== false ? "checked" : ""}>
+      </div>
+    </section>
+    <section class="wide-panel personal-form">
+      <h3>${t("privacy")}</h3>
+      <div class="settings-toggle">
+        <label for="privacyOnline">${t("showOnlineStatus")}</label>
+        <input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}>
+      </div>
+      <div class="settings-toggle">
+        <label for="privacyPublic">${t("showProfilePublicly")}</label>
+        <input type="checkbox" id="privacyPublic" ${settings.showProfilePublicly !== false ? "checked" : ""}>
+      </div>
+    </section>
+    <button class="primary-button" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
+  `;
+}
+
+async function saveSettings() {
+  const notifFriendReq = document.querySelector("#notifFriendReq")?.checked !== false;
+  const notifGroupInvite = document.querySelector("#notifGroupInvite")?.checked !== false;
+  const showOnlineStatus = document.querySelector("#privacyOnline")?.checked !== false;
+  const showProfilePublicly = document.querySelector("#privacyPublic")?.checked !== false;
+
+  const profile = state.account?.profile || {};
+  const data = await api("/api/account", {
+    method: "PATCH",
+    body: {
+      username: currentUsername(),
+      profile: {
+        ...profile,
+        settings: {
+          friendRequestNotif: notifFriendReq,
+          groupInviteNotif: notifGroupInvite,
+          showOnlineStatus,
+          showProfilePublicly
+        }
+      }
+    }
+  });
+
+  saveAccount(data.user);
+  showError(t("settingsSaved"));
 }
 
 function renderProfilePage() {
@@ -907,13 +1194,18 @@ function renderProfilePage() {
     return;
   }
 
-  if (state.activePage === "inbox") {
-    renderInboxPage().catch((error) => showError(error.message));
+  if (state.activePage === "likedplaces") {
+    renderLikedPlacesPage().catch((error) => showError(error.message));
     return;
   }
 
   if (state.activePage === "past") {
     renderPastPage().catch((error) => showError(error.message));
+    return;
+  }
+
+  if (state.activePage === "settings") {
+    renderSettingsPage().catch((error) => showError(error.message));
     return;
   }
 
@@ -941,6 +1233,43 @@ function hideAppPanels() {
   setVisible(resultsPanel, false);
 }
 
+async function refreshNotifications() {
+  if (!isLoggedIn()) return;
+  try {
+    const data = await api(`/api/notifications?username=${encodeURIComponent(currentUsername())}`);
+    state.notifications = data;
+    const badge = notificationBadge;
+    if (data.total > 0) {
+      badge.textContent = data.total > 99 ? "99+" : String(data.total);
+      badge.classList.remove("is-hidden");
+    } else {
+      badge.classList.add("is-hidden");
+    }
+
+    // Update menu items
+    const menuButtons = profileMenu.querySelectorAll("button[data-page]");
+    menuButtons.forEach((btn) => {
+      const page = btn.dataset.page;
+      btn.classList.remove("has-notif");
+      const existingCount = btn.querySelector(".notif-count");
+      if (existingCount) existingCount.remove();
+
+      let count = 0;
+      if (page === "friends") count = data.friendRequests || 0;
+
+      if (count > 0) {
+        btn.classList.add("has-notif");
+        const span = document.createElement("span");
+        span.className = "notif-count";
+        span.textContent = `(${count})`;
+        btn.appendChild(span);
+      }
+    });
+  } catch (_error) {
+    // Silently fail
+  }
+}
+
 function renderApp() {
   if (!isLoggedIn()) {
     setVisible(loginPanel, true);
@@ -948,6 +1277,25 @@ function renderApp() {
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
+    return;
+  }
+
+  // If showing hero while logged in
+  if (state.showHero) {
+    setVisible(loginPanel, true);
+    setVisible(loginForm, false);
+    setVisible(topbar, false);
+    setVisible(pagePanel, false);
+    hideAppPanels();
+    // Show a "Back to App" button on hero
+    const heroActions = document.querySelector(".hero-actions");
+    if (!document.querySelector("#heroBackButton")) {
+      heroActions.innerHTML = `<button class="primary-button" id="heroBackButton" type="button">${t("home")}</button> <span>${t("heroNote")}</span>`;
+      document.querySelector("#heroBackButton").addEventListener("click", () => {
+        state.showHero = false;
+        renderApp();
+      });
+    }
     return;
   }
 
@@ -961,6 +1309,9 @@ function renderApp() {
     profileInitial.textContent = initials(currentUsername()) || "P";
   }
   setVisible(resetButton, Boolean(state.group && state.user));
+
+  // Refresh notifications
+  refreshNotifications();
 
   if (state.activePage) {
     hideAppPanels();
@@ -1010,7 +1361,8 @@ function renderApp() {
   setVisible(resultsPanel, true);
   renderResults();
 
-  if (state.index < (state.group.places?.length || 0)) {
+  const totalPlaces = [...(state.group.places || []), ...(state.aiPlacesBatch || [])];
+  if (state.index < totalPlaces.length) {
     setVisible(swipeLayout, true);
     renderCard();
   } else {
@@ -1034,6 +1386,8 @@ async function refreshGroup() {
 function startPolling() {
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(refreshGroup, 1500);
+  // Also poll notifications
+  setInterval(refreshNotifications, 5000);
 }
 
 function saveSession(user, group) {
@@ -1041,6 +1395,8 @@ function saveSession(user, group) {
   state.group = group;
   state.groupCode = group.code;
   state.setupMode = "";
+  state.index = 0;
+  state.aiPlacesBatch = [];
   localStorage.setItem("planswipe:user", JSON.stringify(user));
   localStorage.setItem("planswipe:groupCode", group.code);
   startPolling();
@@ -1114,7 +1470,8 @@ async function goBackChoice() {
 }
 
 async function vote(value) {
-  const place = state.group.places[state.index];
+  const totalPlaces = [...(state.group.places || []), ...(state.aiPlacesBatch || [])];
+  const place = totalPlaces[state.index];
   if (!place) return;
 
   activityCard.classList.add(value === "yes" ? "swipe-yes" : "swipe-no");
@@ -1141,6 +1498,7 @@ function leaveGroup() {
   state.groupCode = "";
   state.index = 0;
   state.setupMode = "";
+  state.aiPlacesBatch = [];
   localStorage.removeItem("planswipe:user");
   localStorage.removeItem("planswipe:groupCode");
   renderApp();
@@ -1154,6 +1512,7 @@ function logout() {
   leaveGroup();
   state.activePage = "";
   state.loginOpen = false;
+  state.showHero = false;
   localStorage.removeItem("planswipe:login");
   localStorage.removeItem("planswipe:email");
   localStorage.removeItem("planswipe:account");
@@ -1270,7 +1629,18 @@ async function acceptFriend(username) {
     }
   });
   if (state.activePage === "friends") await refreshFriendsPage();
-  else if (state.activePage === "inbox") await renderInboxPage();
+}
+
+async function removeFriend(username) {
+  if (!confirm(t("removeFriendConfirm"))) return;
+  await api("/api/friends/remove", {
+    method: "POST",
+    body: {
+      username: currentUsername(),
+      friendUsername: username
+    }
+  });
+  await renderFriendsPage();
 }
 
 async function searchFriends() {
@@ -1283,13 +1653,13 @@ async function searchFriends() {
   results.innerHTML = data.users.length
     ? data.users.map((user) => {
       if (user.friendStatus === "friends") {
-        return userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`);
+        return userCard(user, `<button class="secondary-button" type="button" data-view-profile="${escapeHtml(user.username)}">${t("personal")}</button>`);
       }
       if (user.friendStatus === "incoming") {
         return userCard(user, `<button class="primary-button" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`);
       }
       if (user.friendStatus === "requested") {
-        return userCard(user, `<span class="request-status">Request sent</span>`);
+        return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
       }
       return userCard(user, `<button class="primary-button" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
     }).join("")
@@ -1310,7 +1680,7 @@ async function getAiSuggestions() {
   }
 
   setVisible(suggestionPanel, true);
-  suggestionPanel.innerHTML = `<p>${t("suggestedPlaces")}...</p>`;
+  suggestionPanel.innerHTML = `<p>${t("aiGenerating")}</p>`;
 
   const data = await api("/api/suggestions", {
     method: "POST",
@@ -1321,10 +1691,32 @@ async function getAiSuggestions() {
     }
   });
 
+  const suggestions = data.suggestions || [];
+
+  // Inject suggestions into the group places
+  if (suggestions.length > 0) {
+    const newPlaces = suggestions.map((s, i) => ({
+      id: `ai_${Date.now()}_${i}`,
+      title: s.place || "Suggestion",
+      category: selectedOptionLabel("type", typeId),
+      areaLabel: selectedOptionLabel("area", areaId),
+      description: s.reason || "AI suggested place",
+      time: "Anytime",
+      cost: "$$",
+      rating: 4,
+      photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
+    }));
+    state.aiPlacesBatch = newPlaces;
+    if (!state.group.places) state.group.places = [];
+    state.group.places = [...state.group.places, ...newPlaces];
+    state.index = state.group.places.length - newPlaces.length;
+    renderApp();
+  }
+
   suggestionPanel.innerHTML = `
     <h3>${t("suggestedPlaces")}</h3>
     <div class="suggestion-list">
-      ${(data.suggestions || []).map((item) => `
+      ${suggestions.map((item) => `
         <article class="suggestion-card">
           <h4>${escapeHtml(item.place || item.name || "Suggestion")}</h4>
           <p>${escapeHtml(item.reason || item.description || "")}</p>
@@ -1335,8 +1727,32 @@ async function getAiSuggestions() {
 }
 
 function goToHome() {
+  state.showHero = true;
   state.activePage = "";
   leaveGroup();
+}
+
+async function exitGroupPermanently(groupCode) {
+  if (!confirm(t("confirmExitGroup"))) return;
+  await api("/api/groups/exit", {
+    method: "POST",
+    body: {
+      username: currentUsername(),
+      groupCode
+    }
+  });
+  // Track exited group
+  const exited = state.exitedGroups || [];
+  if (!exited.includes(groupCode)) {
+    exited.push(groupCode);
+    state.exitedGroups = exited;
+    localStorage.setItem("planswipe:exitedGroups", JSON.stringify(exited));
+  }
+  // If we're currently in this group, leave session
+  if (state.groupCode === groupCode) {
+    leaveGroup();
+  }
+  await renderGroupsPage();
 }
 
 async function boot() {
@@ -1352,12 +1768,21 @@ async function boot() {
         if (error) throw error;
         state.supabaseSession = data.session;
         if (data.session) {
+          // Only auto-login if the session user exists in our database
           const username = data.session.user?.user_metadata?.username || "";
           const email = data.session.user?.email || "";
           if (username && email) {
-            const user = await syncSupabaseProfile(username, email);
-            setLoggedIn(user.username, user.email || email);
-            saveAccount(user);
+            // Verify user exists before auto-login
+            try {
+              const existingUser = await api(`/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(username)}`);
+              if (existingUser?.user) {
+                const user = await syncSupabaseProfile(username, email);
+                setLoggedIn(user.username, user.email || email);
+                saveAccount(user);
+              }
+            } catch (_err) {
+              console.warn("Auto-login skipped: user not found in database");
+            }
           }
         }
         // Clean the URL hash
@@ -1471,6 +1896,12 @@ pageDemo.addEventListener("click", (event) => {
     return;
   }
 
+  const removeButton = event.target.closest("[data-remove-friend]");
+  if (removeButton) {
+    removeFriend(removeButton.dataset.removeFriend).catch((error) => showError(error.message));
+    return;
+  }
+
   const viewButton = event.target.closest("[data-view-profile]");
   if (viewButton) {
     state.activePage = `profile:${viewButton.dataset.viewProfile}`;
@@ -1486,9 +1917,21 @@ pageDemo.addEventListener("click", (event) => {
     return;
   }
 
+  const exitGroupBtn = event.target.closest("[data-exit-group]");
+  if (exitGroupBtn) {
+    exitGroupPermanently(exitGroupBtn.dataset.exitGroup).catch((error) => showError(error.message));
+    return;
+  }
+
   const saveButton = event.target.closest("#saveProfileButton");
   if (saveButton) {
     saveProfile().catch((error) => showError(error.message));
+    return;
+  }
+
+  const saveSettingsBtn = event.target.closest("#saveSettingsButton");
+  if (saveSettingsBtn) {
+    saveSettings().catch((error) => showError(error.message));
     return;
   }
 
