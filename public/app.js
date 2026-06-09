@@ -471,6 +471,7 @@ async function login() {
     loginEmail.value = "";
     loginPassword.value = "";
     state.loginOpen = false;
+    state.showHero = true;
     renderApp();
     return;
   }
@@ -494,6 +495,7 @@ async function login() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
+  state.showHero = true;
   renderApp();
 }
 
@@ -525,6 +527,7 @@ async function registerUser() {
     loginEmail.value = "";
     loginPassword.value = "";
     state.loginOpen = false;
+    state.showHero = true;
     renderApp();
     return;
   }
@@ -544,6 +547,7 @@ async function registerUser() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
+  state.showHero = true;
   renderApp();
 }
 
@@ -644,17 +648,10 @@ function renderCard() {
   activityTime.textContent = place.time;
   activityCost.textContent = place.cost;
 
-  // Show continue button if we're past AI suggestions
-  if (state.index >= (state.group.places?.length || 0) + (state.aiPlacesBatch?.length || 0) - 1 && state.aiPlacesBatch.length > 0) {
-    const continueBtn = document.querySelector(".continue-button");
-    if (!continueBtn) {
-      const btn = document.createElement("button");
-      btn.className = "continue-button";
-      btn.textContent = t("continueBrowsing");
-      btn.addEventListener("click", () => loadMoreAiSuggestions());
-      activityCard.parentElement.appendChild(btn);
-    }
-  }
+  // Show continue browsing button in results panel instead
+  // Remove any stray continue buttons from card stage
+  const oldBtn = document.querySelector(".card-stage .continue-button");
+  if (oldBtn) oldBtn.remove();
 }
 
 function renderResults() {
@@ -720,12 +717,15 @@ function renderResults() {
     `)
     .join("");
 
+  // Show continue browsing button permanently after AI places voted, until clicked
+  const existingBtn = document.querySelector("#continueBrowseBtn");
   if (state.aiPlacesBatch.length > 0) {
-    resultList.insertAdjacentHTML("afterend", `<button class="continue-button" id="continueBrowseBtn">${t("continueBrowsing")}</button>`);
-    const contBtn = document.querySelector("#continueBrowseBtn");
-    if (contBtn) {
-      contBtn.addEventListener("click", () => loadMoreAiSuggestions());
+    if (!existingBtn) {
+      resultList.insertAdjacentHTML("afterend", `<button class="continue-button" id="continueBrowseBtn">${t("continueBrowsing")}</button>`);
+      document.querySelector("#continueBrowseBtn").addEventListener("click", () => loadMoreAiSuggestions());
     }
+  } else if (existingBtn) {
+    existingBtn.remove();
   }
 }
 
@@ -1290,7 +1290,7 @@ function renderApp() {
     // Show a "Back to App" button on hero
     const heroActions = document.querySelector(".hero-actions");
     if (!document.querySelector("#heroBackButton")) {
-      heroActions.innerHTML = `<button class="primary-button" id="heroBackButton" type="button">${t("home")}</button> <span>${t("heroNote")}</span>`;
+      heroActions.innerHTML = `<button class="primary-button" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>`;
       document.querySelector("#heroBackButton").addEventListener("click", () => {
         state.showHero = false;
         renderApp();
