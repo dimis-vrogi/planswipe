@@ -892,10 +892,6 @@ h3 {
   background: #eef1f4;
 }
 
-.setup-panel {
-  grid-template-columns: 1fr;
-  align-items: stretch;
-}
 
 .setup-intro {
   display: grid;
