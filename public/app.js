@@ -63,7 +63,6 @@ const yesButton = document.querySelector("#yesButton");
 const resultList = document.querySelector("#resultList");
 const loginPanel = document.querySelector("#loginPanel");
 const loginForm = document.querySelector("#loginForm");
-const openLoginButton = document.querySelector("#openLoginButton");
 const heroLoginButton = document.querySelector("#heroLoginButton");
 const heroEnterButton = document.querySelector("#heroEnterButton");
 const loginUsername = document.querySelector("#loginUsername");
@@ -315,7 +314,6 @@ function applyLanguage() {
   document.documentElement.lang = state.language;
   languageButton.textContent = state.language === "en" ? "EL" : "EN";
   appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
-  openLoginButton.textContent = t("login");
   heroLoginButton.textContent = t("login");
   // Enter PlanSwipe button text
   heroEnterButton.textContent = t("enterPlanswipe");
@@ -1217,7 +1215,6 @@ heroEnterButton.addEventListener("click", () => {
 
 showCreateButton.addEventListener("click", () => { state.setupMode = "create"; renderApp(); });
 showJoinButton.addEventListener("click", () => { state.setupMode = "join"; renderApp(); });
-openLoginButton.addEventListener("click", openLogin);
 heroLoginButton.addEventListener("click", openLogin);
 backFromCreateButton.addEventListener("click", () => { state.setupMode = ""; renderApp(); });
 backFromJoinButton.addEventListener("click", () => { state.setupMode = ""; renderApp(); });
