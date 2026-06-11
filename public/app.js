@@ -65,6 +65,7 @@ const loginPanel = document.querySelector("#loginPanel");
 const loginForm = document.querySelector("#loginForm");
 const openLoginButton = document.querySelector("#openLoginButton");
 const heroLoginButton = document.querySelector("#heroLoginButton");
+const heroEnterButton = document.querySelector("#heroEnterButton");
 const loginUsername = document.querySelector("#loginUsername");
 const loginEmail = document.querySelector("#loginEmail");
 const loginPassword = document.querySelector("#loginPassword");
@@ -188,6 +189,9 @@ const copy = {
     showProfilePublicly: "Show profile publicly",
     saveSettings: "Save Settings",
     settingsSaved: "Settings saved",
+    deleteAccount: "Delete Account",
+    deleteAccountConfirm: "Are you sure you want to permanently delete your account? This cannot be undone.",
+    deleteAccountSuccess: "Account deleted successfully.",
     removeFriend: "Remove Friend",
     removeFriendConfirm: "Remove this friend?",
     activeGroups: "Active Groups",
@@ -204,7 +208,8 @@ const copy = {
     noMoreSuggestions: "No more suggestions available",
     aiGenerating: "Getting AI suggestions...",
     exitGroupPermanent: "Exit Group Permanently",
-    confirmExitGroup: "Are you sure you want to permanently leave this group?"
+    confirmExitGroup: "Are you sure you want to permanently leave this group?",
+    accountManagement: "Account Management"
   },
   el: {
     login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
@@ -222,7 +227,7 @@ const copy = {
     settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2",
     logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
     heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
-    heroTitle: "\u0392\u03c1\u03b5\u03c2 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03bc\u03b5 \u03c4\u03bf \u03bf\u03c0\u03bf\u03af\u03bf \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
+    heroTitle: "\u0392\u03c1\u03b5\u03b9\u03c2 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03bc\u03b5 \u03c4\u03bf \u03bf\u03c0\u03bf\u03af\u03bf \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
     heroDescription: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03bc\u03b1\u03b6\u03af \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03bf\u03bd\u03c4\u03ac \u03c3\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03c3\u03c4\u03b7\u03bd \u03c0\u03b1\u03c1\u03ad\u03b1.",
     heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd \u03c0\u03bf\u03c4\u03ad.",
     startPlanning: "\u039e\u03b5\u03ba\u03af\u03bd\u03b1 \u03bd\u03b1 \u03c3\u03c7\u03b5\u03b4\u03b9\u03ac\u03b6\u03b5\u03b9\u03c2 \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03bf\u03c5",
@@ -274,6 +279,9 @@ const copy = {
     showProfilePublicly: "\u0394\u03b7\u03bc\u03cc\u03c3\u03b9\u03bf \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
     saveSettings: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c9\u03bd",
     settingsSaved: "\u039f\u03b9 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b1\u03bd",
+    deleteAccount: "\u0394\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    deleteAccountConfirm: "\u0395\u03af\u03c3\u03b1\u03b9 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03c2 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c8\u03b5\u03b9\u03c2 \u03c4\u03bf\u03bd \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc \u03c3\u03bf\u03c5; \u0391\u03c5\u03c4\u03ae \u03b7 \u03b5\u03bd\u03ad\u03c1\u03b3\u03b5\u03b9\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03b9\u03b1\u03c4\u03b7.",
+    deleteAccountSuccess: "\u039f \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2.",
     removeFriend: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03c6\u03af\u03bb\u03bf\u03c5",
     removeFriendConfirm: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03b1\u03c5\u03c4\u03bf\u03cd \u03c4\u03bf\u03c5 \u03c6\u03af\u03bb\u03bf\u03c5;",
     activeGroups: "\u0395\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
@@ -290,7 +298,8 @@ const copy = {
     noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b5\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2",
     aiGenerating: "\u039b\u03ae\u03c8\u03b7 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd AI...",
     exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
-    confirmExitGroup: "\u0395\u03af\u03c3\u03b1\u03b9 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03c2 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03b9\u03c2 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1 \u03b1\u03c0\u03cc \u03b1\u03c5\u03c4\u03ae\u03bd \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1;"
+    confirmExitGroup: "\u0395\u03af\u03c3\u03b1\u03b9 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03c2 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03b9\u03c2 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1 \u03b1\u03c0\u03cc \u03b1\u03c5\u03c4\u03ae\u03bd \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1;",
+    accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd"
   }
 };
 
@@ -494,7 +503,7 @@ async function login() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
-  renderApp();
+  navigate("#/main");
 }
 
 async function registerUser() {
@@ -525,7 +534,7 @@ async function registerUser() {
     loginEmail.value = "";
     loginPassword.value = "";
     state.loginOpen = false;
-    renderApp();
+    navigate("#/main");
     return;
   }
 
@@ -544,7 +553,7 @@ async function registerUser() {
   loginEmail.value = "";
   loginPassword.value = "";
   state.loginOpen = false;
-  renderApp();
+  navigate("#/main");
 }
 
 function selected(kind) {
@@ -1138,6 +1147,10 @@ async function renderSettingsPage() {
       </div>
     </section>
     <button class="primary-button" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
+    <section class="wide-panel personal-form" style="margin-top: 18px; border-top: 2px solid var(--red);">
+      <h3 style="color: var(--red);">${t("accountManagement")}</h3>
+      <button class="danger-button" type="button" id="deleteAccountButton">${t("deleteAccount")}</button>
+    </section>
   `;
 }
 
@@ -1166,6 +1179,18 @@ async function saveSettings() {
 
   saveAccount(data.user);
   showError(t("settingsSaved"));
+}
+
+async function deleteAccount() {
+  if (!confirm(t("deleteAccountConfirm"))) return;
+  await api("/api/account/delete", {
+    method: "POST",
+    body: {
+      username: currentUsername()
+    }
+  });
+  alert(t("deleteAccountSuccess"));
+  logout();
 }
 
 function renderProfilePage() {
@@ -1266,6 +1291,70 @@ async function refreshNotifications() {
   }
 }
 
+// ---------- Hash-based Routing ----------
+
+function currentRoute() {
+  const hash = window.location.hash || "#/home";
+  return hash;
+}
+
+function navigate(hash) {
+  if (window.location.hash !== hash) {
+    window.location.hash = hash;
+  } else {
+    onHashChange();
+  }
+}
+
+function onHashChange() {
+  const route = currentRoute();
+
+  // If not logged in and not on hero routes, redirect to home
+  if (!isLoggedIn()) {
+    state.showHero = true;
+    state.activePage = "";
+    state.loginOpen = false;
+    renderApp();
+    return;
+  }
+
+  // Parse route
+  if (route === "#/home" || route === "#/" || route === "") {
+    state.showHero = true;
+    state.activePage = "";
+    renderApp();
+    return;
+  }
+
+  if (route === "#/main") {
+    state.showHero = false;
+    state.activePage = "";
+    renderApp();
+    return;
+  }
+
+  // Profile page routes
+  const pageMatch = route.match(/^#\/(groups|friends|likedplaces|past|personal|settings)$/);
+  if (pageMatch) {
+    state.showHero = false;
+    state.activePage = pageMatch[1];
+    renderApp();
+    return;
+  }
+
+  // Profile view route
+  const profileMatch = route.match(/^#\/profile\/(.+)$/);
+  if (profileMatch) {
+    state.showHero = false;
+    state.activePage = "profile:" + decodeURIComponent(profileMatch[1]);
+    renderApp();
+    return;
+  }
+
+  // Default: go to home
+  navigate("#/home");
+}
+
 function renderApp() {
   if (!isLoggedIn()) {
     setVisible(loginPanel, true);
@@ -1273,23 +1362,27 @@ function renderApp() {
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
+    // Show Enter PlanSwipe button on hero
+    setVisible(heroEnterButton, !state.loginOpen);
     return;
   }
 
-  // If showing hero while logged in
+  // If showing hero while logged in (home route)
   if (state.showHero) {
     setVisible(loginPanel, true);
     setVisible(loginForm, false);
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
-    // Show a "Back to App" button on hero
+    // Show "Enter PlanSwipe" button and hide login button
+    setVisible(heroEnterButton, true);
+    setVisible(heroLoginButton, false);
+    // Show a "Back to App" / "Enter PlanSwipe" button on hero
     const heroActions = document.querySelector(".hero-actions");
     if (!document.querySelector("#heroBackButton")) {
       heroActions.innerHTML = `<button class="primary-button" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>`;
       document.querySelector("#heroBackButton").addEventListener("click", () => {
-        state.showHero = false;
-        renderApp();
+        navigate("#/main");
       });
     }
     return;
@@ -1309,6 +1402,7 @@ function renderApp() {
   // Refresh notifications
   refreshNotifications();
 
+  // Show a page panel if activePage is set
   if (state.activePage) {
     hideAppPanels();
     setVisible(pagePanel, true);
@@ -1513,7 +1607,7 @@ function logout() {
   localStorage.removeItem("planswipe:email");
   localStorage.removeItem("planswipe:account");
   state.account = null;
-  renderApp();
+  navigate("#/home");
 }
 
 function showError(message) {
@@ -1723,9 +1817,7 @@ async function getAiSuggestions() {
 }
 
 function goToHome() {
-  state.showHero = true;
-  state.activePage = "";
-  leaveGroup();
+  navigate("#/home");
 }
 
 async function exitGroupPermanently(groupCode) {
@@ -1804,7 +1896,19 @@ async function boot() {
     return;
   }
 
-  renderApp();
+  // Initialize route handling
+  window.addEventListener("hashchange", onHashChange);
+
+  // Set default route if no hash
+  if (!window.location.hash || window.location.hash === "#") {
+    if (isLoggedIn()) {
+      navigate("#/main");
+    } else {
+      navigate("#/home");
+    }
+  } else {
+    onHashChange();
+  }
 }
 
 function openLogin() {
@@ -1812,6 +1916,17 @@ function openLogin() {
   renderApp();
   loginUsername.focus();
 }
+
+// --- Event Listeners ---
+
+// Enter PlanSwipe button on hero
+heroEnterButton.addEventListener("click", () => {
+  if (isLoggedIn()) {
+    navigate("#/main");
+  } else {
+    openLogin();
+  }
+});
 
 showCreateButton.addEventListener("click", () => {
   state.setupMode = "create";
@@ -1862,21 +1977,36 @@ homeButton.addEventListener("click", goToHome);
 resetButton.addEventListener("click", leaveGroup);
 logoutButton.addEventListener("click", logout);
 
-profileButton.addEventListener("click", () => {
+profileButton.addEventListener("click", (event) => {
+  event.stopPropagation();
   profileMenu.classList.toggle("is-hidden");
 });
 
 profileMenu.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-page]");
-  if (!button) return;
-  state.activePage = button.dataset.page;
-  profileMenu.classList.add("is-hidden");
-  renderApp();
+  if (button) {
+    state.activePage = button.dataset.page;
+    profileMenu.classList.add("is-hidden");
+    const pageRoutes = {
+      groups: "#/groups",
+      friends: "#/friends",
+      likedplaces: "#/likedplaces",
+      past: "#/past",
+      personal: "#/personal",
+      settings: "#/settings"
+    };
+    navigate(pageRoutes[button.dataset.page] || "#/main");
+    return;
+  }
+  // Handle logout button inside menu
+  if (event.target.closest("#logoutButton")) {
+    profileMenu.classList.add("is-hidden");
+  }
 });
 
 closePageButton.addEventListener("click", () => {
   state.activePage = "";
-  renderApp();
+  navigate("#/main");
 });
 
 pageDemo.addEventListener("click", (event) => {
@@ -1901,7 +2031,7 @@ pageDemo.addEventListener("click", (event) => {
   const viewButton = event.target.closest("[data-view-profile]");
   if (viewButton) {
     state.activePage = `profile:${viewButton.dataset.viewProfile}`;
-    renderApp();
+    navigate("#/profile/" + encodeURIComponent(viewButton.dataset.viewProfile));
     return;
   }
 
@@ -1928,6 +2058,12 @@ pageDemo.addEventListener("click", (event) => {
   const saveSettingsBtn = event.target.closest("#saveSettingsButton");
   if (saveSettingsBtn) {
     saveSettings().catch((error) => showError(error.message));
+    return;
+  }
+
+  const deleteAccountBtn = event.target.closest("#deleteAccountButton");
+  if (deleteAccountBtn) {
+    deleteAccount().catch((error) => showError(error.message));
     return;
   }
 
@@ -1978,7 +2114,7 @@ memberRow.addEventListener("click", (event) => {
   const button = event.target.closest("[data-username]");
   if (!button) return;
   state.activePage = `profile:${button.dataset.username}`;
-  renderApp();
+  navigate("#/profile/" + encodeURIComponent(button.dataset.username));
 });
 
 noButton.addEventListener("click", () =>
