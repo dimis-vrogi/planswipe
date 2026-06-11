@@ -938,8 +938,8 @@ function summarizeGroup(group) {
 
 function serveStatic(request, response) {
   const url = new URL(request.url, `http://${host}:${port}`);
-  const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
-  const filePath = path.resolve(publicRoot, `.${requestedPath}`);
+  let requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+  let filePath = path.resolve(publicRoot, `.${requestedPath}`);
 
   if (!filePath.startsWith(publicRoot)) {
     response.writeHead(403);
@@ -961,15 +961,44 @@ function serveStatic(request, response) {
     ".cmd": "text/plain; charset=utf-8"
   };
 
+  // Check if the file has an extension - if not, it's a route path for SPA
+  const ext = path.extname(filePath);
+  if (!ext) {
+    // SPA fallback: serve index.html for client-side routing paths
+    filePath = path.resolve(publicRoot, "index.html");
+  }
+
   fs.readFile(filePath, (error, data) => {
     if (error) {
       response.writeHead(404);
       response.end("Not found");
       return;
     }
-    response.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "application/octet-stream" });
+    response.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "text/html; charset=utf-8" });
     response.end(data);
   });
+}
+
+async function handleDeleteAccount(body) {
+  const username = String(body.username || "").trim();
+  if (!username) {
+    throw new Error("Username required");
+  }
+
+  // Delete friend requests involving this user
+  await supabase
+    .from("friend_requests")
+    .delete()
+    .or(`requester.eq.${username},receiver.eq.${username}`);
+
+  // Delete user
+  const { error } = await supabase
+    .from("users")
+    .delete()
+    .eq("username", username);
+
+  if (error) throw error;
+  return { status: "deleted" };
 }
 
 async function handleApi(request, response) {
@@ -1153,6 +1182,13 @@ async function handleApi(request, response) {
     });
 
     sendJson(response, 200, { places: likedPlaces });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/account/delete") {
+    const body = await readBody(request);
+    const result = await handleDeleteAccount(body);
+    sendJson(response, 200, result);
     return;
   }
 
