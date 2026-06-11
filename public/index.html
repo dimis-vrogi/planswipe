@@ -4,57 +4,64 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PlanSwipe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
 
   <body>
     <main class="app-shell">
+      <!-- Hero Screen (shown when not logged in OR on /home route) -->
       <section id="loginPanel" class="hero-screen is-hidden">
         <div class="hero-nav">
-          <img src="logo.png" alt="PlanSwipe logo">
+          <img src="logo.png" alt="PlanSwipe logo" class="hero-logo-img">
           <div class="nav-actions">
             <button class="language-button" id="languageButton" type="button">EL</button>
-            <button id="heroLoginButton" type="button">Login</button>
-            <button class="primary-button hero-enter-button" id="heroEnterButton" type="button">Enter PlanSwipe</button>
+            <button id="heroLoginButton" type="button" class="btn-outline">Login</button>
+            <button class="btn-primary hero-enter-button is-hidden" id="heroEnterButton" type="button">Enter PlanSwipe</button>
           </div>
         </div>
 
-        <section class="hero-section">
-          <div class="hero-copy">
-            <p class="eyebrow">Group plans made easier</p>
-            <h1>Find the plan your group can actually agree on.</h1>
-            <p class="hero-description">
-              Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.
-            </p>
-            <div class="hero-actions">
-              <span>Built for group chats that never decide.</span>
-            </div>
-          </div>
-
-          <div class="hero-preview" aria-hidden="true">
-            <div class="preview-card preview-main">
-              <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80" alt="">
-              <div>
-                <p>Dinner near the sea</p>
-                <h2>Glyfada seafood taverna</h2>
-                <span>See what your friends think about this.</span>
+        <div class="hero-layout">
+          <section class="hero-section">
+            <div class="hero-copy">
+              <p class="eyebrow">Group plans made easier</p>
+              <h1>Find the plan your group can actually agree on.</h1>
+              <p class="hero-description">
+                Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.
+              </p>
+              <div class="hero-actions">
+                <span>Built for group chats that never decide.</span>
               </div>
             </div>
-            <div class="preview-stack">
-              <span>Find similar places</span>
+
+            <div class="hero-preview" aria-hidden="true">
+              <div class="preview-card preview-main">
+                <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80" alt="">
+                <div>
+                  <p>Dinner near the sea</p>
+                  <h2>Glyfada seafood taverna</h2>
+                  <span>See what your friends think about this.</span>
+                </div>
+              </div>
+              <div class="preview-stack">
+                <span>Find similar places</span>
+              </div>
             </div>
-          </div>
+          </section>
 
           <div class="login-panel is-hidden" id="loginForm">
-            <h2>Enter PlanSwipe</h2>
-            <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
-            <input id="loginEmail" type="email" placeholder="Email" autocomplete="email">
-            <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
-
-            <button id="loginButton" type="button">Login</button>
-            <button id="registerButton" type="button">Create Account</button>
+            <div class="login-inner">
+              <h2>Enter PlanSwipe</h2>
+              <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
+              <input id="loginEmail" type="email" placeholder="Email" autocomplete="email">
+              <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+              <button id="loginButton" type="button">Login</button>
+              <button id="registerButton" type="button" class="btn-secondary">Create Account</button>
+            </div>
           </div>
-        </section>
+        </div>
 
         <section class="offer-section" aria-label="What PlanSwipe offers">
           <div>
@@ -80,16 +87,20 @@
         </section>
       </section>
 
+      <!-- Top bar -->
       <section class="topbar is-hidden" id="topbar" aria-label="App header">
-        <div>
-          <p class="eyebrow">Group plans</p>
-          <h1>PlanSwipe</h1>
+        <div class="topbar-brand">
+          <img src="logo.png" alt="PlanSwipe" class="topbar-logo">
+          <div>
+            <p class="eyebrow">Group plans</p>
+            <h1>PlanSwipe</h1>
+          </div>
         </div>
 
         <div class="topbar-actions">
-          <button class="secondary-button" id="homeButton" type="button">Home</button>
-          <button class="secondary-button" id="appLanguageButton" type="button">EL</button>
-          <button class="secondary-button" id="resetButton" type="button">Leave Group</button>
+          <button class="btn-ghost" id="homeButton" type="button">Home</button>
+          <button class="btn-ghost" id="appLanguageButton" type="button">EL</button>
+          <button class="btn-ghost" id="resetButton" type="button">Leave Group</button>
           <div class="profile-wrap">
             <button class="profile-button" id="profileButton" type="button" aria-label="Open profile menu">
               <span id="profileInitial">P</span>
@@ -108,6 +119,7 @@
         </div>
       </section>
 
+      <!-- Create / Join Group -->
       <section class="setup-panel is-hidden" id="setupPanel" aria-label="Create or join a group">
         <div class="setup-intro">
           <h2>Start planning with your group</h2>
@@ -130,10 +142,9 @@
             <span>Group name</span>
             <input id="groupInput" type="text" maxlength="30" placeholder="Friday crew">
           </label>
-
           <div class="setup-actions">
-            <button class="primary-button" id="createButton" type="button">Create Group</button>
-            <button class="secondary-button" id="backFromCreateButton" type="button">Back</button>
+            <button class="btn-primary" id="createButton" type="button">Create Group</button>
+            <button class="btn-ghost" id="backFromCreateButton" type="button">Back</button>
           </div>
         </form>
 
@@ -142,25 +153,26 @@
             <span>8-digit group code</span>
             <input id="codeInput" type="text" inputmode="numeric" maxlength="8" placeholder="12345678">
           </label>
-
           <div class="setup-actions">
-            <button class="primary-button" id="joinButton" type="button">Join Group</button>
-            <button class="secondary-button" id="backFromJoinButton" type="button">Back</button>
+            <button class="btn-primary" id="joinButton" type="button">Join Group</button>
+            <button class="btn-ghost" id="backFromJoinButton" type="button">Back</button>
           </div>
         </form>
       </section>
 
+      <!-- Profile page panel -->
       <section class="page-panel is-hidden" id="pagePanel" aria-live="polite">
         <div class="page-header">
           <div>
             <p class="eyebrow" id="pageEyebrow">Profile</p>
             <h2 id="pageTitle">Inbox</h2>
           </div>
-          <button class="secondary-button" id="closePageButton" type="button">Exit Group</button>
+          <button class="btn-ghost" id="closePageButton" type="button">Exit Group</button>
         </div>
         <div class="demo-grid" id="pageDemo"></div>
       </section>
 
+      <!-- Group info panel -->
       <section class="group-panel is-hidden" id="groupPanel" aria-label="Group">
         <div>
           <p class="eyebrow">Current group</p>
@@ -172,6 +184,7 @@
 
       <section class="status-panel is-hidden" id="statusPanel" aria-live="polite"></section>
 
+      <!-- Decision panel (Area / Activity choice) -->
       <section class="decision-panel is-hidden" id="decisionPanel" aria-label="Group choices">
         <div class="decision-header">
           <div>
@@ -180,28 +193,24 @@
           </div>
           <div class="decision-side">
             <p id="decisionHint">Everyone needs to agree before the group moves to the next step.</p>
-            <button class="secondary-button is-hidden" id="backChoiceButton" type="button">Back</button>
+            <button class="btn-ghost is-hidden" id="backChoiceButton" type="button">Back</button>
           </div>
         </div>
-
         <div class="option-grid" id="optionGrid"></div>
       </section>
 
+      <!-- Swipe layout -->
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
           <div class="search-summary" id="searchSummary">Searching...</div>
-
           <div class="activity-card" id="activityCard">
             <img class="activity-photo" id="activityPhoto" alt="" loading="lazy">
-
             <div class="card-copy">
               <div>
                 <p class="activity-category" id="activityCategory">Category</p>
                 <h2 id="activityTitle">Place</h2>
               </div>
-
               <p id="activityDescription">Description</p>
-
               <div class="activity-meta">
                 <span id="activityArea">Area</span>
                 <span id="activityTime">Time</span>
@@ -210,7 +219,6 @@
             </div>
           </div>
         </article>
-
         <div class="actions" aria-label="Swipe choices">
           <button class="choice-button no" id="noButton" type="button" aria-label="No">No</button>
           <button class="choice-button maybe" id="maybeButton" type="button" aria-label="Maybe">Maybe</button>
@@ -218,6 +226,7 @@
         </div>
       </section>
 
+      <!-- Results panel -->
       <section class="results-panel is-hidden" id="resultsPanel" aria-label="Results">
         <div class="results-header">
           <div>
@@ -225,11 +234,10 @@
             <h2>What you can do</h2>
           </div>
           <div class="results-actions">
-            <button class="secondary-button" id="suggestionButton" type="button">AI Suggestions</button>
-            <button class="secondary-button" id="reviewButton" type="button">Change basics</button>
+            <button class="btn-ghost" id="suggestionButton" type="button">AI Suggestions</button>
+            <button class="btn-ghost" id="reviewButton" type="button">Change basics</button>
           </div>
         </div>
-
         <div class="suggestion-panel is-hidden" id="suggestionPanel"></div>
         <div class="result-list" id="resultList"></div>
       </section>
