@@ -48,1423 +48,506 @@ const typeOptions = [
   {
     id: "restaurant",
     label: "Restaurants",
-    description: "Dinner, casual food, or places where the plan starts with eating.",
-    googleType: "restaurant",
-    searchTerm: "restaurants"
+    description: "Going out to eat, pizza, or food-related choices.",
+    queryType: "restaurant"
   },
   {
     id: "game",
     label: "Games",
-    description: "Bowling, escape rooms, arcades, and playful activities.",
-    googleType: "amusement_center",
-    searchTerm: "bowling escape rooms arcades"
+    description: "Bowling, escape rooms, arcades, and other fun activities.",
+    queryType: "entertainment"
   },
   {
     id: "walking",
     label: "Walking",
-    description: "Parks, promenades, viewpoints, and easy outdoor routes.",
-    googleType: "park",
-    searchTerm: "parks walking areas"
+    description: "Parks, seaside promenades, views, and easy outdoor routes.",
+    queryType: "park"
   }
 ];
 
-const mockPlaces = [
-  {
-    id: "sushi-syntagma",
-    title: "Sushi place in Syntagma",
-    category: "Restaurant",
-    type: "restaurant",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "A central sushi option with shared plates and easy metro access.",
-    time: "Open tonight",
-    cost: "$$",
-    rating: 4.6,
-    photoUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "psyrri-meze",
-    title: "Psyrri meze spot",
-    category: "Restaurant",
-    type: "restaurant",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "Greek small plates, casual tables, and good for a mixed group.",
-    time: "Open tonight",
-    cost: "$$",
-    rating: 4.5,
-    photoUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "monastiraki-burger",
-    title: "Monastiraki burger bar",
-    category: "Restaurant",
-    type: "restaurant",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "Simple food, central location, and quick enough for last-minute plans.",
-    time: "Open late",
-    cost: "$$",
-    rating: 4.3,
-    photoUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "glyfada-seafood",
-    title: "Glyfada seafood taverna",
-    category: "Restaurant",
-    type: "restaurant",
-    area: "athens_seaside",
-    areaLabel: "Athens seaside",
-    description: "Seafood and outdoor tables near the coast.",
-    time: "Open tonight",
-    cost: "$$$",
-    rating: 4.4,
-    photoUrl: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "chalandri-pizza",
-    title: "Chalandri pizza place",
-    category: "Restaurant",
-    type: "restaurant",
-    area: "athens_north",
-    areaLabel: "North Athens",
-    description: "Easy dinner option for a group that wants something familiar.",
-    time: "Open tonight",
-    cost: "$$",
-    rating: 4.2,
-    photoUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "center-bowling",
-    title: "Bowling near Syntagma",
-    category: "Games",
-    type: "game",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "Book one lane, order snacks, and keep the competition light.",
-    time: "8:30 PM",
-    cost: "$$",
-    rating: 4.1,
-    photoUrl: "https://images.unsplash.com/photo-1538511059256-46e2c43a40c6?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "psyrri-escape",
-    title: "Escape room in Psyrri",
-    category: "Games",
-    type: "game",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "A beginner-friendly room for a group that wants a challenge.",
-    time: "Weekend",
-    cost: "$$$",
-    rating: 4.7,
-    photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "flisvos-walk",
-    title: "Flisvos seaside walk",
-    category: "Walking",
-    type: "walking",
-    area: "athens_seaside",
-    areaLabel: "Athens seaside",
-    description: "A low-effort walk with coffee options nearby.",
-    time: "Sunset",
-    cost: "Free",
-    rating: 4.6,
-    photoUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "national-garden",
-    title: "National Garden walk",
-    category: "Walking",
-    type: "walking",
-    area: "athens_center",
-    areaLabel: "Center of Athens",
-    description: "A calm walking option right in the center.",
-    time: "Afternoon",
-    cost: "Free",
-    rating: 4.5,
-    photoUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80"
-  }
-];
+const mimeTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8"
+};
 
-function hashPassword(password) {
-  return crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
-}
+const ALPHABET = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
 
-function requireSupabase() {
-  if (!supabase) {
-    throw new Error("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
-  }
-}
-
-async function findUserByUsername(username) {
-  requireSupabase();
-
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("username", username)
-    .maybeSingle();
-
-  if (error) throw error;
-  return user;
-}
-
-async function findUserByEmail(email) {
-  requireSupabase();
-
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (error) throw error;
-  return user;
-}
-
-async function createUser(username, email, password) {
-  requireSupabase();
-  const passwordHash = hashPassword(password);
-
-  const { error } = await supabase
-    .from("users")
-    .insert({
-      username,
-      email,
-      password_hash: passwordHash
-    });
-
-  if (error) throw error;
-}
-
-function validEmail(email) {
-  return emailPattern.test(String(email || "").trim().toLowerCase());
-}
-
-function defaultProfile(username = "") {
-  return {
-    picture: "",
-    bio: "",
-    age: "",
-    preferences: {
-      areas: [],
-      activities: [],
-      places: []
-    },
-    pastActivities: [],
-    displayName: username
-  };
-}
-
-function normalizeProfile(profile, username = "") {
-  const source = profile && typeof profile === "object" ? profile : {};
-  const preferences = source.preferences && typeof source.preferences === "object"
-    ? source.preferences
-    : {};
-
-  return {
-    ...defaultProfile(username),
-    ...source,
-    preferences: {
-      areas: Array.isArray(preferences.areas) ? preferences.areas.slice(0, 20) : [],
-      activities: Array.isArray(preferences.activities) ? preferences.activities.slice(0, 20) : [],
-      places: Array.isArray(preferences.places) ? preferences.places.slice(0, 20) : []
-    },
-    age: source.age ? Number(source.age) : "",
-    pastActivities: Array.isArray(source.pastActivities) ? source.pastActivities.slice(0, 50) : []
-  };
-}
-
-function publicUser(user, friendStatus = "none") {
-  if (!user) return null;
-  const profile = normalizeProfile(user.profile, user.username);
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    profile,
-    friendStatus
-  };
-}
-
-async function updateUserProfile(username, profile) {
-  requireSupabase();
-
-  const { data: user, error } = await supabase
-    .from("users")
-    .update({ profile: normalizeProfile(profile, username) })
-    .eq("username", username)
-    .select("*")
-    .single();
-
-  if (error) throw error;
-  return user;
-}
-
-async function authUserFromRequest(request) {
-  requireSupabase();
-  const authHeader = request.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-  if (!token) return null;
-
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error) throw error;
-  return data.user || null;
-}
-
-async function syncAuthProfile(request, body) {
-  const authUser = await authUserFromRequest(request);
-  if (!authUser) {
-    throw new Error("Supabase Auth session required.");
-  }
-
-  const username = String(body.username || authUser.user_metadata?.username || "").trim().slice(0, 24);
-  const email = String(authUser.email || body.email || "").trim().toLowerCase();
-  if (!username || !validEmail(email)) {
-    throw new Error("Username and a valid email are required.");
-  }
-
-  const existingUsername = await findUserByUsername(username);
-  if (existingUsername && existingUsername.id !== authUser.id) {
-    throw new Error("Username is already taken.");
-  }
-
-  const { data: user, error } = await supabase
-    .from("users")
-    .upsert(
-      {
-        id: authUser.id,
-        username,
-        email,
-        profile: normalizeProfile(existingUsername?.profile, username)
-      },
-      { onConflict: "id" }
-    )
-    .select("*")
-    .single();
-
-  if (error) throw error;
-  return user;
-}
-
-async function friendshipRows(username) {
-  requireSupabase();
-
-  const { data, error } = await supabase
-    .from("friend_requests")
-    .select("*")
-    .or(`requester.eq.${username},receiver.eq.${username}`)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function friendshipBetween(a, b) {
-  const rows = await friendshipRows(a);
-  return rows.find((row) =>
-    (row.requester === a && row.receiver === b) ||
-    (row.requester === b && row.receiver === a)
-  ) || null;
-}
-
-function friendshipStatus(row, username) {
-  if (!row) return "none";
-  if (row.status === "accepted") return "friends";
-  return row.requester === username ? "requested" : "incoming";
-}
-
-async function listFriends(username) {
-  const rows = await friendshipRows(username);
-  const otherUsernames = rows.map((row) => row.requester === username ? row.receiver : row.requester);
-  if (!otherUsernames.length) {
-    return { friends: [], incoming: [], outgoing: [] };
-  }
-
-  const { data: users, error } = await supabase
-    .from("users")
-    .select("username,email,profile")
-    .in("username", otherUsernames);
-
-  if (error) throw error;
-  const usersByUsername = new Map((users || []).map((user) => [user.username, user]));
-
-  return rows.reduce((result, row) => {
-    const otherUsername = row.requester === username ? row.receiver : row.requester;
-    const item = publicUser(usersByUsername.get(otherUsername), friendshipStatus(row, username));
-    if (!item) return result;
-    if (row.status === "accepted") result.friends.push(item);
-    else if (row.receiver === username) result.incoming.push(item);
-    else result.outgoing.push(item);
-    return result;
-  }, { friends: [], incoming: [], outgoing: [] });
-}
-
-async function searchUsers(query, username) {
-  requireSupabase();
-
-  const cleanQuery = String(query || "").trim();
-  if (!cleanQuery) return [];
-
-  const { data, error } = await supabase
-    .from("users")
-    .select("username,email,profile")
-    .ilike("username", `%${cleanQuery}%`)
-    .neq("username", username)
-    .limit(8);
-
-  if (error) throw error;
-  const rows = await friendshipRows(username);
-  return (data || []).map((user) => {
-    const row = rows.find((friendship) =>
-      (friendship.requester === username && friendship.receiver === user.username) ||
-      (friendship.requester === user.username && friendship.receiver === username)
-    );
-    return publicUser(user, friendshipStatus(row, username));
-  });
-}
-
-async function listGroupsForUsername(username) {
-  requireSupabase();
-
-  const { data, error } = await supabase
-    .from("groups")
-    .select("code,data,updated_at")
-    .order("updated_at", { ascending: false });
-
-  if (error) throw error;
-
-  return (data || [])
-    .map((row) => row.data)
-    .filter((group) => (group.members || []).some((member) => member.username === username || member.name === username))
-    .map((group) => ({
-      code: group.code,
-      name: group.name,
-      memberCount: group.members?.length || 0,
-      createdAt: group.createdAt || null,
-      updatedAt: group.updatedAt || null
-    }));
-}
-
-async function likedPlacesForUsername(username) {
-  requireSupabase();
-
-  const { data, error } = await supabase
-    .from("groups")
-    .select("data")
-    .order("updated_at", { ascending: false });
-
-  if (error) throw error;
-
-  const liked = [];
-  (data || []).forEach((row) => {
-    const group = row.data;
-    const member = (group.members || []).find((item) => item.username === username || item.name === username);
-    if (!member) return;
-    const votes = group.votes?.[member.id] || {};
-    Object.entries(votes).forEach(([placeId, vote]) => {
-      if (vote !== "yes" && vote !== true) return;
-      const place = (group.places || []).find((item) => item.id === placeId);
-      if (place) {
-        liked.push({
-          place: place.title,
-          area: place.areaLabel,
-          activity: place.category
-        });
-      }
-    });
-  });
-
-  return liked.slice(0, 20);
-}
-
-function textFromOpenAiResponse(data) {
-  if (typeof data.output_text === "string") return data.output_text;
-  return (data.output || [])
-    .flatMap((item) => item.content || [])
-    .map((content) => content.text || "")
-    .join("\n")
-    .trim();
-}
-
-function fallbackSuggestions(area, activity) {
-  return [
-    {
-      place: `${activity} in ${area}`,
-      reason: "Add an OpenAI API key to get personalized suggestions from your profile and past activity."
-    }
-  ];
-}
-
-async function aiSuggestions(username, area, activity) {
-  const user = await findUserByUsername(username);
-  if (!user) throw new Error("User not found");
-
-  const profile = normalizeProfile(user.profile, username);
-  const likedPlaces = await likedPlacesForUsername(username);
-
-  if (!openAiApiKey) {
-    return fallbackSuggestions(area, activity);
-  }
-
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${openAiApiKey}`
-    },
-    body: JSON.stringify({
-      model: openAiModel,
-      instructions: "You suggest realistic places for a social planning app. Return only JSON with a suggestions array of 3 objects. Each object must have place and reason fields. Keep reasons short.",
-      input: JSON.stringify({
-        area,
-        activity,
-        age: profile.age || null,
-        preferences: profile.preferences,
-        pastActivities: profile.pastActivities,
-        likedPlaces
-      }),
-      max_output_tokens: 500
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI request failed with ${response.status}`);
-  }
-
-  const data = await response.json();
-  const text = textFromOpenAiResponse(data);
-  try {
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 5) : fallbackSuggestions(area, activity);
-  } catch (_error) {
-    return [
-      {
-        place: "Personalized idea",
-        reason: text.slice(0, 280)
-      }
-    ];
-  }
-}
-
-function id(prefix) {
-  return `${prefix}_${crypto.randomBytes(6).toString("hex")}`;
-}
-
-async function groupCode() {
-  requireSupabase();
-
+function randomCode(length) {
   let code = "";
-  do {
-    code = String(crypto.randomInt(0, 100000000)).padStart(8, "0");
-  } while (await loadGroup(code));
+  for (let i = 0; i < length; i++) code += ALPHABET[crypto.randomInt(ALPHABET.length)];
   return code;
 }
 
-async function loadGroup(code) {
-  requireSupabase();
-
-  const { data, error } = await supabase
-    .from("groups")
-    .select("data")
-    .eq("code", code)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data?.data || null;
-}
-
-async function saveGroup(group) {
-  requireSupabase();
-
-  const { error } = await supabase
-    .from("groups")
-    .upsert(
-      {
-        code: group.code,
-        data: group,
-        updated_at: new Date().toISOString()
-      },
-      { onConflict: "code" }
-    );
-
-  if (error) throw error;
-}
-
-function sendJson(response, status, payload) {
-  response.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store"
-  });
-  response.end(JSON.stringify(payload));
-}
-
-function publicError(error) {
-  if (error?.message?.includes("Supabase is not configured")) {
-    console.error("SUPABASE ERROR:", error);
-    return {
-      status: 503,
-      message: "Supabase is not configured on the server."
-    };
-  }
-
-  if (
-    error?.message?.includes("Supabase Auth session required") ||
-    error?.message?.includes("Username is already taken") ||
-    error?.message?.includes("Username and a valid email")
-  ) {
-    return {
-      status: 400,
-      message: error.message
-    };
-  }
-
-  if (
-    error?.code === "42P01" ||
-    error?.message?.includes('relation "public.groups" does not exist') ||
-    error?.message?.includes('relation "public.friend_requests" does not exist')
-  ) {
-    return {
-      status: 503,
-      message: "A Supabase table is missing. Run supabase-schema.sql in Supabase."
-    };
-  }
-
-  if (
-    error?.code === "42703" ||
-    error?.message?.includes("column")
-  ) {
-    return {
-      status: 503,
-      message: "A Supabase table has the wrong columns. Run supabase-schema.sql in Supabase."
-    };
-  }
-
-  return {
-    status: 500,
-    message: "Server error"
-  };
+function sendJson(response, status, data) {
+  response.writeHead(status, { "Content-Type": "application/json" });
+  response.end(JSON.stringify(data));
 }
 
 function readBody(request) {
   return new Promise((resolve, reject) => {
     let body = "";
-    request.on("data", (chunk) => {
-      body += chunk;
-      if (body.length > 1_000_000) request.destroy();
-    });
+    request.on("data", (chunk) => { body += chunk; });
     request.on("end", () => {
-      try {
-        resolve(body ? JSON.parse(body) : {});
-      } catch (error) {
-        // Return empty body on invalid JSON instead of crashing
-        resolve({});
-      }
+      try { resolve(JSON.parse(body)); }
+      catch (error) { reject(new Error("Invalid JSON")); }
     });
-    request.on("error", () => resolve({}));
+    request.on("error", reject);
   });
 }
 
-function addMember(group, body) {
-  const username = String(body?.username || body?.userName || "").trim().slice(0, 24);
-  const profile = normalizeProfile(body?.profile, username);
-  const user = {
-    id: id("user"),
-    name: username || "Friend",
-    username,
-    profile: {
-      picture: profile.picture || ""
-    },
-    joinedAt: Date.now()
-  };
-  group.members.push(user);
-  return user;
-}
-
-function countChoices(group, kind) {
-  const choices = group.choices[kind] || {};
-  const counts = {};
-  Object.values(choices).forEach((optionId) => {
-    counts[optionId] = (counts[optionId] || 0) + 1;
-  });
-  return counts;
-}
-
-function consensusOption(group, kind) {
-  const choices = group.choices[kind] || {};
-  if (group.members.length === 0) return null;
-  if (Object.keys(choices).length < group.members.length) return null;
-  const values = Object.values(choices);
-  const first = values[0];
-  return values.every((value) => value === first) ? first : null;
-}
-
-function groupOptions(group, kind) {
-  const defaults = kind === "area" ? areaOptions : typeOptions;
-  return [...defaults, ...(group?.customOptions?.[kind] || [])];
-}
-
-function customOption(kind, label) {
-  const cleanLabel = String(label || "").trim().slice(0, 40);
-  if (!cleanLabel) return null;
-
-  const option = {
-    id: `custom_${kind}_${crypto.randomBytes(5).toString("hex")}`,
-    label: cleanLabel,
-    description: kind === "area"
-      ? "Custom area added by the group."
-      : "Custom activity added by the group."
-  };
-
-  if (kind === "area") {
-    option.queryArea = cleanLabel;
-  } else {
-    option.searchTerm = cleanLabel;
-    option.googleType = "";
+function publicError(error) {
+  const message = error.message || "Internal server error";
+  if (message.includes("fetch failed") || message.includes("envelope") || message.includes("Failed to fetch")) {
+    return { status: 502, message: "External service unavailable." };
   }
-
-  return option;
+  return { status: 400, message };
 }
 
-function ensureCustomOptions(group) {
-  if (!group.customOptions) group.customOptions = { area: [], type: [] };
-  if (!Array.isArray(group.customOptions.area)) group.customOptions.area = [];
-  if (!Array.isArray(group.customOptions.type)) group.customOptions.type = [];
-}
-
-function buildQuery(areaId, typeId, group) {
-  const area = groupOptions(group, "area").find((option) => option.id === areaId);
-  const type = groupOptions(group, "type").find((option) => option.id === typeId);
-  if (!area || !type) return null;
-  return {
-    textQuery: `${type.searchTerm} in ${area.queryArea}`,
-    includedType: type.googleType || "",
-    areaLabel: area.label,
-    typeLabel: type.label
-  };
-}
-
-async function googleTextSearch(query) {
-  if (!googleApiKey) return null;
-
-  const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": googleApiKey,
-      "X-Goog-FieldMask": [
-        "places.id",
-        "places.displayName",
-        "places.formattedAddress",
-        "places.rating",
-        "places.priceLevel",
-        "places.photos",
-        "places.types"
-      ].join(",")
-    },
-    body: JSON.stringify({
-      textQuery: query.textQuery,
-      ...(query.includedType ? { includedType: query.includedType } : {}),
-      maxResultCount: 10,
-      languageCode: "en"
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Google Places failed with ${response.status}`);
-  }
-
-  const data = await response.json();
-  return (data.places || []).map((place) => ({
-    id: place.id,
-    title: place.displayName?.text || "Unnamed place",
-    category: query.typeLabel,
-    areaLabel: query.areaLabel,
-    description: place.formattedAddress || query.textQuery,
-    time: "Check hours",
-    cost: priceLabel(place.priceLevel),
-    rating: place.rating || 4,
-    photoUrl: place.photos?.[0]?.name
-      ? `/api/photo?name=${encodeURIComponent(place.photos[0].name)}`
-      : fallbackPhoto(query.includedType)
-  }));
-}
-
-function priceLabel(priceLevel) {
-  const prices = {
-    PRICE_LEVEL_FREE: "Free",
-    PRICE_LEVEL_INEXPENSIVE: "$",
-    PRICE_LEVEL_MODERATE: "$$",
-    PRICE_LEVEL_EXPENSIVE: "$$$",
-    PRICE_LEVEL_VERY_EXPENSIVE: "$$$$"
-  };
-  return prices[priceLevel] || "$$";
-}
-
-function fallbackPhoto(type) {
-  if (type === "restaurant") {
-    return "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80";
-  }
-  if (type === "park") {
-    return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80";
-  }
-  return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
-}
-
-async function searchPlaces(areaId, typeId) {
-  const query = buildQuery(areaId, typeId);
-  if (!query) return { query: "", source: "none", places: [] };
-
-  try {
-    const places = await googleTextSearch(query);
-    if (places?.length) {
-      return { query: query.textQuery, source: "google", places };
-    }
-  } catch (error) {
-    console.warn(error.message);
-  }
-
-  const places = mockPlaces
-    .filter((place) => place.area === areaId && place.type === typeId)
-    .sort((a, b) => b.rating - a.rating);
-
-  return { query: query.textQuery, source: "sample", places };
-}
-
-async function searchGroupPlaces(group, areaId, typeId) {
-  const query = buildQuery(areaId, typeId, group);
-  if (!query) return { query: "", source: "none", places: [] };
-
-  try {
-    const places = await googleTextSearch(query);
-    if (places?.length) {
-      return { query: query.textQuery, source: "google", places };
-    }
-  } catch (error) {
-    console.warn(error.message);
-  }
-
-  const places = mockPlaces
-    .filter((place) => place.area === areaId && place.type === typeId)
-    .sort((a, b) => b.rating - a.rating);
-
-  if (places.length) {
-    return { query: query.textQuery, source: "sample", places };
-  }
-
-  return {
-    query: query.textQuery,
-    source: "custom",
-    places: [
-      {
-        id: `custom-place-${areaId}-${typeId}`,
-        title: query.typeLabel,
-        category: query.typeLabel,
-        areaLabel: query.areaLabel,
-        description: `A custom group idea for ${query.areaLabel}.`,
-        time: "Plan together",
-        cost: "TBD",
-        rating: 4,
-        photoUrl: fallbackPhoto("")
-      }
-    ]
-  };
-}
-
-function summarizeGroup(group) {
-  const areaConsensus = consensusOption(group, "area");
-  const typeConsensus = consensusOption(group, "type");
-  const votesByPlace = {};
-
-  Object.values(group.votes).forEach((userVotes) => {
-    Object.entries(userVotes).forEach(([placeId, vote]) => {
-      const value = vote === true ? "yes" : vote === false ? "no" : vote;
-      if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, maybe: 0, no: 0 };
-      if (value === "yes") votesByPlace[placeId].yes += 1;
-      else if (value === "maybe") votesByPlace[placeId].maybe += 1;
-      else votesByPlace[placeId].no += 1;
-    });
-  });
-
-  const matches = group.places
-    .map((place) => {
-      const votes = votesByPlace[place.id] || { yes: 0, maybe: 0, no: 0 };
-      const total = group.members.length || 1;
-      const percent = Math.round((votes.yes / total) * 100);
-      return {
-        ...place,
-        yes: votes.yes,
-        maybe: votes.maybe,
-        no: votes.no,
-        total,
-        percent,
-        score: percent
-      };
-    })
-    .filter((place) => place.yes > 0 || place.maybe > 0)
-    .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
-
-  return {
-    code: group.code,
-    name: group.name,
-    members: group.members,
-    choices: {
-      area: group.choices.area,
-      type: group.choices.type
-    },
-    options: {
-      area: groupOptions(group, "area"),
-      type: groupOptions(group, "type")
-    },
-    counts: {
-      area: countChoices(group, "area"),
-      type: countChoices(group, "type")
-    },
-    consensus: {
-      area: areaConsensus,
-      type: typeConsensus
-    },
-    search: group.search,
-    places: group.places,
-    votes: group.votes,
-    matches
-  };
+function mimeType(pathname) {
+  const ext = path.extname(pathname).toLowerCase();
+  return mimeTypes[ext] || "application/octet-stream";
 }
 
 function serveStatic(request, response) {
-  const url = new URL(request.url, `http://${host}:${port}`);
-  let requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
-  let filePath = path.resolve(publicRoot, `.${requestedPath}`);
-
+  let urlPath = request.url.split("?")[0];
+  if (urlPath === "/" || !path.extname(urlPath)) {
+    urlPath = "/index.html";
+  }
+  const filePath = path.join(publicRoot, urlPath);
   if (!filePath.startsWith(publicRoot)) {
     response.writeHead(403);
     response.end("Forbidden");
     return;
   }
-
-  const types = {
-    ".html": "text/html; charset=utf-8",
-    ".css": "text/css; charset=utf-8",
-    ".js": "text/javascript; charset=utf-8",
-    ".json": "application/json; charset=utf-8",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".svg": "image/svg+xml",
-    ".ico": "image/x-icon",
-    ".txt": "text/plain; charset=utf-8",
-    ".cmd": "text/plain; charset=utf-8"
-  };
-
-  // Check if the file has an extension - if not, it's a route path for SPA
-  const ext = path.extname(filePath);
-  if (!ext) {
-    // SPA fallback: serve index.html for client-side routing paths
-    filePath = path.resolve(publicRoot, "index.html");
-  }
-
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      response.writeHead(404);
-      response.end("Not found");
+      if (error.code === "ENOENT") {
+        // SPA fallback - serve index.html for client-side routing
+        const fallback = path.join(publicRoot, "index.html");
+        fs.readFile(fallback, (fallbackError, fallbackData) => {
+          if (fallbackError) {
+            response.writeHead(404);
+            response.end("Not found");
+            return;
+          }
+          response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+          response.end(fallbackData);
+        });
+        return;
+      }
+      response.writeHead(500);
+      response.end("Server error");
       return;
     }
-    response.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "text/html; charset=utf-8" });
+    response.writeHead(200, { "Content-Type": mimeType(filePath) || "application/octet-stream" });
     response.end(data);
   });
 }
 
-async function handleDeleteAccount(body) {
-  const username = String(body.username || "").trim();
-  if (!username) {
-    throw new Error("Username required");
-  }
+async function getAllGroups() {
+  const { data, error } = await supabase.from("groups").select("*").order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
 
-  // Delete friend requests involving this user
-  await supabase
-    .from("friend_requests")
-    .delete()
-    .or(`requester.eq.${username},receiver.eq.${username}`);
+async function getGroup(code) {
+  const { data, error } = await supabase.from("groups").select("*").eq("code", code).single();
+  if (error && error.code === "PGRST116") return null;
+  if (error) throw new Error(error.message);
+  return data || null;
+}
 
-  // Delete user
-  const { error } = await supabase
-    .from("users")
-    .delete()
-    .eq("username", username);
+async function saveGroup(group) {
+  const { error } = await supabase.from("groups").upsert({ code: group.code, data: JSON.parse(JSON.stringify(group)) }, { onConflict: "code" });
+  if (error) throw new Error(error.message);
+}
 
-  if (error) throw error;
-  return { status: "deleted" };
+async function deleteGroup(code) {
+  const { error } = await supabase.from("groups").delete().eq("code", code);
+  if (error) throw new Error(error.message);
+}
+
+async function loadGroup(code) {
+  const data = await getGroup(code);
+  return data ? data.data : null;
+}
+
+function summarizeGroup(group) {
+  if (!group) return null;
+  const counts = {};
+  ["area", "type"].forEach((kind) => {
+    const choices = group.choices?.[kind] || {};
+    const tally = {};
+    Object.values(choices).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
+    counts[kind] = tally;
+  });
+  const members = group.members || [];
+  const resolvedMembers = members.map((member) => ({
+    id: member.id,
+    name: member.name,
+    username: member.username,
+    profile: member.profile || {}
+  }));
+  return {
+    name: group.name,
+    code: group.code,
+    members: resolvedMembers,
+    choices: group.choices || { area: {}, type: {} },
+    consensus: group.consensus || {},
+    counts,
+    options: group.options || {},
+    places: group.places || [],
+    matches: group.matches || [],
+    votes: group.votes || {},
+    search: group.search || null,
+    createdAt: group.createdAt
+  };
+}
+
+async function getProfileByUsername(username) {
+  const { data, error } = await supabase.from("profiles").select("*").eq("username", username).single();
+  if (error && error.code === "PGRST116") return null;
+  if (error) throw new Error(error.message);
+  return data || null;
+}
+
+async function upsertProfile(user) {
+  const { error } = await supabase.from("profiles").upsert(
+    { username: user.username, email: user.email || "", profile: user.profile || {} },
+    { onConflict: "username" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+function generateCode() {
+  return String(crypto.randomInt(10000000, 99999999));
 }
 
 async function handleApi(request, response) {
-  const url = new URL(request.url, `http://${host}:${port}`);
-  const parts = url.pathname.split("/").filter(Boolean);
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const parts = url.pathname.replace(/^\/|\/$/g, "").split("/");
 
-  if (request.method === "GET" && url.pathname === "/api/config") {
-    sendJson(response, 200, {
-      supabaseUrl: supabaseUrl || "",
-      supabaseAnonKey
-    });
+  // CORS
+  response.setHeader("Access-Control-Allow-Origin", "*");
+  response.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (request.method === "OPTIONS") { sendJson(response, 200, {}); return; }
+
+  // Configuration
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "config") {
+    sendJson(response, 200, { supabaseUrl, supabaseAnonKey });
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/api/auth/profile") {
-    const body = await readBody(request);
-    const user = await syncAuthProfile(request, body);
-    sendJson(response, 200, { user: publicUser(user) });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/register") {
-    const body = await readBody(request);
-
-    const username = String(body.username || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
-
-    if (!username || !email || !password) {
-      sendJson(response, 400, {
-        error: "Username, email, and password required"
-      });
-      return;
-    }
-
-    if (!validEmail(email)) {
-      sendJson(response, 400, {
-        error: "Enter a valid email address"
-      });
-      return;
-    }
-
-    const existing = await findUserByUsername(username);
-
-    if (existing || await findUserByEmail(email)) {
-      sendJson(response, 400, {
-        error: "User already exists"
-      });
-      return;
-    }
-
-    await createUser(username, email, password);
-
-    sendJson(response, 201, {
-      success: true,
-      username,
-      email,
-      profile: defaultProfile(username)
-    });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/login") {
-    const body = await readBody(request);
-
-    const username = String(body.username || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
-
-    if (!validEmail(email)) {
-      sendJson(response, 400, {
-        error: "Enter a valid email address"
-      });
-      return;
-    }
-
-    const user = await findUserByUsername(username);
-
-    if (
-      !user ||
-      String(user.email || "").toLowerCase() !== email ||
-      user.password_hash !== hashPassword(password)
-    ) {
-      sendJson(response, 401, {
-        error: "Invalid credentials"
-      });
-      return;
-    }
-
-    sendJson(response, 200, {
-      success: true,
-      username,
-      email: user.email,
-      profile: normalizeProfile(user.profile, user.username)
-    });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/account") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    const viewer = String(url.searchParams.get("viewer") || "").trim();
-    const user = await findUserByUsername(username);
-    if (!user) {
-      sendJson(response, 404, { error: "User not found" });
-      return;
-    }
-    sendJson(response, 200, { user: publicUser(user, "none") });
-    return;
-  }
-
-  if (request.method === "PATCH" && url.pathname === "/api/account") {
-    const body = await readBody(request);
-    const username = String(body.username || "").trim();
-    const existing = await findUserByUsername(username);
-    if (!existing) {
-      sendJson(response, 404, { error: "User not found" });
-      return;
-    }
-    const user = await updateUserProfile(username, body.profile);
-    sendJson(response, 200, { user: publicUser(user) });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/users/search") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    const query = url.searchParams.get("q") || "";
-    sendJson(response, 200, { users: await searchUsers(query, username) });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/notifications") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    if (!username) {
-      sendJson(response, 400, { error: "Username required" });
-      return;
-    }
-    const friends = await listFriends(username);
-    const pendingFriendRequests = friends.incoming.length;
-    sendJson(response, 200, {
-      total: pendingFriendRequests,
-      friendRequests: pendingFriendRequests,
-      groupInvites: 0,
-      messages: 0
-    });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/liked-places") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    if (!username) {
-      sendJson(response, 400, { error: "Username required" });
-      return;
-    }
-    const { data, error } = await supabase
-      .from("groups")
-      .select("data")
-      .order("updated_at", { ascending: false });
-    if (error) throw error;
-
-    const likedPlaces = [];
-    (data || []).forEach((row) => {
-      const group = row.data;
-      const member = (group.members || []).find((item) => item.username === username || item.name === username);
-      if (!member) return;
-      const votes = group.votes?.[member.id] || {};
-      Object.entries(votes).forEach(([placeId, vote]) => {
-        const value = vote === true ? "yes" : vote === false ? "no" : vote;
-        if (value !== "yes" && value !== "maybe") return;
-        const place = (group.places || []).find((item) => item.id === placeId);
-        if (place) {
-          likedPlaces.push({
-            place: place.title,
-            area: place.areaLabel,
-            activity: place.category,
-            vote: value,
-            groupName: group.name,
-            groupCode: group.code
-          });
-        }
-      });
-    });
-
-    sendJson(response, 200, { places: likedPlaces });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/account/delete") {
-    const body = await readBody(request);
-    const result = await handleDeleteAccount(body);
-    sendJson(response, 200, result);
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/groups/exit") {
-    const body = await readBody(request);
-    const username = String(body.username || "").trim();
-    const groupCode = String(body.groupCode || "").trim();
-    if (!username || !groupCode) {
-      sendJson(response, 400, { error: "Username and groupCode required" });
-      return;
-    }
-    const group = await loadGroup(groupCode);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
-      return;
-    }
-    const memberIndex = (group.members || []).findIndex((m) => m.username === username || m.name === username);
-    if (memberIndex === -1) {
-      sendJson(response, 400, { error: "User is not a member of this group" });
-      return;
-    }
-    const memberToRemove = group.members[memberIndex];
-    const removedId = memberToRemove.id;
-    group.members.splice(memberIndex, 1);
-    if (removedId) {
-      if (group.choices?.area) delete group.choices.area[removedId];
-      if (group.choices?.type) delete group.choices.type[removedId];
-      if (group.votes) delete group.votes[removedId];
-    }
-    group.updatedAt = Date.now();
-    await saveGroup(group);
-    sendJson(response, 200, { status: "exited", group: summarizeGroup(group) });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/friends") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    sendJson(response, 200, await listFriends(username));
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/friends/request") {
-    const body = await readBody(request);
-    const fromUsername = String(body.fromUsername || "").trim();
-    const toUsername = String(body.toUsername || "").trim();
-
-    if (!fromUsername || !toUsername || fromUsername === toUsername) {
-      sendJson(response, 400, { error: "Choose another user to add" });
-      return;
-    }
-
-    const target = await findUserByUsername(toUsername);
-    if (!target) {
-      sendJson(response, 404, { error: "User not found" });
-      return;
-    }
-
-    const existing = await friendshipBetween(fromUsername, toUsername);
-    if (existing?.status === "accepted") {
-      sendJson(response, 200, { status: "friends" });
-      return;
-    }
-
-    if (existing?.status === "pending" && existing.receiver === fromUsername) {
-      const { error } = await supabase
-        .from("friend_requests")
-        .update({ status: "accepted", responded_at: new Date().toISOString() })
-        .eq("id", existing.id);
-      if (error) throw error;
-      sendJson(response, 200, { status: "friends" });
-      return;
-    }
-
-    if (!existing) {
-      const { error } = await supabase
-        .from("friend_requests")
-        .insert({ requester: fromUsername, receiver: toUsername, status: "pending" });
-      if (error) throw error;
-    }
-
-    sendJson(response, 201, { status: "requested" });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/friends/remove") {
-    const body = await readBody(request);
-    const username = String(body.username || "").trim();
-    const friendUsername = String(body.friendUsername || "").trim();
-    if (!username || !friendUsername) {
-      sendJson(response, 400, { error: "Both usernames required" });
-      return;
-    }
-    const existing = await friendshipBetween(username, friendUsername);
-    if (!existing) {
-      sendJson(response, 404, { error: "Friendship not found" });
-      return;
-    }
-    const { error } = await supabase
-      .from("friend_requests")
-      .delete()
-      .eq("id", existing.id);
-    if (error) throw error;
-    sendJson(response, 200, { status: "removed" });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/friends/accept") {
-    const body = await readBody(request);
-    const username = String(body.username || "").trim();
-    const requester = String(body.requester || "").trim();
-    const existing = await friendshipBetween(username, requester);
-
-    if (!existing || existing.receiver !== username) {
-      sendJson(response, 404, { error: "Friend request not found" });
-      return;
-    }
-
-    const { error } = await supabase
-      .from("friend_requests")
-      .update({ status: "accepted", responded_at: new Date().toISOString() })
-      .eq("id", existing.id);
-    if (error) throw error;
-
-    sendJson(response, 200, { status: "friends" });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/groups/mine") {
-    const username = String(url.searchParams.get("username") || "").trim();
-    sendJson(response, 200, { groups: await listGroupsForUsername(username) });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/api/suggestions") {
-    const body = await readBody(request);
-    const username = String(body.username || "").trim();
-    const area = String(body.area || "").trim();
-    const activity = String(body.activity || "").trim();
-    if (!username || !area || !activity) {
-      sendJson(response, 400, { error: "Username, area, and activity are required" });
-      return;
-    }
-
-    const suggestions = await aiSuggestions(username, area, activity);
-    sendJson(response, 200, { suggestions });
-    return;
-  }
-  
-  if (request.method === "GET" && url.pathname === "/api/options") {
+  // Options
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "options") {
     sendJson(response, 200, { areas: areaOptions, types: typeOptions });
     return;
   }
 
-  if (request.method === "GET" && url.pathname === "/api/photo") {
-    if (!googleApiKey) {
-      response.writeHead(404);
-      response.end("No Google API key configured");
-      return;
+  // Get user account / profile
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "account") {
+    const username = url.searchParams.get("username") || "";
+    const viewer = url.searchParams.get("viewer") || "";
+    const data = await getProfileByUsername(username);
+    if (!data) { sendJson(response, 404, { error: "User not found" }); return; }
+    let friendStatus = "";
+    if (viewer && viewer !== username) {
+      const isFriend = data.profile?.friends?.includes(viewer);
+      const outgoing = data.profile?.friendRequests?.includes(viewer);
+      const incoming = data.profile?.friendRequests?.includes?.(data.username);
+      friendStatus = isFriend ? "friends" : outgoing ? "requested" : "incoming" ? "incoming" : "";
     }
-    const name = url.searchParams.get("name");
-    const photoUrl = `https://places.googleapis.com/v1/${name}/media?maxHeightPx=900&maxWidthPx=1200&key=${googleApiKey}`;
-    response.writeHead(302, { Location: photoUrl });
-    response.end();
+    // Determine incoming requests
+    const viewerProfile = await getProfileByUsername(viewer);
+    const viewerIncoming = (viewerProfile?.profile?.friendRequests || []).includes(username) ? "incoming" : "";
+    const viewerFriends = (viewerProfile?.profile?.friends || []).includes(username);
+    if (viewerFriends && viewer !== username) friendStatus = "friends";
+    const viewerRequested = (data.profile?.friendRequests || []).includes(viewer);
+    if (viewerRequested && !viewerFriends) friendStatus = "requested";
+    if (viewerIncoming === "incoming" && !viewerFriends) friendStatus = "incoming";
+    sendJson(response, 200, { user: { ...data, friendStatus } });
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/api/groups") {
+  // Update account / profile
+  if (request.method === "PATCH" && parts[0] === "api" && parts[1] === "account") {
     const body = await readBody(request);
-    const code = await groupCode();
+    const existing = await getProfileByUsername(body.username);
+    if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
+    const profile = { ...(existing.profile || {}), ...(body.profile || {}) };
+    await upsertProfile({ username: body.username, email: existing.email || "", profile });
+    const updated = await getProfileByUsername(body.username);
+    sendJson(response, 200, { user: updated });
+    return;
+  }
+
+  // Login
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "login") {
+    const body = await readBody(request);
+    const data = await getProfileByUsername(body.username);
+    if (!data) { sendJson(response, 404, { error: "User not found" }); return; }
+    if (data.profile?.password !== hashPassword(body.password)) {
+      sendJson(response, 401, { error: "Wrong password" }); return;
+    }
+    sendJson(response, 200, { username: data.username, email: data.email, profile: data.profile });
+    return;
+  }
+
+  // Register
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "register") {
+    const body = await readBody(request);
+    const existing = await getProfileByUsername(body.username);
+    if (existing) { sendJson(response, 409, { error: "Username taken" }); return; }
+    const profile = { password: hashPassword(body.password), settings: {}, friends: [], friendRequests: [], pastActivities: [], preferences: { areas: [], activities: [], places: [] } };
+    await upsertProfile({ username: body.username, email: body.email, profile });
+    sendJson(response, 200, { username: body.username, email: body.email, profile });
+    return;
+  }
+
+  // Sync Supabase auth profile
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "auth" && parts[2] === "profile") {
+    const body = await readBody(request);
+    const existing = await getProfileByUsername(body.username);
+    if (existing) {
+      await upsertProfile({ username: body.username, email: body.email || existing.email, profile: existing.profile || {} });
+    } else {
+      const profile = { settings: {}, friends: [], friendRequests: [], pastActivities: [], preferences: { areas: [], activities: [], places: [] } };
+      await upsertProfile({ username: body.username, email: body.email, profile });
+    }
+    const data = await getProfileByUsername(body.username);
+    sendJson(response, 200, { user: data });
+    return;
+  }
+
+  // Delete Account
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "account" && parts[2] === "delete") {
+    const body = await readBody(request);
+    const username = body.username;
+    if (!username) { sendJson(response, 400, { error: "Username required" }); return; }
+    
+    // Delete all friend requests involving this user
+    const allProfiles = await getAllProfiles();
+    for (const profile of allProfiles) {
+      if (profile.profile?.friendRequests) {
+        profile.profile.friendRequests = profile.profile.friendRequests.filter((fr) => fr !== username);
+      }
+      if (profile.profile?.friends) {
+        profile.profile.friends = profile.profile.friends.filter((f) => f !== username);
+      }
+      if (profile.username !== username) {
+        await upsertProfile(profile);
+      }
+    }
+    
+    // Remove user from all groups
+    const allGroups = await getAllGroups();
+    for (const groupData of allGroups) {
+      const group = groupData.data;
+      if (!group) continue;
+      const changed = removeUserFromGroup(group, username);
+      if (changed) {
+        await saveGroup(group);
+      }
+    }
+    
+    // Delete the user's profile from supabase
+    const { error: deleteError } = await supabase.from("profiles").delete().eq("username", username);
+    if (deleteError) throw new Error(deleteError.message);
+    
+    // Also delete the user from Supabase Auth if we have the service role key
+    try {
+      // Find the user by email in auth
+      const userProfile = await getProfileByUsername(username);
+      if (userProfile && userProfile.email) {
+        // Try to find and delete the auth user
+        const { data: authUsers } = await supabase.auth.admin.listUsers();
+        if (authUsers) {
+          const authUser = authUsers.users.find((u) => u.email === userProfile.email);
+          if (authUser) {
+            await supabase.auth.admin.deleteUser(authUser.id);
+          }
+        }
+      }
+    } catch (authError) {
+      console.warn("Could not delete auth user:", authError.message);
+    }
+    
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  // Exit Group (move to past groups)
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[2] === "exit") {
+    const body = await readBody(request);
+    const group = await loadGroup(body.groupCode);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const changed = removeUserFromGroup(group, body.username);
+    if (changed) {
+      await saveGroup(group);
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  // Create group
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && !parts[2]) {
+    const body = await readBody(request);
+    const code = generateCode();
+    const profile = body.profile || {};
+    const userId = crypto.randomUUID();
+    const user = { id: userId, name: body.username, username: body.username, profile };
+    const groupName = body.groupName || `${body.username}'s Group`;
     const group = {
+      name: groupName,
       code,
-      name: String(body.groupName || "Friday crew").trim().slice(0, 30) || "Friday crew",
-      members: [],
+      members: [user],
       choices: { area: {}, type: {} },
-      customOptions: { area: [], type: [] },
+      consensus: {},
+      options: { area: areaOptions, type: typeOptions },
+      places: [],
+      matches: [],
       votes: {},
       search: null,
-      places: [],
       createdAt: Date.now()
     };
-    group.updatedAt = Date.now();
-    const account = await findUserByUsername(String(body.username || body.userName || "").trim());
-    const user = addMember(group, {
-      username: body.username || body.userName,
-      profile: account?.profile
-    });
-    await saveGroup(group);
-    sendJson(response, 201, { user, group: summarizeGroup(group) });
-    return;
-  }
-
-  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "join") {
-    const group = await loadGroup(parts[2]);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
-      return;
-    }
-    const body = await readBody(request);
-    const username = String(body.username || body.userName || "").trim();
-    const existingMember = (group.members || []).find((member) => member.username === username);
-    if (existingMember) {
-      sendJson(response, 200, { user: existingMember, group: summarizeGroup(group) });
-      return;
-    }
-    const account = await findUserByUsername(username);
-    const user = addMember(group, {
-      username,
-      profile: account?.profile
-    });
-    group.updatedAt = Date.now();
     await saveGroup(group);
     sendJson(response, 200, { user, group: summarizeGroup(group) });
     return;
   }
 
-  if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2]) {
-    const group = await loadGroup(parts[2]);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
+  // Join group
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "join") {
+    const groupCode = parts[2];
+    const body = await readBody(request);
+    const group = await loadGroup(groupCode);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    if (group.members.some((member) => member.username === body.username)) {
+      sendJson(response, 200, { group: summarizeGroup(group), user: group.members.find((member) => member.username === body.username) });
       return;
     }
+    const userId = crypto.randomUUID();
+    const profile = body.profile || {};
+    const user = { id: userId, name: body.username, username: body.username, profile };
+    group.members.push(user);
+    await saveGroup(group);
+    sendJson(response, 200, { user, group: summarizeGroup(group) });
+    return;
+  }
+
+  // Get group details
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] && !parts[3]) {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
 
+  // User groups
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] === "mine") {
+    const username = url.searchParams.get("username") || "";
+    const allGroups = await getAllGroups();
+    const userGroups = allGroups.filter((g) => g.data?.members?.some((member) => member.username === username)).map((g) => ({
+      name: g.data.name,
+      code: g.data.code,
+      memberCount: g.data.members?.length || 0
+    }));
+    sendJson(response, 200, { groups: userGroups });
+    return;
+  }
+
+  // Submit choice
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "choice") {
     const group = await loadGroup(parts[2]);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
-      return;
-    }
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
-    ensureCustomOptions(group);
     const kind = body.kind === "type" ? "type" : "area";
-    let optionId = body.optionId;
-
+    if (!["area", "type"].includes(kind)) { sendJson(response, 400, { error: "Invalid kind" }); return; }
     if (body.customLabel) {
-      const option = customOption(kind, body.customLabel);
-      if (!option) {
-        sendJson(response, 400, { error: "Custom option required" });
-        return;
+      const id = `custom_${Date.now()}`;
+      if (!group.options[kind]) group.options[kind] = [];
+      group.options[kind].push({ id, label: body.customLabel, description: "" });
+      if (!group.choices[kind]) group.choices[kind] = {};
+      group.choices[kind][body.userId] = id;
+    } else {
+      if (!group.choices[kind]) group.choices[kind] = {};
+      group.choices[kind][body.userId] = body.optionId;
+    }
+    // Recalculate consensus for this kind
+    const tally = {};
+    Object.values(group.choices[kind] || {}).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
+    const maxVotes = Math.max(...Object.values(tally), 1);
+    const unanimous = Object.values(tally).every((count) => count === maxVotes) && Object.keys(tally).length === 1;
+    if (unanimous && Object.keys(tally).length > 0) {
+      const selectedId = Object.keys(tally)[0];
+      if (!group.consensus) group.consensus = {};
+      group.consensus[kind] = selectedId;
+      if (kind === "area") {
+        group.consensus.type = null;
       }
-      group.customOptions[kind].push(option);
-      optionId = option.id;
+      if (kind === "type" && group.consensus.area) {
+        const areaId = group.consensus.area;
+        const areaLabel = (group.options.area || []).find((option) => option.id === areaId)?.label || "";
+        const typeLabel = (group.options.type || []).find((option) => option.id === selectedId)?.label || "";
+        const groupsLabel = areaOptions.find((option) => option.id === areaId)?.queryArea || areaLabel;
+        const groupsType = typeOptions.find((option) => option.id === selectedId)?.queryType || typeLabel;
+        group.search = { source: "opensource", query: `${typeLabel} near ${areaLabel}` };
+        if (googleApiKey) {
+          group.search.source = "google";
+        } else {
+          group.search.source = "sample";
+        }
+        // Generate sample places
+        group.places = generateSamplePlaces(areaLabel, typeLabel);
+      }
+    } else {
+      if (group.consensus?.[kind]) group.consensus[kind] = null;
     }
-
-    const validOptions = groupOptions(group, kind);
-    if (!validOptions.some((option) => option.id === optionId)) {
-      sendJson(response, 400, { error: "Invalid option" });
-      return;
-    }
-    group.choices[kind][body.userId] = optionId;
-    const areaConsensus = consensusOption(group, "area");
-    const typeConsensus = consensusOption(group, "type");
-
-    if (areaConsensus && typeConsensus) {
-      const result = await searchGroupPlaces(group, areaConsensus, typeConsensus);
-      group.search = { query: result.query, source: result.source };
-      group.places = result.places;
-    }
-
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
 
+  // Go back choice
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "back") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const body = await readBody(request);
+    const userId = body.userId;
+    const step = body.step === "type" ? "type" : "area";
+    if (step === "type") {
+      delete group.choices.type[userId];
+      group.consensus.type = null;
+    } else {
+      delete group.choices.area[userId];
+      delete group.choices.type[userId];
+      delete group.votes[userId];
+      group.consensus.area = null;
+      group.consensus.type = null;
+      group.search = null;
+      group.places = [];
+    }
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // Vote
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "vote") {
     const group = await loadGroup(parts[2]);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
-      return;
-    }
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
     if (!group.places.some((place) => place.id === body.placeId)) {
-      sendJson(response, 400, { error: "Invalid place" });
-      return;
+      sendJson(response, 400, { error: "Invalid place" }); return;
     }
     const value = ["yes", "maybe", "no"].includes(body.vote) ? body.vote : (body.liked ? "yes" : "no");
     if (!group.votes[body.userId]) group.votes[body.userId] = {};
@@ -1474,32 +557,250 @@ async function handleApi(request, response) {
     return;
   }
 
-  if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "back") {
-    const group = await loadGroup(parts[2]);
-    if (!group) {
-      sendJson(response, 404, { error: "Group not found" });
+  // Friends endpoints
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "friends") {
+    const username = url.searchParams.get("username") || "";
+    const profile = await getProfileByUsername(username);
+    if (!profile) { sendJson(response, 404, { error: "User not found" }); return; }
+    const friendsList = profile.profile?.friends || [];
+    const friends = [];
+    for (const friendUsername of friendsList) {
+      const friendProfile = await getProfileByUsername(friendUsername);
+      if (friendProfile) friends.push(friendProfile);
+    }
+    const incomingRequests = (profile.profile?.friendRequests || []).filter((req) => !friendsList.includes(req));
+    const incoming = [];
+    for (const requester of incomingRequests) {
+      const requesterProfile = await getProfileByUsername(requester);
+      if (requesterProfile) incoming.push(requesterProfile);
+    }
+    // Outgoing requests (users I requested but haven't accepted me back)
+    const allProfiles = await getAllProfiles();
+    const outgoing = allProfiles.filter((p) => 
+      p.username !== username && 
+      !friendsList.includes(p.username) && 
+      (p.profile?.friendRequests || []).includes(username)
+    );
+    sendJson(response, 200, { friends, incoming, outgoing });
+    return;
+  }
+
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "friends" && parts[2] === "request") {
+    const body = await readBody(request);
+    const fromProfile = await getProfileByUsername(body.fromUsername);
+    if (!fromProfile) { sendJson(response, 404, { error: "Sender not found" }); return; }
+    const toProfile = await getProfileByUsername(body.toUsername);
+    if (!toProfile) { sendJson(response, 404, { error: "Recipient not found" }); return; }
+    const toRequests = toProfile.profile?.friendRequests || [];
+    if (!toRequests.includes(body.fromUsername)) {
+      toRequests.push(body.fromUsername);
+      await upsertProfile({ ...toProfile, profile: { ...toProfile.profile, friendRequests: toRequests } });
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "friends" && parts[2] === "accept") {
+    const body = await readBody(request);
+    const profile = await getProfileByUsername(body.username);
+    if (!profile) { sendJson(response, 404, { error: "User not found" }); return; }
+    const requesterProfile = await getProfileByUsername(body.requester);
+    if (!requesterProfile) { sendJson(response, 404, { error: "Requester not found" }); return; }
+    const friends = profile.profile?.friends || [];
+    const requests = profile.profile?.friendRequests || [];
+    if (!friends.includes(body.requester)) {
+      friends.push(body.requester);
+    }
+    const filteredRequests = requests.filter((req) => req !== body.requester);
+    await upsertProfile({ ...profile, profile: { ...profile.profile, friends, friendRequests: filteredRequests } });
+    const requesterFriends = requesterProfile.profile?.friends || [];
+    if (!requesterFriends.includes(body.username)) {
+      requesterFriends.push(body.username);
+      await upsertProfile({ ...requesterProfile, profile: { ...requesterProfile.profile, friends: requesterFriends } });
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "friends" && parts[2] === "remove") {
+    const body = await readBody(request);
+    const profile = await getProfileByUsername(body.username);
+    const friendProfile = await getProfileByUsername(body.friendUsername);
+    if (profile) {
+      const friends = (profile.profile?.friends || []).filter((f) => f !== body.friendUsername);
+      await upsertProfile({ ...profile, profile: { ...profile.profile, friends } });
+    }
+    if (friendProfile) {
+      const friends = (friendProfile.profile?.friends || []).filter((f) => f !== body.username);
+      await upsertProfile({ ...friendProfile, profile: { ...friendProfile.profile, friends } });
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  // User search
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "users" && parts[2] === "search") {
+    const q = url.searchParams.get("q") || "";
+    const username = url.searchParams.get("username") || "";
+    const allProfiles = await getAllProfiles();
+    const viewerProfile = await getProfileByUsername(username);
+    const viewerFriends = viewerProfile?.profile?.friends || [];
+    const results = allProfiles.filter((p) =>
+      p.username !== username &&
+      p.username.toLowerCase().includes(q.toLowerCase())
+    ).map((p) => {
+      let friendStatus = "";
+      if (viewerFriends.includes(p.username)) friendStatus = "friends";
+      else if ((p.profile?.friendRequests || []).includes(username)) friendStatus = "requested";
+      const viewerRequests = viewerProfile?.profile?.friendRequests || [];
+      if (viewerRequests.includes(p.username)) friendStatus = "incoming";
+      return { ...p, friendStatus };
+    });
+    sendJson(response, 200, { users: results });
+    return;
+  }
+
+  // Liked places
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "liked-places") {
+    const username = url.searchParams.get("username") || "";
+    const profile = await getProfileByUsername(username);
+    if (!profile) { sendJson(response, 200, { places: [] }); return; }
+    const allGroups = await getAllGroups();
+    const places = [];
+    for (const groupData of allGroups) {
+      const group = groupData.data;
+      if (!group || !group.members?.some((member) => member.username === username)) continue;
+      if (!group.votes) continue;
+      for (const [userId, userVotes] of Object.entries(group.votes)) {
+        if (userId === username || group.members?.find((m) => m.id === userId)?.username === username) {
+          for (const [placeId, vote] of Object.entries(userVotes)) {
+            if (vote === "yes" || vote === true) {
+              const place = group.places?.find((p) => p.id === placeId);
+              if (place) {
+                places.push({ place: place.title, area: place.areaLabel, activity: place.category, vote, groupName: group.name });
+              }
+            }
+          }
+        }
+      }
+    }
+    sendJson(response, 200, { places });
+    return;
+  }
+
+  // AI Suggestions
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "suggestions") {
+    const body = await readBody(request);
+    if (!openAiApiKey) {
+      sendJson(response, 200, { suggestions: [] });
       return;
     }
-    const body = await readBody(request);
-    const userId = body.userId;
-    const step = body.step === "type" ? "type" : "area";
-
-    if (step === "type") {
-      delete group.choices.type[userId];
-    } else {
-      delete group.choices.area[userId];
-      delete group.choices.type[userId];
-      delete group.votes[userId];
-      group.search = null;
-      group.places = [];
+    try {
+      const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
+        body: JSON.stringify({
+          model: openAiModel,
+          messages: [
+            { role: "system", content: `You are a helpful assistant that suggests places based on area and activity. Return a JSON array of objects with "place" and "reason" keys.` },
+            { role: "user", content: `Suggest 5 places for ${body.activity} in ${body.area}. Return ONLY JSON.` }
+          ],
+          temperature: 0.7,
+          max_tokens: 500
+        })
+      });
+      const aiData = await aiResponse.json();
+      let suggestions = [];
+      try {
+        const content = aiData.choices?.[0]?.message?.content || "[]";
+        suggestions = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+      } catch (parseError) {
+        console.warn("AI response parse error:", parseError.message);
+        suggestions = [];
+      }
+      sendJson(response, 200, { suggestions });
+    } catch (error) {
+      console.warn("AI request error:", error.message);
+      sendJson(response, 200, { suggestions: [] });
     }
+    return;
+  }
 
-    await saveGroup(group);
-    sendJson(response, 200, { group: summarizeGroup(group) });
+  // Notifications
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "notifications") {
+    const username = url.searchParams.get("username") || "";
+    const profile = await getProfileByUsername(username);
+    if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 }); return; }
+    const friendRequests = profile.profile?.friendRequests?.length || 0;
+    sendJson(response, 200, { total: friendRequests, friendRequests, groupInvites: 0, messages: 0 });
     return;
   }
 
   sendJson(response, 404, { error: "Not found" });
+}
+
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+function removeUserFromGroup(group, username) {
+  const before = group.members?.length || 0;
+  group.members = (group.members || []).filter((member) => member.username !== username);
+  if (group.choices?.area) delete group.choices.area[group.members.find((m) => m.username === username)?.id || ""];
+  if (group.choices?.type) delete group.choices.type[group.members.find((m) => m.username === username)?.id || ""];
+  if (group.votes) delete group.votes[group.members.find((m) => m.username === username)?.id || ""];
+  // Clean up any references by username directly too
+  Object.keys(group.choices?.area || {}).forEach((key) => {
+    const member = group.members.find((m) => m.id === key);
+    if (!member) delete group.choices.area[key];
+  });
+  Object.keys(group.choices?.type || {}).forEach((key) => {
+    const member = group.members.find((m) => m.id === key);
+    if (!member) delete group.choices.type[key];
+  });
+  Object.keys(group.votes || {}).forEach((key) => {
+    const member = group.members.find((m) => m.id === key);
+    if (!member) delete group.votes[key];
+  });
+  return group.members.length !== before;
+}
+
+async function getAllProfiles() {
+  const { data, error } = await supabase.from("profiles").select("*");
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+function generateSamplePlaces(area, activity) {
+  const sampleNames = [
+    `${activity} Spot`, `Best ${activity} Place`, `${area} ${activity} Lounge`,
+    `${activity} House`, `Prime ${activity}`, `${activity} Central`,
+    `The ${activity} Corner`, `${activity} & Co.`, `${activity} Garden`,
+    `${activity} Square`, `${activity} Terrace`, `${activity} Room`,
+    `${activity} Hall`, `${activity} Club`, `${activity} Bar`
+  ];
+  const times = ["11:00–23:00", "12:00–00:00", "10:00–22:00", "09:00–02:00", "12:00–01:00"];
+  const costs = ["€", "€€", "€€€", "€€", "€–€€"];
+  const categories = [activity, activity, activity, activity, activity];
+  const ratings = [4.0, 3.5, 4.5, 4.2, 3.8];
+  const photos = [
+    "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=80"
+  ];
+  return Array.from({ length: 6 }, (_, i) => ({
+    id: `place_${Date.now()}_${i}`,
+    title: sampleNames[i % sampleNames.length],
+    category: categories[i % categories.length],
+    areaLabel: area,
+    description: `A nice ${activity.toLowerCase()} spot in the ${area} area.`,
+    time: times[i % times.length],
+    cost: costs[i % costs.length],
+    rating: ratings[i % ratings.length],
+    photoUrl: photos[i % photos.length]
+  }));
 }
 
 const server = http.createServer(async (request, response) => {
@@ -1521,4 +822,5 @@ server.listen(port, host, () => {
   console.log(`On your Wi-Fi, friends can use http://YOUR-COMPUTER-IP:${port}`);
   console.log("Mode: Supabase");
   console.log("Set GOOGLE_MAPS_API_KEY to use real Google Places results.");
+  console.log("Set OPENAI_API_KEY for AI suggestions.");
 });
