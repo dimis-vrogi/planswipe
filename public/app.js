@@ -237,7 +237,25 @@ const copy = {
     searchSample: "sample data",
     searchCustom: "custom group idea",
     areaSelected: "Area selected. Waiting for everyone to agree on an activity.",
-    fridayCrew: "Friday crew"
+    fridayCrew: "Friday crew",
+    forgotPassword: "Forgot Password?",
+    username: "Username",
+    email: "Email",
+    password: "Password",
+    oldPassword: "Old password",
+    newPassword: "New password",
+    verifyPassword: "Verify new password",
+    changePassword: "Change Password",
+    passwordChanged: "Password changed successfully",
+    passwordMismatch: "New passwords do not match",
+    editProfilePicture: "Edit profile picture",
+    bioPlaceholder: "Tell friends what kind of plans you like.",
+    favouriteAreas: "Favourite Areas",
+    favouriteActivities: "Favourite Activities",
+    favouritePlaces: "Favourite Places",
+    addAnotherArea: "Add another area",
+    addAnotherActivity: "Add another activity",
+    addAnotherPlace: "Add another place"
   },
   el: {
     login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
@@ -349,7 +367,25 @@ const copy = {
     searchSample: "\u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd",
     searchCustom: "\u03c0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03bf\u03c3\u03bc\u03ad\u03bd\u03b7 \u03b9\u03b4\u03ad\u03b1",
     areaSelected: "\u0395\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae. \u0391\u03bd\u03b1\u03bc\u03ad\u03bd\u03bf\u03c5\u03bc\u03b5 \u03cc\u03bb\u03bf\u03c5\u03c2 \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03bf\u03c5\u03bd \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1.",
-    fridayCrew: "\u03a0\u03b1\u03c1\u03ad\u03b1 \u03a0\u03b1\u03c1\u03b1\u03c3\u03ba\u03b5\u03c5\u03ae\u03c2"
+    fridayCrew: "\u03a0\u03b1\u03c1\u03ad\u03b1 \u03a0\u03b1\u03c1\u03b1\u03c3\u03ba\u03b5\u03c5\u03ae\u03c2",
+    forgotPassword: "\u039e\u03b5\u03c7\u03ac\u03c3\u03b1\u03c4\u03b5 \u03c4\u03bf\u03bd \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc;",
+    username: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7",
+    email: "Email",
+    password: "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+    oldPassword: "\u03a0\u03b1\u03bb\u03b9\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+    newPassword: "\u039d\u03ad\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+    verifyPassword: "\u0395\u03c0\u03b9\u03b2\u03b5\u03b2\u03b1\u03af\u03c9\u03c3\u03b7 \u03bd\u03ad\u03bf\u03c5 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd",
+    changePassword: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd",
+    passwordChanged: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b1\u03bb\u03bb\u03ac\u03c7\u03b8\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2",
+    passwordMismatch: "\u039f\u03b9 \u03bd\u03ad\u03bf\u03b9 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03af \u03b4\u03b5\u03bd \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd",
+    editProfilePicture: "\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c6\u03c9\u03c4\u03bf\u03b3\u03c1\u03b1\u03c6\u03af\u03b1\u03c2 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    bioPlaceholder: "\u03a0\u03b5\u03af\u03c4\u03b5 \u03c3\u03c4\u03bf\u03c5\u03c2 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c4\u03b9 \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c3\u03b1\u03c2 \u03b1\u03c1\u03ad\u03c3\u03bf\u03c5\u03bd.",
+    favouriteAreas: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2",
+    favouriteActivities: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
+    favouritePlaces: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7",
+    addAnotherArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
+    addAnotherActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    addAnotherPlace: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03bf\u03c5 \u03bc\u03ad\u03c1\u03bf\u03c5\u03c2"
   }
 };
 
@@ -770,7 +806,7 @@ async function renderPersonalInformation() {
   const account = await loadAccount();
   const profile = account.profile || {};
   const preferences = profile.preferences || {};
-  pageDemo.innerHTML = `<form class="personal-form"><section><h3>My Profile</h3><label class="profile-upload">${profileImage(account)}<span>Edit profile picture</span><input id="profilePictureInput" type="file" accept="image/*"></label><label class="field"><span>Username</span><input type="text" value="${escapeHtml(account.username)}" disabled></label><label class="field"><span>Email</span><input type="email" value="${escapeHtml(account.email || "")}" disabled></label><label class="field"><span>${t("age")}</span><input id="profileAge" type="number" min="13" max="120" value="${escapeHtml(profile.age || "")}"></label><label class="field"><span>Password</span><input type="password" placeholder="Email authentication required to change password" disabled></label><label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="5" placeholder="Tell friends what kind of plans you like.">${escapeHtml(profile.bio || "")}</textarea></label><button class="btn-primary" type="button" id="saveProfileButton">${t("saveProfile")}</button></section><section><h3>${t("preferences")}</h3>${preferenceList("Favourite Areas", "areas", preferences.areas, "Add another area")}${preferenceList("Favourite Activities", "activities", preferences.activities, "Add another activity")}${preferenceList("Favourite Places", "places", preferences.places, "Add another place")}</section></form>`;
+  pageDemo.innerHTML = `<form class="personal-form"><section><h3>${t("personal")}</h3><label class="profile-upload">${profileImage(account)}<span>${t("editProfilePicture")}</span><input id="profilePictureInput" type="file" accept="image/*"></label><label class="field"><span>${t("username")}</span><input type="text" value="${escapeHtml(account.username)}" disabled></label><label class="field"><span>${t("email")}</span><input type="email" value="${escapeHtml(account.email || "")}" disabled></label><label class="field"><span>${t("age")}</span><input id="profileAge" type="number" min="13" max="120" value="${escapeHtml(profile.age || "")}"></label><label class="field"><span>${t("password")}</span><input id="profileOldPassword" type="password" placeholder="${t("oldPassword")}"><input id="profileNewPassword" type="password" placeholder="${t("newPassword")}"><input id="profileVerifyPassword" type="password" placeholder="${t("verifyPassword")}"><button class="btn-ghost" type="button" id="changePasswordButton">${t("changePassword")}</button></label><label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="3" placeholder="${t("bioPlaceholder")}">${escapeHtml(profile.bio || "")}</textarea></label><button class="btn-primary" type="button" id="saveProfileButton">${t("saveProfile")}</button></section><section><h3>${t("preferences")}</h3>${preferenceList(t("favouriteAreas"), "areas", preferences.areas, t("addAnotherArea"))}${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}${preferenceList(t("favouritePlaces"), "places", preferences.places, t("addAnotherPlace"))}</section></form>`;
 }
 
 function userCard(user, action = "") {
@@ -1342,6 +1378,14 @@ joinButton.addEventListener("click", () => joinGroup().catch((error) => showErro
 loginButton.addEventListener("click", () => login().catch((error) => showError(error.message)));
 registerButton.addEventListener("click", () => registerUser().catch((error) => showError(error.message)));
 [loginUsername, loginEmail, loginPassword].forEach((input) => { input.addEventListener("keydown", (event) => { if (event.key === "Enter") login().catch((error) => showError(error.message)); }); });
+forgotPasswordButton.addEventListener("click", () => {
+  const email = loginEmail.value.trim();
+  if (!email) { alert("Please enter your email first."); return; }
+  alert(`If "${email}" is registered, a recovery email has been sent. (Requires Supabase Auth configured)`);
+  if (state.supabaseClient) {
+    state.supabaseClient.auth.resetPasswordForEmail(email).catch(console.warn);
+  }
+});
 homeButton.addEventListener("click", goToHome);
 resetButton.addEventListener("click", leaveGroup);
 logoutButton.addEventListener("click", logout);
@@ -1392,6 +1436,21 @@ pageDemo.addEventListener("click", (event) => {
   if (showPastFormButton) { document.querySelector("#pastActivityForm")?.classList.toggle("is-hidden"); return; }
   const savePastButton = event.target.closest("#savePastActivityButton");
   if (savePastButton) { savePastActivity().catch((error) => showError(error.message)); }
+  const changePwButton = event.target.closest("#changePasswordButton");
+  if (changePwButton) {
+    const old = document.querySelector("#profileOldPassword")?.value;
+    const pw = document.querySelector("#profileNewPassword")?.value;
+    const verify = document.querySelector("#profileVerifyPassword")?.value;
+    if (!old || !pw || !verify) { showError("Please fill in all password fields."); return; }
+    if (pw !== verify) { showError(t("passwordMismatch")); return; }
+    api("/api/change-password", { method: "POST", body: { username: currentUsername(), oldPassword: old, newPassword: pw } }).then(() => {
+      alert(t("passwordChanged"));
+      document.querySelector("#profileOldPassword").value = "";
+      document.querySelector("#profileNewPassword").value = "";
+      document.querySelector("#profileVerifyPassword").value = "";
+    }).catch((error) => showError(error.message));
+    return;
+  }
 });
 
 pageDemo.addEventListener("change", (event) => { if (event.target.id === "profilePictureInput") { updateProfilePicture(event.target.files?.[0]).catch((error) => showError(error.message)); } });
