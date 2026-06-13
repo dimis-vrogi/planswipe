@@ -494,7 +494,7 @@ button:active {
   position: absolute;
   top: 54px;
   right: 0;
-  z-index: 20;
+  z-index: 1000;
   width: 230px;
   padding: 8px;
   border: 1px solid var(--line);
