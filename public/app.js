@@ -6,6 +6,7 @@ const state = {
   types: [],
   index: 0,
   pollTimer: null,
+  notifTimer: null,
   setupMode: "",
   activePage: "",
   loginOpen: false,
@@ -17,7 +18,9 @@ const state = {
   notifications: { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 },
   exitedGroups: JSON.parse(localStorage.getItem("planswipe:exitedGroups") || "[]"),
   aiPlacesBatch: [],
-  aiBatchIndex: 0
+  aiBatchIndex: 0,
+  friendsDataLoaded: false,
+  friendsData: null
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -95,18 +98,14 @@ const pageContent = {
   settings: { title: "Settings", eyebrow: "Account", dynamic: true }
 };
 
-// Greek translations for area/type options (shown in decision panels)
 const optionTranslations = {
   el: {
-    // Areas
     athens_center: { label: "\u039a\u03ad\u03bd\u03c4\u03c1\u03bf \u0391\u03b8\u03b7\u03bd\u03ce\u03bd", description: "\u03a3\u03cd\u03bd\u03c4\u03b1\u03b3\u03bc\u03b1, \u039c\u03bf\u03bd\u03b1\u03c3\u03c4\u03b7\u03c1\u03ac\u03ba\u03b9, \u03a8\u03c5\u03c1\u03c1\u03ae \u03ba\u03b1\u03b9 \u03ba\u03b5\u03bd\u03c4\u03c1\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
     athens_seaside: { label: "\u03a0\u03b1\u03c1\u03b1\u03bb\u03af\u03b1 \u0391\u03b8\u03b7\u03bd\u03ce\u03bd", description: "\u03a6\u03bb\u03bf\u03af\u03c3\u03b2\u03bf\u03c2, \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1, \u0386\u03bb\u03b9\u03bc\u03bf\u03c2 \u03ba\u03b1\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03b1\u03bb\u03b9\u03b1\u03ba\u03ae \u03c0\u03bb\u03b5\u03c5\u03c1\u03ac." },
     athens_north: { label: "\u0392\u03cc\u03c1\u03b5\u03b9\u03b1 \u03c0\u03c1\u03bf\u03ac\u03c3\u03c4\u03b9\u03b1", description: "\u03a7\u03b1\u03bb\u03ac\u03bd\u03b4\u03c1\u03b9, \u039c\u03b1\u03c1\u03bf\u03cd\u03c3\u03b9, \u039a\u03b7\u03c6\u03b9\u03c3\u03b9\u03ac \u03ba\u03b1\u03b9 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
-    // Types
     restaurant: { label: "\u0395\u03c3\u03c4\u03b9\u03b1\u03c4\u03cc\u03c1\u03b9\u03b1", description: "\u0392\u03b3\u03b1\u03af\u03bd\u03bf\u03c5\u03bc\u03b5 \u03b3\u03b9\u03b1 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc, \u03c0\u03b9\u03c4\u03c3\u03b1\u03c1\u03af\u03b1 \u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c0\u03bf\u03c5 \u03be\u03b5\u03ba\u03b9\u03bd\u03bf\u03cd\u03bd \u03bc\u03b5 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc." },
     game: { label: "\u03a0\u03b1\u03b9\u03c7\u03bd\u03af\u03b4\u03b9\u03b1", description: "\u039c\u03c0\u03bf\u03c9\u03bb\u03b9\u03bd\u03b3\u03ba, escape rooms, arcades \u03ba\u03b1\u03b9 \u03b4\u03b9\u03b1\u03c3\u03ba\u03b5\u03b4\u03b1\u03c3\u03c4\u03b9\u03ba\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2." },
     walking: { label: "\u03a0\u03b5\u03c1\u03af\u03c0\u03b1\u03c4\u03bf\u03c2", description: "\u03a0\u03ac\u03c1\u03ba\u03b1, \u03c0\u03b1\u03c1\u03b1\u03bb\u03b9\u03b1\u03ba\u03ad\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ad\u03c2, \u03b8\u03ad\u03b1 \u03ba\u03b1\u03b9 \u03b5\u03cd\u03ba\u03bf\u03bb\u03b5\u03c2 \u03b5\u03be\u03c9\u03c4\u03b5\u03c1\u03b9\u03ba\u03ad\u03c2 \u03b4\u03b9\u03b1\u03b4\u03c1\u03bf\u03bc\u03ad\u03c2." },
-    // Custom fallback
     addArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
     addActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
     addAreaText: "\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03bc\u03ad\u03c1\u03bf\u03c2.",
@@ -147,6 +146,19 @@ const copy = {
     heroTitle: "Find the plan your group can actually agree on.",
     heroDescription: "Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.",
     heroNote: "Built for group chats that never decide.",
+    whatPlanswipeIs: "What PlanSwipe is",
+    sharedDecisionTool: "A shared decision tool for real plans",
+    offerText: "Instead of long group chats, everyone chooses the basics, swipes through options, and sees which activities have the strongest support.",
+    agreeFaster: "Agree faster",
+    agreeFasterText: "Pick an area and activity type together before looking at suggestions.",
+    discoverOptions: "Discover options",
+    discoverOptionsText: "Use sample ideas or Google Places results when the API key is configured.",
+    voteAsGroup: "Vote as a group",
+    voteAsGroupText: "Mark activities as No, Maybe, or Yes and compare support instantly.",
+    dinnerNearSea: "Dinner near the sea",
+    glyfadaTaverna: "Glyfada seafood taverna",
+    seeWhatFriendsThink: "See what your friends think about this.",
+    findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
     startPlanningText: "Choose whether you are creating a new group or joining one that already exists.",
     createGroup: "Create Group",
@@ -216,7 +228,16 @@ const copy = {
     aiGenerating: "Getting AI suggestions...",
     exitGroupPermanent: "Exit Group Permanently",
     confirmExitGroup: "Are you sure you want to permanently leave this group?",
-    accountManagement: "Account Management"
+    accountManagement: "Account Management",
+    choiceNo: "No",
+    choiceMaybe: "Maybe",
+    choiceYes: "Yes",
+    searchFrom: "Search from",
+    searchGooglePlaces: "Google Places",
+    searchSample: "sample data",
+    searchCustom: "custom group idea",
+    areaSelected: "Area selected. Waiting for everyone to agree on an activity.",
+    fridayCrew: "Friday crew"
   },
   el: {
     login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
@@ -237,6 +258,19 @@ const copy = {
     heroTitle: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03c0\u03bf\u03c5 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1 \u03c3\u03b1\u03c2 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9.",
     heroDescription: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac \u03bc\u03b1\u03b6\u03af, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ad\u03c2 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03b8\u03b1 \u03b1\u03c0\u03bf\u03bb\u03b1\u03cd\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
     heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03c0\u03bf\u03c4\u03ad \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd.",
+    whatPlanswipeIs: "\u03a4\u03b9 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c4\u03bf PlanSwipe",
+    sharedDecisionTool: "\u0388\u03bd\u03b1 \u03b5\u03c1\u03b3\u03b1\u03bb\u03b5\u03af\u03bf \u03ba\u03bf\u03b9\u03bd\u03ce\u03bd \u03b1\u03c0\u03bf\u03c6\u03ac\u03c3\u03b5\u03c9\u03bd",
+    offerText: "\u0391\u03bd\u03c4\u03af \u03b3\u03b9\u03b1 \u03b1\u03c4\u03b5\u03bb\u03b5\u03af\u03c9\u03c4\u03b5\u03c2 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03b6\u03b7\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2, \u03cc\u03bb\u03bf\u03b9 \u03b5\u03c0\u03b9\u03bb\u03ad\u03b3\u03bf\u03c5\u03bd \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03bf\u03c5\u03bd swipe \u03c3\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03ba\u03b1\u03b9 \u03b2\u03bb\u03ad\u03c0\u03bf\u03c5\u03bd \u03c0\u03bf\u03b9\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7.",
+    agreeFaster: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c0\u03b9\u03bf \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03b1",
+    agreeFasterText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af \u03c0\u03c1\u03b9\u03bd \u03b4\u03b5\u03af\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2.",
+    discoverOptions: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
+    discoverOptionsText: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03ae \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1 Google Places \u03cc\u03c4\u03b1\u03bd \u03c1\u03c5\u03b8\u03bc\u03b9\u03c3\u03c4\u03b5\u03af \u03c4\u03bf API key.",
+    voteAsGroup: "\u03a8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03c9\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1",
+    voteAsGroupText: "\u03a3\u03b7\u03bc\u03b5\u03b9\u03ce\u03c3\u03c4\u03b5 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03c9\u03c2 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9 \u03ba\u03b1\u03b9 \u03c3\u03c5\u03b3\u03ba\u03c1\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1.",
+    dinnerNearSea: "\u0392\u03c1\u03b1\u03b4\u03b9\u03bd\u03cc \u03b4\u03af\u03c0\u03bb\u03b1 \u03c3\u03c4\u03b7 \u03b8\u03ac\u03bb\u03b1\u03c3\u03c3\u03b1",
+    glyfadaTaverna: "\u03a8\u03b1\u03c1\u03bf\u03c4\u03b1\u03b2\u03ad\u03c1\u03bd\u03b1 \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1\u03c2",
+    seeWhatFriendsThink: "\u0394\u03b5\u03af\u03c4\u03b5 \u03c4\u03b9 \u03c0\u03b9\u03c3\u03c4\u03b5\u03cd\u03bf\u03c5\u03bd \u03bf\u03b9 \u03c6\u03af\u03bb\u03bf\u03b9 \u03c3\u03b1\u03c2.",
+    findSimilar: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c0\u03b1\u03c1\u03cc\u03bc\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7",
     startPlanning: "\u039e\u03b5\u03ba\u03b9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf\u03bd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03b1\u03c2",
     startPlanningText: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03bd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03ae\u03c3\u03b5\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03bd\u03ad\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ae \u03bd\u03b1 \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03c3\u03b1.",
     createGroup: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
@@ -306,7 +340,16 @@ const copy = {
     aiGenerating: "\u039b\u03ae\u03c8\u03b7 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd AI...",
     exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
     confirmExitGroup: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03c4\u03b5 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1;",
-    accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd"
+    accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    choiceNo: "\u038c\u03c7\u03b9",
+    choiceMaybe: "\u038a\u03c3\u03c9\u03c2",
+    choiceYes: "\u039d\u03b1\u03b9",
+    searchFrom: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03b1\u03c0\u03cc",
+    searchGooglePlaces: "Google Places",
+    searchSample: "\u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd",
+    searchCustom: "\u03c0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03bf\u03c3\u03bc\u03ad\u03bd\u03b7 \u03b9\u03b4\u03ad\u03b1",
+    areaSelected: "\u0395\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae. \u0391\u03bd\u03b1\u03bc\u03ad\u03bd\u03bf\u03c5\u03bc\u03b5 \u03cc\u03bb\u03bf\u03c5\u03c2 \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03bf\u03c5\u03bd \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1.",
+    fridayCrew: "\u03a0\u03b1\u03c1\u03ad\u03b1 \u03a0\u03b1\u03c1\u03b1\u03c3\u03ba\u03b5\u03c5\u03ae\u03c2"
   }
 };
 
@@ -315,33 +358,109 @@ function applyLanguage() {
   languageButton.textContent = state.language === "en" ? "EL" : "EN";
   appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
   heroLoginButton.textContent = t("login");
-  // Enter PlanSwipe button text
   heroEnterButton.textContent = t("enterPlanswipe");
   loginButton.textContent = t("login");
   registerButton.textContent = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
-  document.querySelector(".hero-copy .eyebrow").textContent = t("heroEyebrow");
-  document.querySelector(".hero-copy h1").textContent = t("heroTitle");
-  document.querySelector(".hero-description").textContent = t("heroDescription");
-  document.querySelector(".hero-actions span").textContent = t("heroNote");
-  document.querySelector(".topbar .eyebrow").textContent = t("groupPlans");
+  
+  // Hero copy
+  const heroCopy = document.querySelector(".hero-copy");
+  if (heroCopy) {
+    const eyb = heroCopy.querySelector(".eyebrow");
+    if (eyb) eyb.textContent = t("heroEyebrow");
+    const h1 = heroCopy.querySelector("h1");
+    if (h1) h1.textContent = t("heroTitle");
+    const desc = heroCopy.querySelector(".hero-description");
+    if (desc) desc.textContent = t("heroDescription");
+    const span = heroCopy.querySelector(".hero-actions span");
+    if (span) span.textContent = t("heroNote");
+  }
+  
+  // Hero preview cards
+  const previewDiv = document.querySelector(".preview-card div");
+  if (previewDiv) {
+    const p = previewDiv.querySelector("p");
+    if (p) p.textContent = t("dinnerNearSea");
+    const h2 = previewDiv.querySelector("h2");
+    if (h2) h2.textContent = t("glyfadaTaverna");
+    const span = previewDiv.querySelector("span");
+    if (span) span.textContent = t("seeWhatFriendsThink");
+  }
+  const previewStack = document.querySelector(".preview-stack span");
+  if (previewStack) previewStack.textContent = t("findSimilar");
+  
+  // Offer section
+  const offerSection = document.querySelector(".offer-section");
+  if (offerSection) {
+    const eyb = offerSection.querySelector(".eyebrow");
+    if (eyb) eyb.textContent = t("whatPlanswipeIs");
+    const h2 = offerSection.querySelector("h2");
+    if (h2) h2.textContent = t("sharedDecisionTool");
+    const p = offerSection.querySelector("p");
+    if (p) p.textContent = t("offerText");
+    const articles = offerSection.querySelectorAll(".offer-grid article");
+    if (articles[0]) {
+      const h3 = articles[0].querySelector("h3");
+      if (h3) h3.textContent = t("agreeFaster");
+      const p = articles[0].querySelector("p");
+      if (p) p.textContent = t("agreeFasterText");
+    }
+    if (articles[1]) {
+      const h3 = articles[1].querySelector("h3");
+      if (h3) h3.textContent = t("discoverOptions");
+      const p = articles[1].querySelector("p");
+      if (p) p.textContent = t("discoverOptionsText");
+    }
+    if (articles[2]) {
+      const h3 = articles[2].querySelector("h3");
+      if (h3) h3.textContent = t("voteAsGroup");
+      const p = articles[2].querySelector("p");
+      if (p) p.textContent = t("voteAsGroupText");
+    }
+  }
+  
+  // Topbar
+  const topbarEyb = document.querySelector(".topbar .eyebrow");
+  if (topbarEyb) topbarEyb.textContent = t("groupPlans");
   resetButton.textContent = t("leaveGroup");
   closePageButton.textContent = t("exitGroup");
   suggestionButton.textContent = t("aiSuggestions");
   reviewButton.textContent = t("changeBasics");
-  document.querySelector("#setupPanel h2").textContent = t("startPlanning");
-  document.querySelector("#setupPanel .setup-intro p").textContent = t("startPlanningText");
-  showCreateButton.querySelector("strong").textContent = t("createGroup");
-  showCreateButton.querySelector("span").textContent = t("createGroupText");
-  showJoinButton.querySelector("strong").textContent = t("joinGroup");
-  showJoinButton.querySelector("span").textContent = t("joinGroupText");
-  createForm.querySelector(".field span").textContent = t("groupName");
-  joinForm.querySelector(".field span").textContent = t("groupCodeLabel");
+  
+  // Setup panel
+  const setupH2 = document.querySelector("#setupPanel h2");
+  if (setupH2) setupH2.textContent = t("startPlanning");
+  const setupP = document.querySelector("#setupPanel .setup-intro p");
+  if (setupP) setupP.textContent = t("startPlanningText");
+  if (showCreateButton) {
+    const strong = showCreateButton.querySelector("strong");
+    if (strong) strong.textContent = t("createGroup");
+    const span = showCreateButton.querySelector("span");
+    if (span) span.textContent = t("createGroupText");
+  }
+  if (showJoinButton) {
+    const strong = showJoinButton.querySelector("strong");
+    if (strong) strong.textContent = t("joinGroup");
+    const span = showJoinButton.querySelector("span");
+    if (span) span.textContent = t("joinGroupText");
+  }
+  const createFieldSpan = createForm.querySelector(".field span");
+  if (createFieldSpan) createFieldSpan.textContent = t("groupName");
+  groupInput.placeholder = t("fridayCrew");
+  const joinFieldSpan = joinForm.querySelector(".field span");
+  if (joinFieldSpan) joinFieldSpan.textContent = t("groupCodeLabel");
   createButton.textContent = t("createGroup");
   joinButton.textContent = t("joinGroup");
   backFromCreateButton.textContent = t("back");
   backFromJoinButton.textContent = t("back");
   homeButton.textContent = t("home");
+  
+  // Swipe buttons
+  noButton.textContent = t("choiceNo");
+  maybeButton.textContent = t("choiceMaybe");
+  yesButton.textContent = t("choiceYes");
+  
+  // Profile menu
   const menuButtons = profileMenu.querySelectorAll("button[data-page]");
   menuButtons.forEach((button) => {
     const pageKey = button.dataset.page;
@@ -349,6 +468,12 @@ function applyLanguage() {
     button.textContent = t(labelKey);
   });
   logoutButton.textContent = t("logout");
+  
+  // Results
+  const resultsEyb = document.querySelector(".results-panel .eyebrow");
+  if (resultsEyb) resultsEyb.textContent = t("liveChoices");
+  const resultsTitle = document.querySelector(".results-panel h2");
+  if (resultsTitle && resultsTitle.id !== "groupName") resultsTitle.textContent = t("resultsTitle");
 }
 
 function toggleLanguage() {
@@ -513,7 +638,6 @@ function renderDecisionStep(kind) {
   const optionCards = options.map((option) => {
     const score = optionScore(kind, option.id);
     const selectedClass = chosen === option.id ? " is-selected" : "";
-    // Check for Greek translation
     let label = option.label;
     let description = option.description;
     const translated = translateOption(kind, option.id);
@@ -528,7 +652,6 @@ function renderDecisionStep(kind) {
   }).join("");
   const addLabel = isAreaStep ? t("addArea") : t("addActivity");
   const addText = isAreaStep ? t("addAreaText") : t("addActivityText");
-  // Greek translations for add own
   let addOwnText = t("addOwn");
   let addLabelCustom = addLabel;
   let addTextCustom = addText;
@@ -558,6 +681,9 @@ function renderCard() {
   activityArea.textContent = place.areaLabel;
   activityTime.textContent = place.time;
   activityCost.textContent = place.cost;
+  noButton.textContent = t("choiceNo");
+  maybeButton.textContent = t("choiceMaybe");
+  yesButton.textContent = t("choiceYes");
   const oldBtn = document.querySelector(".card-stage .continue-button");
   if (oldBtn) oldBtn.remove();
 }
@@ -625,9 +751,9 @@ function renderStatus() {
   if (!state.group) { setVisible(statusPanel, false); return; }
   setVisible(statusPanel, true);
   if (!areaReady) { statusPanel.textContent = t("decisionHint"); return; }
-  if (!typeReady) { statusPanel.textContent = "Area selected. Waiting for everyone to agree on an activity."; return; }
-  const source = state.group.search?.source === "google" ? "Google Places" : state.group.search?.source === "custom" ? "custom group idea" : "sample data";
-  statusPanel.textContent = `Search from ${source}: "${state.group.search?.query || ""}"`;
+  if (!typeReady) { statusPanel.textContent = t("areaSelected"); return; }
+  const source = state.group.search?.source === "google" ? t("searchGooglePlaces") : state.group.search?.source === "custom" ? t("searchCustom") : t("searchSample");
+  statusPanel.textContent = `${t("searchFrom")} ${source}: "${state.group.search?.query || ""}"`;
 }
 
 function preferenceList(title, key, items, placeholder) {
@@ -660,6 +786,8 @@ async function renderFriendsPage() {
 
 async function refreshFriendsPage() {
   const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
+  state.friendsData = data;
+  state.friendsDataLoaded = true;
   const friendList = document.querySelector("#friendList");
   const requestList = document.querySelector("#requestList");
   if (!friendList || !requestList) return;
@@ -810,7 +938,6 @@ function navigate(path) {
 function onUrlChange() {
   const route = currentRoute();
 
-  // If not logged in, show hero for /home route, redirect to /home otherwise
   if (!isLoggedIn()) {
     if (route !== "/home") {
       history.replaceState({}, "", "/home");
@@ -822,7 +949,6 @@ function onUrlChange() {
     return;
   }
 
-  // Parse route
   if (route === "/home") {
     state.showHero = true;
     state.activePage = "";
@@ -837,7 +963,6 @@ function onUrlChange() {
     return;
   }
 
-  // Profile page routes
   const pageMatch = route.match(/^\/(groups|friends|likedplaces|past|personal|settings)$/);
   if (pageMatch) {
     state.showHero = false;
@@ -846,7 +971,6 @@ function onUrlChange() {
     return;
   }
 
-  // Profile view route
   const profileMatch = route.match(/^\/profile\/(.+)$/);
   if (profileMatch) {
     state.showHero = false;
@@ -855,37 +979,29 @@ function onUrlChange() {
     return;
   }
 
-  // Default: go to home
   navigate("/home");
 }
 
 function renderApp() {
-  // Not logged in - show hero
   if (!isLoggedIn()) {
     setVisible(loginPanel, true);
     setVisible(loginForm, state.loginOpen);
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
-    // Hide Enter PlanSwipe button when not logged in
     setVisible(heroEnterButton, false);
-    // Show login button
     setVisible(heroLoginButton, true);
     return;
   }
 
-  // Logged in and on hero (home route)
   if (state.showHero) {
     setVisible(loginPanel, true);
     setVisible(loginForm, false);
     setVisible(topbar, false);
     setVisible(pagePanel, false);
     hideAppPanels();
-    // Show Enter PlanSwipe button
     setVisible(heroEnterButton, true);
-    // Hide login button when logged in on hero
     setVisible(heroLoginButton, false);
-    // Show the hero back button (Enter PlanSwipe)
     const heroActions = document.querySelector(".hero-actions");
     if (!document.querySelector("#heroBackButton")) {
       heroActions.innerHTML = `<button class="btn-primary" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>`;
@@ -894,7 +1010,6 @@ function renderApp() {
     return;
   }
 
-  // Logged in and not on hero
   setVisible(loginPanel, false);
   setVisible(topbar, true);
   if (state.account?.profile?.picture) {
@@ -950,7 +1065,7 @@ function renderApp() {
     return;
   }
 
-  searchSummary.textContent = `Search: "${state.group.search?.query || ""}"`;
+  searchSummary.textContent = `${t("searchFrom")}: "${state.group.search?.query || ""}"`;
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
   renderResults();
@@ -975,8 +1090,9 @@ async function refreshGroup() {
 
 function startPolling() {
   clearInterval(state.pollTimer);
+  clearInterval(state.notifTimer);
   state.pollTimer = setInterval(refreshGroup, 1500);
-  setInterval(refreshNotifications, 5000);
+  state.notifTimer = setInterval(refreshNotifications, 5000);
 }
 
 function saveSession(user, group) {
@@ -1034,6 +1150,7 @@ async function vote(value) {
 
 function leaveGroup() {
   clearInterval(state.pollTimer);
+  clearInterval(state.notifTimer);
   state.user = null; state.group = null; state.groupCode = ""; state.index = 0; state.setupMode = ""; state.aiPlacesBatch = [];
   localStorage.removeItem("planswipe:user");
   localStorage.removeItem("planswipe:groupCode");
@@ -1092,18 +1209,21 @@ async function updateProfilePicture(file) {
 
 async function requestFriend(username) {
   await api("/api/friends/request", { method: "POST", body: { fromUsername: currentUsername(), toUsername: username } });
+  state.friendsDataLoaded = false;
   if (state.activePage === "friends") await refreshFriendsPage();
   else await renderAccountProfile(username);
 }
 
 async function acceptFriend(username) {
   await api("/api/friends/accept", { method: "POST", body: { username: currentUsername(), requester: username } });
+  state.friendsDataLoaded = false;
   if (state.activePage === "friends") await refreshFriendsPage();
 }
 
 async function removeFriend(username) {
   if (!confirm(t("removeFriendConfirm"))) return;
   await api("/api/friends/remove", { method: "POST", body: { username: currentUsername(), friendUsername: username } });
+  state.friendsDataLoaded = false;
   await renderFriendsPage();
 }
 
@@ -1190,7 +1310,6 @@ async function boot() {
 
   window.addEventListener("popstate", onUrlChange);
 
-  // Use current path to determine initial route
   const path = window.location.pathname;
   if (path === "/" || path === "" || path === "/home") {
     if (isLoggedIn()) { navigate("/main"); }
