@@ -133,7 +133,7 @@ const copy = {
     createAccount: "Create Account",
     enterPlanswipe: "Enter PlanSwipe",
     groupPlans: "Group plans",
-    leaveGroup: "Leave Group",
+    leaveGroup: "Exit Group",
     exitGroup: "Exit Group",
     home: "Home",
     likedPlaces: "Liked Places",
