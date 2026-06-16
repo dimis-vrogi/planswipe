@@ -20,7 +20,8 @@ const state = {
   aiPlacesBatch: [],
   aiBatchIndex: 0,
   friendsDataLoaded: false,
-  friendsData: null
+  friendsData: null,
+  aiToggle: false
 };
 
 const setupPanel = document.querySelector("#setupPanel");
@@ -88,6 +89,7 @@ const appLanguageButton = document.querySelector("#appLanguageButton");
 const suggestionButton = document.querySelector("#suggestionButton");
 const suggestionPanel = document.querySelector("#suggestionPanel");
 const homeButton = document.querySelector("#homeButton");
+const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
 
 const pageContent = {
   likedplaces: { title: "Liked Places", eyebrow: "History", dynamic: true },
@@ -671,6 +673,36 @@ function renderDecisionStep(kind) {
   decisionTitle.textContent = isAreaStep ? t("areaTitle") : t("typeTitle");
   decisionHint.textContent = t("decisionHint");
   setVisible(backChoiceButton, kind === "type" || Boolean(chosen));
+  
+  // Show AI toggle button during area step
+  if (isAreaStep && state.group && !document.querySelector("#aiToggleBtn")) {
+    if (!document.querySelector(".ai-toggle-row")) {
+      const row = document.createElement("div");
+      row.className = "ai-toggle-row";
+      row.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 16px;background:rgba(48,24,96,0.06);border-radius:12px;";
+      row.innerHTML = `<span style="font-weight:600;font-size:0.9rem;">Toggle AI Suggestions</span>
+        <label class="switch" style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="aiToggleCheckbox" ${state.aiToggle ? "checked" : ""} style="opacity:0;width:0;height:0;">
+          <span class="slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:0.3s;border-radius:24px;"></span>
+        </label>
+        <span style="font-size:0.82rem;color:var(--muted);">${state.aiToggle ? "AI suggestions will replace default places" : "Default sample places will be used"}</span>`;
+      decisionPanel.insertBefore(row, decisionPanel.querySelector(".option-grid")?.parentNode || decisionPanel.querySelector(".decision-header")?.nextSibling);
+      const checkbox = row.querySelector("#aiToggleCheckbox");
+      const slider = row.querySelector(".slider");
+      const label = row.querySelector("span:last-child");
+      checkbox.addEventListener("change", () => {
+        state.aiToggle = checkbox.checked;
+        label.textContent = state.aiToggle ? "AI suggestions will replace default places" : "Default sample places will be used";
+      });
+      // Style the slider
+      setInterval(() => {
+        if (checkbox.checked) { slider.style.background = "var(--purple)"; }
+        else { slider.style.background = "#ccc"; }
+        const knob = slider.querySelector(".knob") || (() => { const k = document.createElement("span"); k.className = "knob"; k.style.cssText = "position:absolute;height:18px;width:18px;border-radius:50%;background:white;top:3px;left:3px;transition:0.3s;"; slider.appendChild(k); return k; })();
+        knob.style.left = checkbox.checked ? "23px" : "3px";
+      }, 100);
+    }
+  }
   const optionCards = options.map((option) => {
     const score = optionScore(kind, option.id);
     const selectedClass = chosen === option.id ? " is-selected" : "";
