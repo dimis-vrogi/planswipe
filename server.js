@@ -25,22 +25,22 @@ if (!supabase) {
 
 const areaOptions = [
   {
+    id: "north_suburbs",
+    label: "North suburbs",
+    description: "Filothei, Chalandri, Psixiko, Kifisia, Kefalari",
+    queryArea: "north suburbs of Athens"
+  },
+  {
     id: "athens_center",
     label: "Center of Athens",
-    description: "Syntagma, Monastiraki, Psyrri, and nearby central areas.",
+    description: "Syntagma, Monastiraki, Psyrri, Exarcheia, Kolonaki",
     queryArea: "center of Athens"
   },
   {
-    id: "athens_seaside",
-    label: "Athens seaside",
-    description: "Flisvos, Glyfada, Alimos, and the coastal side of the city.",
-    queryArea: "Athens seaside"
-  },
-  {
-    id: "athens_north",
-    label: "North Athens",
-    description: "Chalandri, Marousi, Kifisia, and nearby neighborhoods.",
-    queryArea: "north Athens"
+    id: "south_suburbs",
+    label: "South suburbs",
+    description: "Glyfada, Vouliagmeni, Alimos, Flisvos, Voula",
+    queryArea: "south suburbs of Athens"
   }
 ];
 
@@ -52,16 +52,22 @@ const typeOptions = [
     queryType: "restaurant"
   },
   {
-    id: "game",
-    label: "Games",
-    description: "Bowling, escape rooms, arcades, and other fun activities.",
+    id: "gaming",
+    label: "Gaming",
+    description: "Bowling, escape rooms, arcades, VR, and other gaming activities.",
     queryType: "entertainment"
   },
   {
-    id: "walking",
-    label: "Walking",
-    description: "Parks, seaside promenades, views, and easy outdoor routes.",
-    queryType: "park"
+    id: "bars",
+    label: "Bars",
+    description: "Cocktail bars, wine bars, pubs, and nightlife spots.",
+    queryType: "bar"
+  },
+  {
+    id: "movies",
+    label: "Movies",
+    description: "Cinemas, open-air theaters, film screenings, and multiplexes.",
+    queryType: "movie_theater"
   }
 ];
 
