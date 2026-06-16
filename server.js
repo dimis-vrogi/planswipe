@@ -450,15 +450,7 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Get group details
-  if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] && !parts[3]) {
-    const group = await loadGroup(parts[2]);
-    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
-    sendJson(response, 200, { group: summarizeGroup(group) });
-    return;
-  }
-
-  // User groups
+  // User groups (MUST be before generic GET group)
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] === "mine") {
     const username = url.searchParams.get("username") || "";
     const allGroups = await getAllGroups();
@@ -468,6 +460,14 @@ async function handleApi(request, response) {
       memberCount: g.data.members?.length || 0
     }));
     sendJson(response, 200, { groups: userGroups });
+    return;
+  }
+
+  // Get group details
+  if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] && !parts[3]) {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
 
