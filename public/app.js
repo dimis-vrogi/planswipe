@@ -24,7 +24,11 @@ const state = {
   pageShellRendered: "",
   chatOpen: false,
   chatLastTimestamp: null,
-  pollErrorCount: 0
+  pollErrorCount: 0,
+  authMode: "login",
+  pendingAreaOption: null,
+  useAiSuggestions: localStorage.getItem("planswipe:useAiSuggestions") !== "false",
+  selectedBookPlaceId: ""
 };
 
 // ====== DOM REFERENCES ======
@@ -72,10 +76,12 @@ const resultList           = document.querySelector("#resultList");
 const loginPanel           = document.querySelector("#loginPanel");
 const loginForm            = document.querySelector("#loginForm");
 const heroLoginButton      = document.querySelector("#heroLoginButton");
+const heroSignupButton     = document.querySelector("#heroSignupButton");
 const heroEnterButton      = document.querySelector("#heroEnterButton");
 const loginUsername        = document.querySelector("#loginUsername");
 const loginEmail           = document.querySelector("#loginEmail");
 const loginPassword        = document.querySelector("#loginPassword");
+const passwordStrength     = document.querySelector("#passwordStrength");
 const loginButton          = document.querySelector("#loginButton");
 const registerButton       = document.querySelector("#registerButton");
 const logoutButton         = document.querySelector("#logoutButton");
@@ -122,6 +128,47 @@ function t(key) {
   return copy[state.language]?.[key] ?? copy.en[key] ?? key;
 }
 
+const ageGroups = ["<12", "12-17", "18-24", "25-34", "35-44", "45-54"];
+
+function passwordScore(password) {
+  let score = 0;
+  if ((password || "").length >= 8) score++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return score;
+}
+
+function isStrongPassword(password) {
+  return passwordScore(password) >= 3;
+}
+
+function renderPasswordStrength() {
+  if (!passwordStrength) return;
+  const value = loginPassword.value || "";
+  const show = state.authMode === "signup" && value.length > 0;
+  setVisible(passwordStrength, show);
+  if (!show) return;
+  const score = passwordScore(value);
+  passwordStrength.className = `password-strength ${score >= 4 ? "strong" : score >= 3 ? "ok" : "weak"}`;
+  passwordStrength.textContent = score >= 4 ? t("passwordStrong") : score >= 3 ? t("passwordOk") : `${t("passwordWeak")}. ${t("passwordRequirements")}`;
+}
+
+function getPreferences() {
+  return state.account?.profile?.preferences || { areas: [], activities: [], places: [] };
+}
+
+function optionLabel(kind, optionOrId) {
+  const option = typeof optionOrId === "string" ? findOption(kind, optionOrId) : optionOrId;
+  if (!option) return "";
+  const translated = translateOption(kind, option.id);
+  return translated?.label ?? option.label ?? option.id ?? "";
+}
+
+function findOption(kind, id) {
+  return optionsFor(kind).find((o) => o.id === id) || null;
+}
+
 const copy = {
   en: {
     login: "Login", createAccount: "Create Account", enterPlanswipe: "Enter PlanSwipe",
@@ -156,7 +203,7 @@ const copy = {
     changeBasics: "Change basics", noStrongChoice: "No strong choice yet",
     keepSwiping: "Keep swiping or wait for the rest of the group.",
     noFriends: "No friends yet", searchByUsername: "Search by username", search: "Search",
-    requests: "Requests", saveProfile: "Save Profile", age: "Age", bio: "Bio",
+    requests: "Requests", saveProfile: "Save Profile", age: "Age", ageGroup: "Age group", bio: "Bio",
     preferences: "Preferences", logPastActivity: "Log Past Activity",
     area: "Area", activity: "Activity", place: "Place", saveActivity: "Save Activity",
     suggestedPlaces: "Suggested places", noLikedPlaces: "No liked places yet",
@@ -193,7 +240,12 @@ const copy = {
     favouriteAreas: "Favourite Areas", favouriteActivities: "Favourite Activities",
     favouritePlaces: "Favourite Places",
     addAnotherArea: "Add another area", addAnotherActivity: "Add another activity",
-    addAnotherPlace: "Add another place",
+    addAnotherPlace: "Add another place", useFavourite: "Use a favourite", selectSpecificArea: "Select a specific area",
+    addYourOwnPlace: "Add your Own Place", selectThisPlace: "Select this Place", selectedThisPlace: "Selected",
+    bookNow: "Book now", website: "Website", reservations: "Reservations", noBookingDetails: "No website or phone number is available yet.",
+    passwordWeak: "Weak password", passwordOk: "Password is OK", passwordStrong: "Strong password",
+    passwordRequirements: "Use at least 8 characters with uppercase, lowercase, and a number.",
+    ageGroupRequired: "Select your age group before entering a group.",
     groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
     closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
@@ -241,7 +293,7 @@ const copy = {
     noFriends: "\u0394\u03b5\u03bd \u03ad\u03c7\u03b5\u03c4\u03b5 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
     searchByUsername: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03bc\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", search: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7",
     requests: "\u0391\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", saveProfile: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1", bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc", preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
+    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1", ageGroup: "\u0397\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1", bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc", preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
     logPastActivity: "\u039a\u03b1\u03c4\u03b1\u03c7\u03ce\u03c1\u03b7\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
     area: "\u03a0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae", activity: "\u0394\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1", place: "\u039c\u03ad\u03c1\u03bf\u03c2",
     saveActivity: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
@@ -279,7 +331,12 @@ const copy = {
     favouriteAreas: "Favourite Areas", favouriteActivities: "Favourite Activities",
     favouritePlaces: "Favourite Places",
     addAnotherArea: "Add another area", addAnotherActivity: "Add another activity",
-    addAnotherPlace: "Add another place",
+    addAnotherPlace: "Add another place", useFavourite: "Use a favourite", selectSpecificArea: "Select a specific area",
+    addYourOwnPlace: "Add your Own Place", selectThisPlace: "Select this Place", selectedThisPlace: "Selected",
+    bookNow: "Book now", website: "Website", reservations: "Reservations", noBookingDetails: "No website or phone number is available yet.",
+    passwordWeak: "Weak password", passwordOk: "Password is OK", passwordStrong: "Strong password",
+    passwordRequirements: "Use at least 8 characters with uppercase, lowercase, and a number.",
+    ageGroupRequired: "Select your age group before entering a group.",
     groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
     closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
@@ -376,16 +433,39 @@ const copy = {
   }
 };
 
+Object.assign(copy.el, {
+  ageGroup: "\u0397\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1",
+  useFavourite: "\u03a7\u03c1\u03ae\u03c3\u03b7 \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf\u03c5",
+  selectSpecificArea: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c3\u03c5\u03b3\u03ba\u03b5\u03ba\u03c1\u03b9\u03bc\u03ad\u03bd\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae",
+  addYourOwnPlace: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03c4\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03b1\u03c2 \u03bc\u03ad\u03c1\u03bf\u03c2",
+  selectThisPlace: "\u0395\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae \u03b1\u03c5\u03c4\u03bf\u03cd \u03c4\u03bf\u03c5 \u03bc\u03ad\u03c1\u03bf\u03c5\u03c2",
+  selectedThisPlace: "\u0395\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b5",
+  bookNow: "\u039a\u03c1\u03ac\u03c4\u03b7\u03c3\u03b7 \u03c4\u03ce\u03c1\u03b1",
+  website: "Website",
+  reservations: "\u039a\u03c1\u03b1\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2",
+  noBookingDetails: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b1\u03ba\u03cc\u03bc\u03b1 website \u03ae \u03c4\u03b7\u03bb\u03ad\u03c6\u03c9\u03bd\u03bf.",
+  passwordWeak: "\u0391\u03b4\u03cd\u03bd\u03b1\u03bc\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+  passwordOk: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b5\u03af\u03bd\u03b1\u03b9 OK",
+  passwordStrong: "\u0394\u03c5\u03bd\u03b1\u03c4\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+  passwordRequirements: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 8+ \u03c7\u03b1\u03c1\u03b1\u03ba\u03c4\u03ae\u03c1\u03b5\u03c2 \u03bc\u03b5 \u03ba\u03b5\u03c6\u03b1\u03bb\u03b1\u03af\u03bf, \u03c0\u03b5\u03b6\u03cc \u03ba\u03b1\u03b9 \u03b1\u03c1\u03b9\u03b8\u03bc\u03cc.",
+  ageGroupRequired: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b7\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c0\u03c1\u03b9\u03bd \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1."
+});
+optionTranslations.el.north_suburbs = optionTranslations.el.northsuburbs;
+optionTranslations.el.athens_center = optionTranslations.el.athenscenter;
+optionTranslations.el.south_suburbs = optionTranslations.el.southsuburbs;
+
 // ====== LANGUAGE ======
 function applyLanguage() {
   document.documentElement.lang = state.language;
   languageButton.textContent    = state.language === "en" ? "EL" : "EN";
   appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
   heroLoginButton.textContent   = t("login");
+  if (heroSignupButton) heroSignupButton.textContent = t("createAccount");
   heroEnterButton.textContent   = t("enterPlanswipe");
   loginButton.textContent       = t("login");
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
+  renderPasswordStrength();
 
   const heroCopy = document.querySelector(".hero-copy");
   if (heroCopy) {
@@ -580,6 +660,7 @@ async function registerUser() {
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
   if (!validEmail(email)) throw new Error("Enter a valid email address.");
+  if (!isStrongPassword(password)) throw new Error(t("passwordRequirements"));
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
     if (error) throw new Error(error.message);
@@ -622,13 +703,16 @@ function renderSetup() {
 
 function renderDecisionStep(kind) {
   const isAreaStep = kind === "area";
-  const options    = optionsFor(kind);
+  const broadArea  = isAreaStep && state.pendingAreaOption ? state.pendingAreaOption : null;
+  const options    = broadArea
+    ? broadArea.subareas.map((label) => ({ id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, Athens`, queryArea: `${label}, Athens` }))
+    : optionsFor(kind);
   const chosen     = selected(kind);
   const total      = memberCount();
   const votedCount = Object.keys(state.group?.choices?.[kind] || {}).length;
 
   decisionStep.textContent  = isAreaStep ? t("stepArea") : t("stepType");
-  decisionTitle.textContent = isAreaStep ? t("areaTitle") : t("typeTitle");
+  decisionTitle.textContent = broadArea ? `${t("selectSpecificArea")}: ${optionLabel("area", broadArea)}` : (isAreaStep ? t("areaTitle") : t("typeTitle"));
 
   if (votedCount > 0 && votedCount < total) {
     decisionHint.textContent = `${votedCount} ${t("of")} ${total} ${t("voted")} \u2014 ${t("waitingForOthers")}`;
@@ -649,11 +733,20 @@ function renderDecisionStep(kind) {
     const translated = translateOption(kind, option.id);
     const label = translated?.label ?? option.label ?? option.id;
     const description = translated?.description ?? option.description ?? "";
-    return `<button class="option-card${isSelected ? " is-selected" : ""}" type="button" data-kind="${escapeHtml(kind)}" data-id="${escapeHtml(option.id)}">
+    const broadAttr = isAreaStep && !broadArea && option.subareas?.length ? ` data-broad-area="true"` : "";
+    const customLabelAttr = broadArea ? ` data-custom-label="${escapeHtml(option.label)}"` : "";
+    return `<button class="option-card${isSelected ? " is-selected" : ""}" type="button" data-kind="${escapeHtml(kind)}" data-id="${escapeHtml(option.id)}"${broadAttr}${customLabelAttr}>
       <span class="option-score">${score}/${total} ${t("liveChoices")}</span>
       <span><h3>${escapeHtml(label)}</h3><p>${escapeHtml(description)}</p></span>
     </button>`;
   }).join("");
+
+  const prefKey = isAreaStep ? "areas" : "activities";
+  const favourites = (getPreferences()[prefKey] || []).slice(0, 6).map((item) => `
+    <button class="option-card favourite-option-card" type="button" data-kind="${escapeHtml(kind)}" data-favourite="${escapeHtml(item)}">
+      <span class="option-score">${escapeHtml(t("useFavourite"))}</span>
+      <span><h3>${escapeHtml(item)}</h3><p>${escapeHtml(isAreaStep ? t("addAreaText") : t("addActivityText"))}</p></span>
+    </button>`).join("");
 
   const addOwn   = state.language === "el" ? optionTranslations.el.addOwn    : t("addOwn");
   const addLabel = state.language === "el"
@@ -663,7 +756,16 @@ function renderDecisionStep(kind) {
     ? (isAreaStep ? optionTranslations.el.addAreaText : optionTranslations.el.addActivityText)
     : (isAreaStep ? t("addAreaText") : t("addActivityText"));
 
-  optionGrid.innerHTML = `${optionCards}
+  const aiToggle = !isAreaStep ? `<div class="ai-toggle-row">
+    <label class="css-toggle" aria-label="${escapeHtml(t("aiToggleLabel"))}">
+      <input id="aiSuggestionToggle" type="checkbox" ${state.useAiSuggestions ? "checked" : ""}>
+      <span class="css-toggle-track"><span class="css-toggle-knob"></span></span>
+    </label>
+    <div><div class="ai-toggle-label">${escapeHtml(t("aiSuggestions"))}</div>
+    <div class="ai-toggle-desc">${escapeHtml(state.useAiSuggestions ? t("aiToggleOn") : t("aiToggleOff"))}</div></div>
+  </div>` : "";
+
+  optionGrid.innerHTML = `${aiToggle}${optionCards}${favourites}
     <button class="option-card add-option-card" type="button" data-kind="${escapeHtml(kind)}" data-custom="true">
       <span class="option-score">${escapeHtml(addOwn)}</span>
       <span><h3>${escapeHtml(addLabel)}</h3><p>${escapeHtml(addText)}</p></span>
@@ -678,7 +780,8 @@ function renderCard() {
   activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt               = place.title;
   const ratingText = place.rating ? `${Number(place.rating).toFixed(1)} \u2605` : "";
-  activityCategory.textContent    = ratingText ? `${place.category} | ${ratingText}` : place.category;
+  const typeLabel = optionLabel("type", consensus("type")) || place.category;
+  activityCategory.textContent    = ratingText ? `${typeLabel} | ${ratingText}` : typeLabel;
   activityTitle.textContent       = place.title;
   activityDescription.textContent = place.description || place.address || "";
   activityArea.textContent        = place.areaLabel || place.address || "";
@@ -691,6 +794,7 @@ function renderCard() {
 
 function renderResults() {
   const allPlaces = state.group.places || [];
+  const canAddOwnPlace = state.index >= Math.min(5, allPlaces.length || 5);
   if (!allPlaces.length) {
     resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`;
     return;
@@ -716,20 +820,33 @@ function renderResults() {
     .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
 
   if (!ranked.length) {
-    resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`;
+    resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>
+      ${canAddOwnPlace ? `<button class="btn-primary add-own-place-button" type="button" id="addOwnPlaceButton">${t("addYourOwnPlace")}</button>` : ""}`;
     return;
   }
 
   resultList.innerHTML = ranked.map((item) => {
     const ratingPart = item.rating ? ` | ${Number(item.rating).toFixed(1)} \u2605` : "";
+    const selectedByMe = state.group.placeSelections?.[state.user?.id] === item.id;
+    const canBook = state.group.consensus?.place === item.id;
+    const booking = state.selectedBookPlaceId === item.id ? `
+      <div class="booking-details">
+        ${item.website ? `<a class="btn-ghost" href="${escapeHtml(item.website)}" target="_blank" rel="noopener">${t("website")}</a>` : ""}
+        ${item.phone ? `<a class="btn-ghost" href="tel:${escapeHtml(item.phone)}">${t("reservations")}: ${escapeHtml(item.phone)}</a>` : ""}
+        ${!item.website && !item.phone ? `<span class="muted-text">${t("noBookingDetails")}</span>` : ""}
+      </div>` : "";
     return `
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
       <div><h3>${escapeHtml(item.title)}</h3>
-      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(item.category)}${ratingPart} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p></div>
+      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(optionLabel("type", consensus("type")) || item.category)}${ratingPart} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p>
+      <div class="result-buttons">
+        <button class="btn-ghost" type="button" data-select-place="${escapeHtml(item.id)}">${selectedByMe ? t("selectedThisPlace") : t("selectThisPlace")}</button>
+        ${canBook ? `<button class="btn-primary" type="button" data-book-place="${escapeHtml(item.id)}">${t("bookNow")}</button>` : ""}
+      </div>${booking}</div>
       <strong class="result-score">${item.percent}%</strong>
     </article>`;
-  }).join("");
+  }).join("") + (canAddOwnPlace ? `<button class="btn-primary add-own-place-button" type="button" id="addOwnPlaceButton">${t("addYourOwnPlace")}</button>` : "");
 }
 
 function renderStatus() {
@@ -740,7 +857,7 @@ function renderStatus() {
   if (!areaReady) { statusPanel.textContent = t("decisionHint"); return; }
   if (!typeReady) { statusPanel.textContent = t("areaSelected"); return; }
   const src = state.group.search?.source;
-  const sourceLabel = src === "google" ? t("searchGooglePlaces") : src === "custom" ? t("searchCustom") : t("searchSample");
+  const sourceLabel = (src === "google" || src === "google-ai") ? t("searchGooglePlaces") : src === "custom" ? t("searchCustom") : t("searchSample");
   const area = state.group.search?.area || "";
   const activity = state.group.search?.activity || "";
   const context = area && activity ? `${activity} · ${area}` : `"${state.group.search?.query || ""}"`;
@@ -950,14 +1067,18 @@ function renderApp() {
   if (!isLoggedIn()) {
     setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen);
     setVisible(topbar, false); setVisible(pagePanel, false);
-    setVisible(heroEnterButton, false); setVisible(heroLoginButton, true);
+    setVisible(heroEnterButton, false); setVisible(heroLoginButton, true); setVisible(heroSignupButton, true);
+    loginForm.querySelector("h2").textContent = state.authMode === "signup" ? t("createAccount") : t("enterPlanswipe");
+    setVisible(loginButton, state.authMode !== "signup");
+    setVisible(registerButton, state.authMode === "signup");
+    renderPasswordStrength();
     hideAppPanels(); removeChatButton(); return;
   }
 
   if (state.showHero) {
     setVisible(loginPanel, true); setVisible(loginForm, false);
     setVisible(topbar, false); setVisible(pagePanel, false);
-    setVisible(heroEnterButton, true); setVisible(heroLoginButton, false);
+    setVisible(heroEnterButton, true); setVisible(heroLoginButton, false); setVisible(heroSignupButton, false);
     hideAppPanels(); removeChatButton();
     const heroActions = document.querySelector(".hero-actions");
     if (heroActions && !document.querySelector("#heroBackButton")) {
@@ -1060,12 +1181,14 @@ function saveSession(user, group) {
 // ====== GROUP ACTIONS ======
 async function createGroup() {
   const username = currentUsername() || "Friend";
+  if (!state.account?.profile?.ageGroup) { showError(t("ageGroupRequired")); state.activePage = "personal"; navigate("/personal"); return; }
   const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim() } });
   saveSession(data.user, data.group);
 }
 
 async function joinGroup() {
   const username = currentUsername() || "Friend";
+  if (!state.account?.profile?.ageGroup) { showError(t("ageGroupRequired")); state.activePage = "personal"; navigate("/personal"); return; }
   const code = codeInput.value.trim();
   if (!/^\d{8}$/.test(code)) { showError("Enter an 8-digit group code."); return; }
   const data = await api(`/api/groups/${code}/join`, { method: "POST", body: { username, profile: state.account?.profile } });
@@ -1073,7 +1196,8 @@ async function joinGroup() {
 }
 
 async function chooseOption(kind, optionId, customLabel = "") {
-  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel } });
+  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions } });
+  if (kind === "area") state.pendingAreaOption = null;
   state.index = 0; state.group = data.group; renderApp();
 }
 
@@ -1081,7 +1205,7 @@ async function goBackChoice() {
   if (!state.group || !state.user) return;
   const step = (consensus("area") && !consensus("type")) ? "type" : "area";
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step } });
-  state.index = 0; state.group = data.group; renderApp();
+  state.index = 0; state.pendingAreaOption = null; state.group = data.group; renderApp();
 }
 
 async function vote(value) {
@@ -1094,11 +1218,37 @@ async function vote(value) {
   setTimeout(() => { state.index += 1; renderApp(); }, 170);
 }
 
+async function selectPlace(placeId) {
+  const data = await api(`/api/groups/${state.group.code}/select-place`, { method: "POST", body: { userId: state.user.id, placeId } });
+  state.group = data.group;
+  renderResults();
+}
+
+async function addOwnPlace() {
+  const favourites = getPreferences().places || [];
+  const favText = favourites.length ? `\n\n${t("useFavourite")}: ${favourites.join(", ")}` : "";
+  const title = prompt(`${t("addYourOwnPlace")}${favText}`);
+  if (!title?.trim()) return;
+  const favourite = favourites.find((item) => item.toLowerCase() === title.trim().toLowerCase());
+  const data = await api(`/api/groups/${state.group.code}/custom-place`, {
+    method: "POST",
+    body: {
+      title: title.trim(),
+      description: favourite ? `${t("useFavourite")}: ${favourite}` : "",
+      area: state.group.search?.area || "",
+      category: state.group.search?.activity || ""
+    }
+  });
+  state.group = data.group;
+  state.index = Math.max(0, (state.group.places || []).length - 1);
+  renderApp();
+}
+
 function leaveGroup() {
   clearInterval(state.pollTimer); clearInterval(state.notifTimer);
   removeChatButton();
   state.user = null; state.group = null; state.groupCode = "";
-  state.index = 0; state.setupMode = ""; state.pollErrorCount = 0;
+  state.index = 0; state.setupMode = ""; state.pendingAreaOption = null; state.pollErrorCount = 0;
   localStorage.removeItem("planswipe:user"); localStorage.removeItem("planswipe:groupCode");
   renderApp();
 }
@@ -1121,7 +1271,7 @@ async function continueBrowsing() {
     const prevCount = state.group.places?.length || 0;
     const data = await api(`/api/groups/${state.group.code}/more-places`, {
       method: "POST",
-      body: { username: currentUsername() }
+      body: { username: currentUsername(), useAiSuggestions: state.useAiSuggestions }
     });
     state.group = data.group;
     state.index = prevCount;
@@ -1167,7 +1317,10 @@ async function renderPersonalInformation() {
       <label class="profile-upload">${profileImage(account)}<span>${t("editProfilePicture")}</span><input id="profilePictureInput" type="file" accept="image/*"></label>
       <label class="field"><span>${t("username")}</span><input type="text" value="${escapeHtml(account.username)}" disabled></label>
       <label class="field"><span>${t("email")}</span><input type="email" value="${escapeHtml(account.email || "")}" disabled></label>
-      <label class="field"><span>${t("age")}</span><input id="profileAge" type="number" min="13" max="120" value="${escapeHtml(profile.age || "")}"></label>
+      <label class="field"><span>${t("ageGroup")}</span><select id="profileAgeGroup">
+        <option value="">${escapeHtml(t("ageGroup"))}</option>
+        ${ageGroups.map((group) => `<option value="${escapeHtml(group)}" ${profile.ageGroup === group ? "selected" : ""}>${escapeHtml(group)}</option>`).join("")}
+      </select></label>
       <label class="field"><span>${t("password")}</span>
         <input id="profileOldPassword" type="password" placeholder="${t("oldPassword")}">
         <input id="profileNewPassword" type="password" placeholder="${t("newPassword")}">
@@ -1388,9 +1541,8 @@ function renderProfilePage() {
 // ====== PROFILE ACTIONS ======
 async function saveProfile() {
   const bio = document.querySelector("#profileBio")?.value || "";
-  const ageValue = document.querySelector("#profileAge")?.value || "";
-  const age = ageValue ? Number(ageValue) : "";
-  const profile = { ...(state.account?.profile || {}), bio, age, preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] } };
+  const ageGroup = document.querySelector("#profileAgeGroup")?.value || "";
+  const profile = { ...(state.account?.profile || {}), bio, ageGroup, preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] } };
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile } });
   saveAccount(data.user);
   await renderPersonalInformation();
@@ -1473,6 +1625,12 @@ function showError(message) {
 }
 
 function openLogin() {
+  state.authMode = "login";
+  state.loginOpen = true; renderApp(); loginUsername.focus();
+}
+
+function openSignup() {
+  state.authMode = "signup";
   state.loginOpen = true; renderApp(); loginUsername.focus();
 }
 
@@ -1533,6 +1691,7 @@ async function boot() {
 // ====== EVENT LISTENERS ======
 heroEnterButton.addEventListener("click", () => { isLoggedIn() ? navigate("/main") : openLogin(); });
 heroLoginButton.addEventListener("click", openLogin);
+if (heroSignupButton) heroSignupButton.addEventListener("click", openSignup);
 showCreateButton.addEventListener("click", () => { state.setupMode = "create"; renderApp(); });
 showJoinButton.addEventListener("click", () => { state.setupMode = "join"; renderApp(); });
 backFromCreateButton.addEventListener("click", () => { state.setupMode = ""; renderApp(); });
@@ -1541,7 +1700,8 @@ createButton.addEventListener("click", () => createGroup().catch((e) => showErro
 joinButton.addEventListener("click", () => joinGroup().catch((e) => showError(e.message)));
 loginButton.addEventListener("click", () => login().catch((e) => showError(e.message)));
 registerButton.addEventListener("click", () => registerUser().catch((e) => showError(e.message)));
-[loginUsername, loginEmail, loginPassword].forEach((input) => { input.addEventListener("keydown", (e) => { if (e.key === "Enter") login().catch((err) => showError(err.message)); }); });
+[loginUsername, loginEmail, loginPassword].forEach((input) => { input.addEventListener("keydown", (e) => { if (e.key === "Enter") (state.authMode === "signup" ? registerUser() : login()).catch((err) => showError(err.message)); }); });
+loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
   const email = loginEmail.value.trim();
@@ -1578,18 +1738,42 @@ reviewButton.addEventListener("click", () => goBackChoice().catch((e) => showErr
 if (continueBrowseButton) {
   continueBrowseButton.addEventListener("click", () => continueBrowsing().catch((e) => showError(e.message)));
 }
+resultList.addEventListener("click", (e) => {
+  const selectBtn = e.target.closest("[data-select-place]");
+  if (selectBtn) { selectPlace(selectBtn.dataset.selectPlace).catch((err) => showError(err.message)); return; }
+  const bookBtn = e.target.closest("[data-book-place]");
+  if (bookBtn) { state.selectedBookPlaceId = state.selectedBookPlaceId === bookBtn.dataset.bookPlace ? "" : bookBtn.dataset.bookPlace; renderResults(); return; }
+  if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace().catch((err) => showError(err.message)); }
+});
 [languageButton, appLanguageButton].forEach((btn) => btn.addEventListener("click", toggleLanguage));
 
 optionGrid.addEventListener("click", (e) => {
   const btn = e.target.closest(".option-card");
   if (!btn) return;
   const kind = btn.dataset.kind;
+  if (btn.dataset.broadArea === "true") {
+    state.pendingAreaOption = findOption("area", btn.dataset.id);
+    renderDecisionStep("area");
+    return;
+  }
+  if (btn.dataset.favourite) {
+    chooseOption(kind, "", btn.dataset.favourite).catch((err) => showError(err.message)); return;
+  }
   if (btn.dataset.custom === "true") {
     const label = prompt(kind === "area" ? "Add an area" : "Add an activity");
     if (!label?.trim()) return;
     chooseOption(kind, "", label.trim()).catch((err) => showError(err.message)); return;
   }
+  if (btn.dataset.customLabel) {
+    chooseOption(kind, "", btn.dataset.customLabel).catch((err) => showError(err.message)); return;
+  }
   chooseOption(kind, btn.dataset.id).catch((err) => showError(err.message));
+});
+optionGrid.addEventListener("change", (e) => {
+  if (e.target.id !== "aiSuggestionToggle") return;
+  state.useAiSuggestions = e.target.checked;
+  localStorage.setItem("planswipe:useAiSuggestions", String(state.useAiSuggestions));
+  renderDecisionStep("type");
 });
 
 groupInput.addEventListener("keydown", (e) => { if (e.key === "Enter") createGroup().catch((err) => showError(err.message)); });
@@ -1630,6 +1814,7 @@ pageDemo.addEventListener("click", (e) => {
     const verify = document.querySelector("#profileVerifyPassword")?.value;
     if (!old || !pw || !verify) { showError("Please fill in all password fields."); return; }
     if (pw !== verify) { showError(t("passwordMismatch")); return; }
+    if (!isStrongPassword(pw)) { showError(t("passwordRequirements")); return; }
     api("/api/change-password", { method: "POST", body: { username: currentUsername(), oldPassword: old, newPassword: pw } })
       .then(() => { alert(t("passwordChanged")); document.querySelector("#profileOldPassword").value = ""; document.querySelector("#profileNewPassword").value = ""; document.querySelector("#profileVerifyPassword").value = ""; })
       .catch((err) => showError(err.message));
