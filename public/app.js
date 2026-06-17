@@ -413,7 +413,7 @@ function initials(name) {
 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-  if (state.supabaseSession?.accesstoken) headers.Authorization = Bearer ${state.supabaseSession.accesstoken};
+  if (state.supabaseSession?.access_token) headers.Authorization = `Bearer ${state.supabaseSession.access_token}`;
   const response = await fetch(path, { headers, ...options, body: options.body ? JSON.stringify(options.body) : undefined });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed");
@@ -565,7 +565,8 @@ function renderDecisionStep(kind) {
       }
       row.querySelector("#aiToggleCheckbox").addEventListener("change", (e) => {
         state.aiToggle = e.target.checked;
-        document.querySelector("#aiToggleDesc").textContent = state.aiToggle ? t("aiToggleOn") : t("aiToggleOff");
+        const toggleDesc = document.querySelector("#aiToggleDesc");
+        if (toggleDesc) toggleDesc.textContent = state.aiToggle ? t("aiToggleOn") : t("aiToggleOff");
       });
     }
   } else {
@@ -789,7 +790,7 @@ async function loadChatMessages(scrollToBottom) {
       messages.forEach((msg) => {
         const isMine = msg.username === me;
         const bubble = document.createElement("div");
-        bubble.className = chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"};
+        bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
         bubble.innerHTML = ${!isMine ? <span class="chat-sender">${escapeHtml(msg.username)}</span> : ""}
           <span class="chat-text">${escapeHtml(msg.message)}</span>;
         container.appendChild(bubble);
@@ -855,7 +856,7 @@ async function refreshNotifications() {
         btn.appendChild(sp);
       }
     });
-  } catch () {}
+  } catch (e) { console.warn("Notifications refresh error:", e.message); }
 }
 
 // ====== ROUTING ======
@@ -955,7 +956,7 @@ function renderApp() {
   }
 
   setVisible(resetButton, Boolean(state.group && state.user));
-  refreshNotifications();
+  await refreshNotifications();
 
   // Page panel (profile sub-pages)
   if (state.activePage) {
@@ -1374,8 +1375,9 @@ async function renderLikedPlacesPage() {
             <span class="group-meta">${escapeHtml(item.groupName || "")}</span>
           </div>).join("")
       : <article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>;
-  } catch () {
-    pageDemo.innerHTML = <article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>;
+  } catch (e) {
+    console.warn("Liked places load error:", e.message);
+    pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
   }
 }
 
@@ -1485,7 +1487,7 @@ async function saveSettings() {
     }
   });
   saveAccount(data.user);
-    showError(t("settingsSaved"));
+    alert(t("settingsSaved"));
 }
 
 async function deleteAccount() {
