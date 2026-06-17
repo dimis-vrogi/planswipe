@@ -15,6 +15,12 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const openAiApiKey = process.env.OPENAI_API_KEY || "";
 const openAiModel = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const BCRYPT_ROUNDS = 10;
+
+// Verify dotenv loaded successfully
+if (!process.env.PORT && !process.env.SUPABASE_URL) {
+  console.warn("WARNING: .env file not found or empty. Environment variables may be missing.");
+}
+
 const supabase = supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : null;
@@ -22,6 +28,7 @@ if (!supabase) {
   console.error("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env file.");
   process.exit(1);
 }
+
 // ====== RATE LIMITER ======
 const rateLimitMap = new Map(); // ip -> { count, resetAt }
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -71,6 +78,7 @@ const mimeTypes = {
 };
 // ====== HELPERS ======
 function sendJson(response, status, data) {
+  if (response.headersSent) return;
   response.writeHead(status, { "Content-Type": "application/json" });
   response.end(JSON.stringify(data));
 }
@@ -96,6 +104,14 @@ function mimeType(pathname) {
   const ext = path.extname(pathname).toLowerCase();
   return mimeTypes[ext] || "application/octet-stream";
 }
+// ====== INPUT VALIDATION ======
+function isValidUsername(username) {
+  return typeof username === "string" && username.length >= 2 && username.length <= 30 && /^[a-zA-Z0-9_\-.]+$/.test(username);
+}
+function isValidPassword(password) {
+  return typeof password === "string" && password.length >= 6 && password.length <= 128;
+}
+
 // ====== JWT VERIFICATION ======
 async function verifyToken(request) {
   const auth = request.headers["authorization"] || "";
@@ -110,22 +126,24 @@ async function verifyToken(request) {
   }
 }
 // Require auth for mutating routes; returns true if the request should proceed.
-// Falls back to username-based session for users who registered without Supabase Auth.
 async function requireAuth(request, response, expectedUsername) {
   const supabaseUser = await verifyToken(request);
   if (supabaseUser) {
-    // Token is valid — ensure it belongs to the expected user
     const email = supabaseUser.email || "";
     const profile = await getProfileByEmail(email);
     if (profile && profile.username === expectedUsername) return true;
-    // Allow if username matches metadata (OAuth / email signup)
     const metaUsername = supabaseUser.user_metadata?.username || "";
     if (metaUsername === expectedUsername) return true;
+    // Token is valid but doesn't match expected user — deny
+    sendJson(response, 403, { error: "Forbidden: token does not match user" });
+    return false;
   }
-  // Fallback: allow if no Supabase Auth is configured (dev mode / custom auth only)
-  if (!supabaseUrl || !supabaseServiceRoleKey) return true;
-  // If Supabase is configured but token is missing/invalid, still allow for
-  // custom-auth users (they have no JWT). In production, tighten this.
+  // If Supabase is configured and token is missing, deny access
+  if (supabaseUrl && supabaseServiceRoleKey) {
+    sendJson(response, 401, { error: "Authentication required" });
+    return false;
+  }
+  // Fallback: allow if no Supabase Auth is configured (dev mode)
   return true;
 }
 // ====== PASSWORD HASHING (bcrypt) ======
@@ -136,9 +154,16 @@ async function verifyPassword(password, hash) {
   // Support legacy SHA-256 hashes during migration
   if (hash && hash.length === 64 && /^[0-9a-f]+$/.test(hash)) {
     const legacy = crypto.createHash("sha256").update(String(password)).digest("hex");
-    return legacy === hash;
+    const match = legacy === hash;
+    // If legacy match, migrate to bcrypt for next time
+    if (match) {
+      const newHash = await bcrypt.hash(String(password), BCRYPT_ROUNDS);
+      return { match: true, newHash };
+    }
+    return { match: false };
   }
-  return bcrypt.compare(String(password), String(hash || ""));
+  const match = await bcrypt.compare(String(password), String(hash || ""));
+  return { match };
 }
 // ====== STATIC FILES ======
 function serveStatic(request, response) {
@@ -203,7 +228,11 @@ async function getProfileByEmail(email) {
 }
 async function upsertProfile(user) {
   const { error } = await supabase.from("profiles").upsert(
-    { username: user.username, email: user.email || "", profile: user.profile || {} },
+    {
+      username: user.username,
+      email: user.email && user.email.trim() ? user.email : undefined,
+      profile: user.profile || {}
+    },
     { onConflict: "username" }
   );
   if (error) throw new Error(error.message);
@@ -249,10 +278,22 @@ function removeUserFromGroup(group, username) {
   Object.keys(group.votes || {}).forEach((key) => {
     if (!remainingIds.has(key)) delete group.votes[key];
   });
+  // Reset consensus and search if group now has no members or less than before
+  if (group.members.length === 0) {
+    group.consensus = {};
+    group.search = null;
+    group.places = [];
+    group.matches = [];
+  }
   return group.members.length !== before;
 }
-function generateGroupCode() {
-  return String(crypto.randomInt(10000000, 99999999));
+async function generateUniqueGroupCode() {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const code = String(crypto.randomInt(10000000, 99999999));
+    const existing = await getGroup(code);
+    if (!existing) return code;
+  }
+  throw new Error("Unable to generate unique group code after 10 attempts");
 }
 function generateSamplePlaces(area, activity) {
   const names = [
@@ -263,12 +304,12 @@ function generateSamplePlaces(area, activity) {
   const costs   = ["€", "€€", "€€€", "€€", "€–€€", "€€"];
   const ratings = [4.0, 3.5, 4.5, 4.2, 3.8, 4.1];
   const photos  = [
-    "[images.unsplash.com](https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80)",
-    "[images.unsplash.com](https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=80)",
-    "[images.unsplash.com](https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80)",
-    "[images.unsplash.com](https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1000&q=80)",
-    "[images.unsplash.com](https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1000&q=80)",
-    "[images.unsplash.com](https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?auto=format&fit=crop&w=1000&q=80)"
+    "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1000&q=80",
+    "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?auto=format&fit=crop&w=1000&q=80"
   ];
   return Array.from({ length: 6 }, (_, i) => ({
     id:          `place_${Date.now()}_${i}`,
@@ -284,16 +325,20 @@ function generateSamplePlaces(area, activity) {
 }
 // ====== API HANDLER ======
 async function handleApi(request, response) {
-  const url   = new URL(request.url, `[${request.headers.host}](http://${request.headers.host})`);
+  const url   = new URL(request.url, `http://${request.headers.host}`);
   const parts = url.pathname.replace(/^\/|\/$/g, "").split("/");
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  // Security headers
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("X-Frame-Options", "DENY");
+  response.setHeader("X-XSS-Protection", "1; mode=block");
   if (request.method === "OPTIONS") { sendJson(response, 200, {}); return; }
-  // Rate-limit auth endpoints
+  // Rate-limit all mutating endpoints
   const ip = request.socket?.remoteAddress || "unknown";
-  const isAuthEndpoint = parts[1] === "login" || parts[1] === "register";
-  if (isAuthEndpoint && isRateLimited(ip)) {
+  const isMutating = ["POST", "PATCH", "DELETE"].includes(request.method);
+  if (isMutating && isRateLimited(ip)) {
     sendJson(response, 429, { error: "Too many requests. Please wait a minute." });
     return;
   }
@@ -315,12 +360,12 @@ async function handleApi(request, response) {
     let friendStatus = "";
     if (viewer && viewer !== username) {
       const viewerProfile = await getProfileByUsername(viewer);
-      const viewerFriends  = viewerProfile?.profile?.friends || [];
-      const viewerOutgoing = data.profile?.friendRequests || []; // requests TO 'data' include viewer?
-      const viewerIncoming = viewerProfile?.profile?.friendRequests || [];
+      const viewerFriends   = viewerProfile?.profile?.friends || [];
+      const targetRequests  = data.profile?.friendRequests || []; // requests TO 'data' — includes viewer if they sent one
+      const viewerIncoming  = viewerProfile?.profile?.friendRequests || [];
       if (viewerFriends.includes(username)) {
         friendStatus = "friends";
-      } else if (viewerOutgoing.includes(viewer)) {
+      } else if (targetRequests.includes(viewer)) {
         // viewer sent a request that is sitting in target's friendRequests
         friendStatus = "requested";
       } else if (viewerIncoming.includes(username)) {
@@ -344,15 +389,29 @@ async function handleApi(request, response) {
   // ── Auth ────────────────────────────────────────────────────────────────────
   if (request.method === "POST" && parts[1] === "login") {
     const body = await readBody(request);
+    if (!isValidUsername(body.username)) {
+      sendJson(response, 400, { error: "Invalid username format" }); return;
+    }
     const data = await getProfileByUsername(body.username);
     if (!data) { sendJson(response, 404, { error: "User not found" }); return; }
-    const ok = await verifyPassword(body.password, data.profile?.password);
-    if (!ok) { sendJson(response, 401, { error: "Wrong password" }); return; }
+    const result = await verifyPassword(body.password, data.profile?.password);
+    if (!result.match) { sendJson(response, 401, { error: "Wrong password" }); return; }
+    // If password was migrated from SHA-256 to bcrypt, save the new hash
+    if (result.newHash) {
+      const profile = { ...(data.profile || {}), password: result.newHash };
+      await upsertProfile({ username: body.username, email: data.email || "", profile });
+    }
     sendJson(response, 200, { username: data.username, email: data.email, profile: data.profile });
     return;
   }
   if (request.method === "POST" && parts[1] === "register") {
     const body = await readBody(request);
+    if (!isValidUsername(body.username)) {
+      sendJson(response, 400, { error: "Username must be 2-30 characters and contain only letters, numbers, underscores, hyphens, or dots." }); return;
+    }
+    if (!isValidPassword(body.password)) {
+      sendJson(response, 400, { error: "Password must be between 6 and 128 characters." }); return;
+    }
     const existing = await getProfileByUsername(body.username);
     if (existing) { sendJson(response, 409, { error: "Username taken" }); return; }
     const hashed = await hashPassword(body.password);
@@ -383,10 +442,13 @@ async function handleApi(request, response) {
   }
   if (request.method === "POST" && parts[1] === "change-password") {
     const body = await readBody(request);
+    if (!isValidPassword(body.newPassword)) {
+      sendJson(response, 400, { error: "New password must be between 6 and 128 characters." }); return;
+    }
     const existing = await getProfileByUsername(body.username);
     if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
-    const ok = await verifyPassword(body.oldPassword, existing.profile?.password);
-    if (!ok) { sendJson(response, 401, { error: "Wrong password" }); return; }
+    const result = await verifyPassword(body.oldPassword, existing.profile?.password);
+    if (!result.match) { sendJson(response, 401, { error: "Wrong password" }); return; }
     const hashed = await hashPassword(body.newPassword);
     const profile = { ...(existing.profile || {}), password: hashed };
     await upsertProfile({ username: body.username, email: existing.email || "", profile });
@@ -441,7 +503,7 @@ async function handleApi(request, response) {
   }
   if (request.method === "POST" && parts[1] === "groups" && !parts[2]) {
     const body    = await readBody(request);
-    const code    = generateGroupCode();
+    const code    = await generateUniqueGroupCode();
     const userId  = crypto.randomUUID();
     const profile = body.profile || {};
     const user    = { id: userId, name: body.username, username: body.username, profile };
@@ -500,7 +562,6 @@ async function handleApi(request, response) {
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
     const kind = body.kind === "type" ? "type" : "area";
-    if (!["area", "type"].includes(kind)) { sendJson(response, 400, { error: "Invalid kind" }); return; }
     if (body.customLabel) {
       const id = `custom_${Date.now()}`;
       if (!group.options[kind]) group.options[kind] = [];
@@ -725,7 +786,7 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     if (!openAiApiKey) { sendJson(response, 200, { suggestions: [] }); return; }
     try {
-      const aiResponse = await fetch("[api.openai.com](https://api.openai.com/v1/chat/completions)", {
+      const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method:  "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
         body:    JSON.stringify({
@@ -769,8 +830,10 @@ const server = http.createServer(async (request, response) => {
     serveStatic(request, response);
   } catch (error) {
     console.error(error);
-    const details = publicError(error);
-    sendJson(response, details.status, { error: details.message });
+    if (!response.headersSent) {
+      const details = publicError(error);
+      sendJson(response, details.status, { error: details.message });
+    }
   }
 });
 server.listen(port, host, () => {
