@@ -52,9 +52,9 @@ setInterval(() => {
 
 // ====== OPTIONS ======
 const areaOptions = [
-  { id: "north_suburbs", label: "North suburbs", description: "Filothei, Chalandri, Psixiko, Kifisia, Kefalari", queryArea: "north suburbs of Athens" },
-  { id: "athens_center", label: "Center of Athens", description: "Syntagma, Monastiraki, Psyrri, Exarcheia, Kolonaki", queryArea: "center of Athens" },
-  { id: "south_suburbs", label: "South suburbs", description: "Glyfada, Vouliagmeni, Alimos, Flisvos, Voula", queryArea: "south suburbs of Athens" }
+  { id: "north_suburbs", label: "North suburbs", description: "Filothei, Chalandri, Psixiko, Kifisia, Kefalari", queryArea: "north suburbs of Athens", subareas: ["Filothei", "Chalandri", "Psixiko", "Kifisia", "Kefalari"] },
+  { id: "athens_center", label: "Center of Athens", description: "Syntagma, Monastiraki, Psyrri, Exarcheia, Kolonaki", queryArea: "center of Athens", subareas: ["Syntagma", "Monastiraki", "Psyrri", "Exarcheia", "Kolonaki"] },
+  { id: "south_suburbs", label: "South suburbs", description: "Glyfada, Vouliagmeni, Alimos, Flisvos, Voula", queryArea: "south suburbs of Athens", subareas: ["Glyfada", "Vouliagmeni", "Alimos", "Flisvos", "Voula"] }
 ];
 const typeOptions = [
   { id: "restaurant", label: "Restaurants", description: "Going out to eat, pizza, or food-related choices.", queryType: "restaurant" },
@@ -113,7 +113,8 @@ function isValidUsername(username) {
   return typeof username === "string" && username.length >= 2 && username.length <= 30 && /^[a-zA-Z0-9_\-.]+$/.test(username);
 }
 function isValidPassword(password) {
-  return typeof password === "string" && password.length >= 6 && password.length <= 128;
+  return typeof password === "string" && password.length >= 8 && password.length <= 128
+    && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
 }
 
 // ====== JWT VERIFICATION ======
@@ -254,6 +255,7 @@ function summarizeGroup(group) {
     counts,
     options:   group.options  || {},
     places:    group.places   || [],
+    placeSelections: group.placeSelections || {},
     matches:   group.matches  || [],
     votes:     group.votes    || {},
     search:    group.search   || null,
@@ -272,6 +274,9 @@ function removeUserFromGroup(group, username) {
   Object.keys(group.votes || {}).forEach((key) => {
     if (!remainingIds.has(key)) delete group.votes[key];
   });
+  Object.keys(group.placeSelections || {}).forEach((key) => {
+    if (!remainingIds.has(key)) delete group.placeSelections[key];
+  });
   if (group.members.length === 0) {
     group.consensus = {};
     group.search = null;
@@ -279,6 +284,14 @@ function removeUserFromGroup(group, username) {
     group.matches = [];
   }
   return group.members.length !== before;
+}
+
+function groupAgeGroups(group) {
+  return [...new Set((group.members || []).map((m) => m.profile?.ageGroup).filter(Boolean))];
+}
+
+function requireAgeGroup(profile) {
+  if (!profile?.ageGroup) throw new Error("Select your age group before entering a group.");
 }
 async function generateUniqueGroupCode() {
   for (let attempt = 0; attempt < 10; attempt++) {
@@ -313,7 +326,9 @@ function generateSamplePlaces(area, activity) {
     time: times[i],
     cost: costs[i],
     rating: ratings[i],
-    photoUrl: photos[i]
+    photoUrl: photos[i],
+    website: "",
+    phone: "+30 210 000 0000"
   }));
 }
 
@@ -402,6 +417,8 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
     userRatingCount: place.userRatingCount || 0,
     photoUrl,
     mapsUrl: place.googleMapsUri || "",
+    website: place.websiteUri || "",
+    phone: place.internationalPhoneNumber || place.nationalPhoneNumber || "",
     address: place.formattedAddress || "",
     primaryType: place.primaryType || place.types?.[0] || ""
   };
@@ -422,7 +439,10 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
     "places.primaryType",
     "places.regularOpeningHours",
     "places.googleMapsUri",
-    "places.editorialSummary"
+    "places.editorialSummary",
+    "places.websiteUri",
+    "places.nationalPhoneNumber",
+    "places.internationalPhoneNumber"
   ].join(",");
 
   async function runSearch(useIncludedType) {
@@ -463,9 +483,10 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
   }
 }
 
-async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5) {
+async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5, ageGroups = []) {
   if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
   try {
+    const ageContext = ageGroups.length ? `Age groups in the group: ${ageGroups.join(", ")}.` : "Age groups are unknown.";
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
@@ -473,7 +494,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
         model: openAiModel,
         messages: [
           { role: "system", content: "You select places from a provided list only. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
-          { role: "user", content: `Area: ${area}. Activity: ${activity}. Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
+          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} Consider age suitability, especially minors, when ranking. Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
         temperature: 0.4, max_tokens: 500
       })
@@ -502,7 +523,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
   }
 }
 
-async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles = []) {
+async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles = [], options = {}) {
   const { areaOption, typeOption } = normalizePlaceOptions(areaInput, typeInput);
   const areaLabel = areaOption.label || areaOption.id || "Athens";
   const typeLabel = typeOption.label || typeOption.id || "Activity";
@@ -512,8 +533,10 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
   if (googleApiKey) {
     const googlePlaces = await googleTextSearch(query, areaLabel, typeLabel, typeId, 20, excludeTitles);
     if (googlePlaces && googlePlaces.length > 0) {
-      const refined = await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count);
-      return { places: refined, source: "google", query };
+      const refined = options.useAi === false
+        ? googlePlaces.slice(0, count)
+        : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || []);
+      return { places: refined, source: options.useAi === false ? "google" : "google-ai", query };
     }
   }
   const samples = generateSamplePlaces(areaLabel, typeLabel)
@@ -613,7 +636,7 @@ async function handleApi(request, response) {
   if (request.method === "POST" && parts[1] === "register") {
     const body = await readBody(request);
     if (!isValidUsername(body.username)) { sendJson(response, 400, { error: "Username must be 2-30 characters and contain only letters, numbers, underscores, hyphens, or dots." }); return; }
-    if (!isValidPassword(body.password)) { sendJson(response, 400, { error: "Password must be between 6 and 128 characters." }); return; }
+    if (!isValidPassword(body.password)) { sendJson(response, 400, { error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." }); return; }
     const existing = await getProfileByUsername(body.username);
     if (existing) { sendJson(response, 409, { error: "Username taken" }); return; }
     const hashed = await hashPassword(body.password);
@@ -655,7 +678,7 @@ async function handleApi(request, response) {
     if (!body.username || !body.oldPassword || !body.newPassword) {
       sendJson(response, 400, { error: "Username, old password, and new password are required." }); return;
     }
-    if (!isValidPassword(body.newPassword)) { sendJson(response, 400, { error: "New password must be between 6 and 128 characters." }); return; }
+    if (!isValidPassword(body.newPassword)) { sendJson(response, 400, { error: "New password must be at least 8 characters and include uppercase, lowercase, and a number." }); return; }
     const existing = await getProfileByUsername(body.username);
     if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
     if (body.username !== existing.username) {
@@ -769,6 +792,7 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && parts[1] === "groups" && !parts[2]) {
     const body    = await readBody(request);
+    requireAgeGroup(body.profile || {});
     const code    = await generateUniqueGroupCode();
     const userId  = crypto.randomUUID();
     const profile = body.profile || {};
@@ -777,7 +801,7 @@ async function handleApi(request, response) {
       name: body.groupName || `${body.username}'s Group`, code,
       members: [user], choices: { area: {}, type: {} }, consensus: {},
       options: { area: areaOptions, type: typeOptions },
-      places: [], matches: [], votes: {}, search: null, createdAt: Date.now()
+      places: [], matches: [], votes: {}, placeSelections: {}, search: null, createdAt: Date.now()
     };
     await saveGroup(group);
     sendJson(response, 200, { user, group: summarizeGroup(group) });
@@ -791,6 +815,7 @@ async function handleApi(request, response) {
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const existing = group.members.find((m) => m.username === body.username);
     if (existing) { sendJson(response, 200, { group: summarizeGroup(group), user: existing }); return; }
+    requireAgeGroup(body.profile || {});
     const userId  = crypto.randomUUID();
     const profile = body.profile || {};
     const user    = { id: userId, name: body.username, username: body.username, profile };
@@ -825,14 +850,18 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const kind = body.kind === "type" ? "type" : "area";
     if (body.customLabel) {
-      const id = `custom_${Date.now()}`;
       if (!group.options[kind]) group.options[kind] = [];
-      const customOption = { id, label: body.customLabel, description: "" };
-      if (kind === "area") customOption.queryArea = `${body.customLabel}, Athens`;
-      else customOption.queryType = body.customLabel;
-      group.options[kind].push(customOption);
+      const cleanLabel = String(body.customLabel).trim();
+      if (!cleanLabel) { sendJson(response, 400, { error: "Custom option required" }); return; }
+      let customOption = group.options[kind].find((option) => String(option.label || "").toLowerCase() === cleanLabel.toLowerCase());
+      if (!customOption) {
+        customOption = { id: `custom_${crypto.createHash("sha1").update(`${kind}:${cleanLabel.toLowerCase()}`).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
+        if (kind === "area") customOption.queryArea = `${cleanLabel}, Athens`;
+        else customOption.queryType = cleanLabel;
+        group.options[kind].push(customOption);
+      }
       if (!group.choices[kind]) group.choices[kind] = {};
-      group.choices[kind][body.userId] = id;
+      group.choices[kind][body.userId] = customOption.id;
     } else {
       if (!group.choices[kind]) group.choices[kind] = {};
       group.choices[kind][body.userId] = body.optionId;
@@ -851,9 +880,10 @@ async function handleApi(request, response) {
       if (kind === "type" && group.consensus.area) {
         const areaOption = findGroupOption(group, "area", group.consensus.area);
         const typeOption = findGroupOption(group, "type", selectedId);
-        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5);
+        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
         group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
         group.places = loaded.places;
+        group.placeSelections = {};
       }
     } else {
       if (group.consensus?.[kind]) group.consensus[kind] = null;
@@ -887,18 +917,62 @@ async function handleApi(request, response) {
   if (request.method === "POST" && parts[1] === "groups" && parts[3] === "more-places") {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const body = await readBody(request);
     const areaId = group.consensus?.area;
     const typeId = group.consensus?.type;
     if (!areaId || !typeId) { sendJson(response, 400, { error: "Area and activity must be agreed first." }); return; }
     const areaOption = findGroupOption(group, "area", areaId);
     const typeOption = findGroupOption(group, "type", typeId);
     const excludeTitles = (group.places || []).map((p) => p.title);
-    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles);
+    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
     if (!loaded.places.length) { sendJson(response, 400, { error: "No more places found for this area and activity." }); return; }
     group.places = [...(group.places || []), ...loaded.places];
     group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "custom-place") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const body = await readBody(request);
+    const title = String(body.title || "").trim().slice(0, 80);
+    if (!title) { sendJson(response, 400, { error: "Place name required" }); return; }
+    const areaOption = findGroupOption(group, "area", group.consensus?.area);
+    const typeOption = findGroupOption(group, "type", group.consensus?.type);
+    const place = {
+      id: `custom_place_${Date.now()}`,
+      title,
+      category: body.category || typeOption.label || "Activity",
+      areaLabel: body.area || areaOption.label || "Athens",
+      description: String(body.description || "Added by the group.").slice(0, 240),
+      time: "Hours not listed",
+      cost: "$$",
+      rating: null,
+      photoUrl: fallbackPhotoForType(typeOption.id || ""),
+      website: String(body.website || "").trim(),
+      phone: String(body.phone || "").trim()
+    };
+    group.places = [...(group.places || []), place];
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group), place });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "select-place") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const body = await readBody(request);
+    if (!group.places.some((p) => p.id === body.placeId)) { sendJson(response, 400, { error: "Invalid place" }); return; }
+    if (!group.placeSelections) group.placeSelections = {};
+    group.placeSelections[body.userId] = body.placeId;
+    const selections = Object.values(group.placeSelections);
+    const unanimous = selections.length === (group.members?.length || 0) && selections.every((id) => id === body.placeId);
+    if (!group.consensus) group.consensus = {};
+    group.consensus.place = unanimous ? body.placeId : null;
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
 
