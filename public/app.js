@@ -677,10 +677,11 @@ function renderCard() {
   activityCard.classList.remove("swipe-yes", "swipe-no");
   activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt               = place.title;
-  activityCategory.textContent    = `${place.category} | ${Number(place.rating || 4).toFixed(1)} \u2605`;
+  const ratingText = place.rating ? `${Number(place.rating).toFixed(1)} \u2605` : "";
+  activityCategory.textContent    = ratingText ? `${place.category} | ${ratingText}` : place.category;
   activityTitle.textContent       = place.title;
-  activityDescription.textContent = place.description;
-  activityArea.textContent        = place.areaLabel;
+  activityDescription.textContent = place.description || place.address || "";
+  activityArea.textContent        = place.areaLabel || place.address || "";
   activityTime.textContent        = place.time;
   activityCost.textContent        = place.cost;
   noButton.textContent    = t("choiceNo");
@@ -719,13 +720,16 @@ function renderResults() {
     return;
   }
 
-  resultList.innerHTML = ranked.map((item) => `
+  resultList.innerHTML = ranked.map((item) => {
+    const ratingPart = item.rating ? ` | ${Number(item.rating).toFixed(1)} \u2605` : "";
+    return `
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
       <div><h3>${escapeHtml(item.title)}</h3>
-      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(item.category)} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p></div>
+      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(item.category)}${ratingPart} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p></div>
       <strong class="result-score">${item.percent}%</strong>
-    </article>`).join("");
+    </article>`;
+  }).join("");
 }
 
 function renderStatus() {
@@ -737,7 +741,10 @@ function renderStatus() {
   if (!typeReady) { statusPanel.textContent = t("areaSelected"); return; }
   const src = state.group.search?.source;
   const sourceLabel = src === "google" ? t("searchGooglePlaces") : src === "custom" ? t("searchCustom") : t("searchSample");
-  statusPanel.textContent = `${t("searchFrom")} ${sourceLabel}: "${state.group.search?.query || ""}"`;
+  const area = state.group.search?.area || "";
+  const activity = state.group.search?.activity || "";
+  const context = area && activity ? `${activity} · ${area}` : `"${state.group.search?.query || ""}"`;
+  statusPanel.textContent = `${t("searchFrom")} ${sourceLabel}: ${context}`;
 }
 
 // ====== GROUP CHAT ======
@@ -999,7 +1006,12 @@ function renderApp() {
   if (!areaReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("area"); return; }
   if (!typeReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("type"); return; }
 
-  searchSummary.textContent = `${t("searchFrom")}: "${state.group.search?.query || ""}"`;
+  searchSummary.textContent = (() => {
+    const area = state.group.search?.area;
+    const activity = state.group.search?.activity;
+    if (area && activity) return `${activity} in ${area}`;
+    return `${t("searchFrom")}: "${state.group.search?.query || ""}"`;
+  })();
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
   renderResults();
