@@ -37,7 +37,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button, input, textarea {
+button, input, textarea, select {
   font: inherit;
 }
 
@@ -234,7 +234,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   color: var(--purple);
 }
 
-.login-inner input {
+.login-inner input,
+.login-inner select {
   width: 100%;
   padding: 14px 16px;
   border: 2px solid var(--line);
@@ -246,10 +247,22 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   transition: var(--transition);
 }
 
-.login-inner input:focus {
+.login-inner input:focus,
+.login-inner select:focus {
   border-color: var(--purple);
   box-shadow: 0 0 0 4px rgba(48, 24, 96, 0.1);
 }
+
+.password-strength {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.password-strength.weak { background: rgba(240, 92, 92, 0.12); color: var(--red); }
+.password-strength.ok { background: rgba(246, 216, 137, 0.28); color: #7a5a00; }
+.password-strength.strong { background: var(--green-light); color: var(--green); }
 
 .login-inner button {
   width: 100%;
@@ -643,7 +656,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   font-weight: 700;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   min-height: 48px;
   border: 2px solid var(--line);
@@ -655,7 +669,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   transition: var(--transition);
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   border-color: var(--purple);
   box-shadow: 0 0 0 4px rgba(48, 24, 96, 0.1);
 }
@@ -1022,6 +1037,22 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   font-size: 1.1rem;
 }
 
+.result-buttons,
+.booking-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.add-own-place-button {
+  justify-self: start;
+}
+
+.ai-toggle-row {
+  grid-column: 1 / -1;
+}
+
 /* ====== PAGE PANEL ====== */
 .page-panel {
   padding: 24px;
@@ -1195,7 +1226,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   box-shadow: 0 0 0 4px rgba(48, 24, 96, 0.1);
 }
 
-.personal-form input {
+.personal-form input,
+.personal-form select {
   border: 2px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 0 12px;
@@ -1204,7 +1236,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   transition: var(--transition);
 }
 
-.personal-form input:focus {
+.personal-form input:focus,
+.personal-form select:focus {
   border-color: var(--purple);
   box-shadow: 0 0 0 4px rgba(48, 24, 96, 0.1);
 }
