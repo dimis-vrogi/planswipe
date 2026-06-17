@@ -318,8 +318,23 @@ function generateSamplePlaces(area, activity) {
 }
 
 // ====== GOOGLE PLACES SEARCH ======
-async function googleTextSearch(query, areaLabel, typeLabel) {
+function mapGooglePlace(place, areaLabel, typeLabel, query) {
+  return {
+    id: `google_${place.id}`,
+    title: place.displayName?.text || "Unnamed place",
+    category: typeLabel,
+    areaLabel: areaLabel,
+    description: place.formattedAddress || query,
+    time: "Check hours",
+    cost: priceLabel(place.priceLevel),
+    rating: place.rating || 4,
+    photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
+  };
+}
+
+async function googleTextSearch(query, areaLabel, typeLabel, maxResults = 5, excludeTitles = []) {
   if (!googleApiKey) return null;
+  const exclude = new Set(excludeTitles.map((t) => String(t).toLowerCase()));
   try {
     const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
@@ -328,26 +343,67 @@ async function googleTextSearch(query, areaLabel, typeLabel) {
         "X-Goog-Api-Key": googleApiKey,
         "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.priceLevel,places.photos,places.types"
       },
-      body: JSON.stringify({ textQuery: query, maxResultCount: 5, languageCode: "en" })
+      body: JSON.stringify({ textQuery: query, maxResultCount: 20, languageCode: "en" })
     });
     if (!response.ok) return null;
     const data = await response.json();
     if (!data.places || !data.places.length) return null;
-    return data.places.map((place) => ({
-      id: `google_${place.id}`,
-      title: place.displayName?.text || "Unnamed place",
-      category: typeLabel,
-      areaLabel: areaLabel,
-      description: place.formattedAddress || query,
-      time: "Check hours",
-      cost: priceLabel(place.priceLevel),
-      rating: place.rating || 4,
-      photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
-    }));
+    return data.places
+      .filter((place) => !exclude.has((place.displayName?.text || "").toLowerCase()))
+      .slice(0, maxResults)
+      .map((place) => mapGooglePlace(place, areaLabel, typeLabel, query));
   } catch (e) {
     console.warn("Google Places search error:", e.message);
     return null;
   }
+}
+
+async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5) {
+  if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
+  try {
+    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
+      body: JSON.stringify({
+        model: openAiModel,
+        messages: [
+          { role: "system", content: "You select places from a provided list only. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
+          { role: "user", content: `Area: ${area}. Activity: ${activity}. Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
+        ],
+        temperature: 0.4, max_tokens: 500
+      })
+    });
+    if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
+    const aiData = await aiResponse.json();
+    const content = aiData.choices?.[0]?.message?.content || "";
+    const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+    if (!Array.isArray(parsed) || !parsed.length) return googlePlaces.slice(0, maxCount);
+    const byTitle = new Map(googlePlaces.map((p) => [p.title.toLowerCase(), p]));
+    const refined = [];
+    parsed.forEach((item) => {
+      const match = byTitle.get(String(item.place || "").toLowerCase());
+      if (match) refined.push({ ...match, description: item.reason || match.description });
+    });
+    return refined.length ? refined.slice(0, maxCount) : googlePlaces.slice(0, maxCount);
+  } catch (e) {
+    console.warn("OpenAI place refinement error:", e.message);
+    return googlePlaces.slice(0, maxCount);
+  }
+}
+
+async function loadPlacesForGroup(areaLabel, typeLabel, count = 5, excludeTitles = []) {
+  const query = `${typeLabel} in ${areaLabel}`;
+  if (googleApiKey) {
+    const googlePlaces = await googleTextSearch(query, areaLabel, typeLabel, 20, excludeTitles);
+    if (googlePlaces && googlePlaces.length > 0) {
+      const refined = await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count);
+      return { places: refined, source: "google", query };
+    }
+  }
+  const samples = generateSamplePlaces(areaLabel, typeLabel)
+    .filter((p) => !excludeTitles.map((t) => t.toLowerCase()).includes(p.title.toLowerCase()))
+    .slice(0, count);
+  return { places: samples, source: googleApiKey ? "sample" : "sample", query };
 }
 
 function priceLabel(priceLevel) {
@@ -458,9 +514,19 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const existing = await getProfileByUsername(body.username);
     if (existing) {
-      await upsertProfile({ username: body.username, email: body.email || existing.email, profile: existing.profile || {} });
+      const profile = { ...(existing.profile || {}) };
+      if (body.password && isValidPassword(body.password)) {
+        profile.password = await hashPassword(body.password);
+      }
+      await upsertProfile({ username: body.username, email: body.email || existing.email, profile });
     } else {
-      const profile = { settings: {}, friends: [], friendRequests: [], pastActivities: [], preferences: { areas: [], activities: [], places: [] } };
+      const profile = {
+        settings: {}, friends: [], friendRequests: [], pastActivities: [],
+        preferences: { areas: [], activities: [], places: [] }
+      };
+      if (body.password && isValidPassword(body.password)) {
+        profile.password = await hashPassword(body.password);
+      }
       await upsertProfile({ username: body.username, email: body.email, profile });
     }
     const data = await getProfileByUsername(body.username);
@@ -476,11 +542,53 @@ async function handleApi(request, response) {
     if (!isValidPassword(body.newPassword)) { sendJson(response, 400, { error: "New password must be between 6 and 128 characters." }); return; }
     const existing = await getProfileByUsername(body.username);
     if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
-    const result = await verifyPassword(body.oldPassword, existing.profile?.password);
-    if (!result.match) { sendJson(response, 401, { error: "Wrong password" }); return; }
+    if (body.username !== existing.username) {
+      sendJson(response, 403, { error: "Forbidden" }); return;
+    }
+
+    const tokenUser = await verifyToken(request);
+    const hasProfilePassword = Boolean(existing.profile?.password);
+    let oldPasswordValid = false;
+
+    if (hasProfilePassword) {
+      const result = await verifyPassword(body.oldPassword, existing.profile.password);
+      oldPasswordValid = result.match;
+    } else if (tokenUser && existing.email && supabaseAnonKey) {
+      try {
+        const verifyClient = createClient(supabaseUrl, supabaseAnonKey);
+        const { error } = await verifyClient.auth.signInWithPassword({
+          email: existing.email,
+          password: body.oldPassword
+        });
+        oldPasswordValid = !error;
+      } catch (e) {
+        console.warn("Supabase old password verification failed:", e.message);
+      }
+    }
+
+    if (!oldPasswordValid) {
+      sendJson(response, 401, { error: "Wrong password" }); return;
+    }
+
     const hashed = await hashPassword(body.newPassword);
     const profile = { ...(existing.profile || {}), password: hashed };
     await upsertProfile({ username: body.username, email: existing.email || "", profile });
+
+    if (existing.email) {
+      try {
+        const authUserId = tokenUser?.id;
+        if (authUserId) {
+          await supabase.auth.admin.updateUserById(authUserId, { password: body.newPassword });
+        } else {
+          const { data: authUsers } = await supabase.auth.admin.listUsers();
+          const authUser = authUsers?.users?.find((u) => u.email === existing.email);
+          if (authUser) {
+            await supabase.auth.admin.updateUserById(authUser.id, { password: body.newPassword });
+          }
+        }
+      } catch (e) { console.warn("Could not update Supabase auth password:", e.message); }
+    }
+
     sendJson(response, 200, { success: true });
     return;
   }
@@ -524,8 +632,22 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const group = await loadGroup(body.groupCode);
     if (!group) { sendJson(response, 200, { success: true }); return; }
+    const pastGroup = { code: group.code, name: group.name, memberCount: group.members?.length || 0, exitedAt: Date.now() };
     if (removeUserFromGroup(group, body.username)) await saveGroup(group);
-    sendJson(response, 200, { success: true });
+
+    const profileRow = await getProfileByUsername(body.username);
+    if (profileRow) {
+      const pastGroups = profileRow.profile?.pastGroups || [];
+      if (!pastGroups.some((g) => g.code === pastGroup.code)) {
+        pastGroups.unshift(pastGroup);
+        await upsertProfile({
+          username: body.username,
+          email: profileRow.email || "",
+          profile: { ...profileRow.profile, pastGroups: pastGroups.slice(0, 50) }
+        });
+      }
+    }
+    sendJson(response, 200, { success: true, pastGroup });
     return;
   }
 
@@ -565,10 +687,12 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "groups" && parts[2] === "mine") {
     const username  = url.searchParams.get("username") || "";
     const allGroups = await getAllGroups();
+    const profile   = await getProfileByUsername(username);
     const userGroups = allGroups
       .filter((g) => g.data?.members?.some((m) => m.username === username))
       .map((g) => ({ name: g.data.name, code: g.data.code, memberCount: g.data.members?.length || 0 }));
-    sendJson(response, 200, { groups: userGroups });
+    const pastGroups = profile?.profile?.pastGroups || [];
+    sendJson(response, 200, { groups: userGroups, pastGroups });
     return;
   }
 
@@ -608,8 +732,9 @@ async function handleApi(request, response) {
       if (kind === "type" && group.consensus.area) {
         const areaLabel = (group.options.area || []).find((o) => o.id === group.consensus.area)?.label || "";
         const typeLabel = (group.options.type || []).find((o) => o.id === selectedId)?.label || "";
-        group.search = { source: googleApiKey ? "google" : "sample", query: `${typeLabel} near ${areaLabel}` };
-        group.places = generateSamplePlaces(areaLabel, typeLabel);
+        const loaded = await loadPlacesForGroup(areaLabel, typeLabel, 5);
+        group.search = { source: loaded.source, query: loaded.query };
+        group.places = loaded.places;
       }
     } else {
       if (group.consensus?.[kind]) group.consensus[kind] = null;
@@ -637,6 +762,24 @@ async function handleApi(request, response) {
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "more-places") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const areaId = group.consensus?.area;
+    const typeId = group.consensus?.type;
+    if (!areaId || !typeId) { sendJson(response, 400, { error: "Area and activity must be agreed first." }); return; }
+    const areaLabel = (group.options.area || []).find((o) => o.id === areaId)?.label || "";
+    const typeLabel = (group.options.type || []).find((o) => o.id === typeId)?.label || "";
+    const excludeTitles = (group.places || []).map((p) => p.title);
+    const loaded = await loadPlacesForGroup(areaLabel, typeLabel, 5, excludeTitles);
+    if (!loaded.places.length) { sendJson(response, 400, { error: "No more places found for this area and activity." }); return; }
+    group.places = [...(group.places || []), ...loaded.places];
+    group.search = { source: loaded.source, query: loaded.query };
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places });
     return;
   }
 
@@ -791,56 +934,14 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const area = body.area || "";
     const activity = body.activity || "";
-    if (!area || !activity) { sendJson(response, 200, { suggestions: [] }); return; }
+    if (!area || !activity) { sendJson(response, 200, { suggestions: [], places: [] }); return; }
 
-    const query = `${activity} in ${area}`;
-    let places = null;
-
-    // Step 1: Try Google Places API first
-    if (googleApiKey) {
-      places = await googleTextSearch(query, area, activity);
-    }
-
-    // Step 2: If we got Google results and have OpenAI, optionally enhance/filter
-    if (places && places.length > 0 && openAiApiKey) {
-      try {
-        const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
-          body: JSON.stringify({
-            model: openAiModel,
-            messages: [
-              { role: "system", content: "You are a helpful assistant. Given a list of places, select the 5 most relevant ones for the user's area and activity. Return ONLY a JSON array of objects with \"place\" and \"reason\" keys." },
-              { role: "user", content: `Area: ${area}. Activity: ${activity}. Places: ${JSON.stringify(places.map((p) => p.title))}. Select the 5 best ones with a brief reason. Return ONLY JSON.` }
-            ],
-            temperature: 0.7, max_tokens: 500
-          })
-        });
-        const aiData = await aiResponse.json();
-        try {
-          const content = aiData.choices?.[0]?.message?.content || "";
-          const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const selected = parsed.map((s) => ({
-              place: s.place,
-              reason: s.reason || "Recommended for you"
-            }));
-            sendJson(response, 200, { suggestions: selected });
-            return;
-          }
-        } catch (e) { console.warn("AI parse error:", e.message); }
-      } catch (error) { console.warn("AI request error:", error.message); }
-    }
-
-    // Return Google results as suggestions (with empty reasons), or sample data
-    if (places && places.length > 0) {
-      sendJson(response, 200, { suggestions: places.map((p) => ({ place: p.title, reason: `${area} | ${activity}` })) });
-      return;
-    }
-
-    // Fallback: sample places
-    const samples = generateSamplePlaces(area, activity).slice(0, 5);
-    sendJson(response, 200, { suggestions: samples.map((p) => ({ place: p.title, reason: `${p.description}` })) });
+    const loaded = await loadPlacesForGroup(area, activity, 5, body.excludeTitles || []);
+    sendJson(response, 200, {
+      suggestions: loaded.places.map((p) => ({ place: p.title, reason: p.description })),
+      places: loaded.places,
+      source: loaded.source
+    });
     return;
   }
 
