@@ -318,40 +318,145 @@ function generateSamplePlaces(area, activity) {
 }
 
 // ====== GOOGLE PLACES SEARCH ======
-function mapGooglePlace(place, areaLabel, typeLabel, query) {
+const activitySearchTerms = {
+  restaurant: "restaurants",
+  gaming: "bowling alleys arcades escape rooms VR",
+  bars: "bars pubs cocktail bars wine bars",
+  movies: "cinemas movie theaters"
+};
+const activityIncludedTypes = {
+  restaurant: "restaurant",
+  bars: "bar",
+  movies: "movie_theater"
+};
+
+function findGroupOption(group, kind, optionId) {
+  const fromGroup = (group?.options?.[kind] || []).find((o) => o.id === optionId);
+  if (fromGroup) return fromGroup;
+  const defaults = kind === "area" ? areaOptions : typeOptions;
+  return defaults.find((o) => o.id === optionId) || { id: optionId, label: optionId };
+}
+
+function normalizePlaceOptions(areaInput, typeInput) {
+  const areaOption = typeof areaInput === "string" ? { label: areaInput } : (areaInput || {});
+  const typeOption = typeof typeInput === "string" ? { label: typeInput } : (typeInput || {});
+  return { areaOption, typeOption };
+}
+
+function buildPlaceSearchQuery(areaOption, typeOption) {
+  const area = areaOption.queryArea || areaOption.label || "Athens";
+  const typeId = typeOption.id || "";
+  const activity = activitySearchTerms[typeId] || typeOption.queryType || typeOption.label || "places";
+  return `${activity} in ${area}, Greece`;
+}
+
+function googlePhotoUrl(photo, maxWidth = 1000) {
+  if (!photo?.name || !googleApiKey) return "";
+  return `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=${maxWidth}&key=${googleApiKey}`;
+}
+
+function formatOpeningHours(regularOpeningHours) {
+  const lines = regularOpeningHours?.weekdayDescriptions || [];
+  if (!lines.length) return "Hours not listed";
+  const dayIndex = (new Date().getDay() + 6) % 7;
+  return lines[dayIndex] || lines[0];
+}
+
+function buildPlaceDescription(place, typeLabel, areaLabel) {
+  const summary = place.editorialSummary?.text?.trim();
+  const address = place.formattedAddress?.trim() || "";
+  const rating = place.rating ? `${Number(place.rating).toFixed(1)} stars` : "";
+  const reviewCount = place.userRatingCount ? `${place.userRatingCount} reviews` : "";
+  const ratingLine = [rating, reviewCount].filter(Boolean).join(" · ");
+  const parts = [];
+  if (summary) parts.push(summary);
+  else parts.push(`${typeLabel} in ${areaLabel}`);
+  if (address) parts.push(address);
+  if (ratingLine) parts.push(ratingLine);
+  return parts.join(" — ");
+}
+
+function fallbackPhotoForType(typeId) {
+  const photos = {
+    restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
+    gaming: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80",
+    bars: "https://images.unsplash.com/photo-1572116469694-31b0c2990c49?auto=format&fit=crop&w=1000&q=80",
+    movies: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1000&q=80"
+  };
+  return photos[typeId] || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
+}
+
+function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
+  const photo = place.photos?.[0];
+  const photoUrl = googlePhotoUrl(photo) || fallbackPhotoForType(typeId);
   return {
     id: `google_${place.id}`,
+    googlePlaceId: place.id,
     title: place.displayName?.text || "Unnamed place",
     category: typeLabel,
-    areaLabel: areaLabel,
-    description: place.formattedAddress || query,
-    time: "Check hours",
+    areaLabel,
+    description: buildPlaceDescription(place, typeLabel, areaLabel),
+    time: formatOpeningHours(place.regularOpeningHours),
     cost: priceLabel(place.priceLevel),
-    rating: place.rating || 4,
-    photoUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80"
+    rating: place.rating || null,
+    userRatingCount: place.userRatingCount || 0,
+    photoUrl,
+    mapsUrl: place.googleMapsUri || "",
+    address: place.formattedAddress || "",
+    primaryType: place.primaryType || place.types?.[0] || ""
   };
 }
 
-async function googleTextSearch(query, areaLabel, typeLabel, maxResults = 5, excludeTitles = []) {
+async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = []) {
   if (!googleApiKey) return null;
   const exclude = new Set(excludeTitles.map((t) => String(t).toLowerCase()));
-  try {
+  const fieldMask = [
+    "places.id",
+    "places.displayName",
+    "places.formattedAddress",
+    "places.rating",
+    "places.userRatingCount",
+    "places.priceLevel",
+    "places.photos",
+    "places.types",
+    "places.primaryType",
+    "places.regularOpeningHours",
+    "places.googleMapsUri",
+    "places.editorialSummary"
+  ].join(",");
+
+  async function runSearch(useIncludedType) {
+    const body = { textQuery: query, maxResultCount: 20, languageCode: "en" };
+    const includedType = activityIncludedTypes[typeId];
+    if (useIncludedType && includedType) body.includedType = includedType;
     const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": googleApiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.priceLevel,places.photos,places.types"
+        "X-Goog-FieldMask": fieldMask
       },
-      body: JSON.stringify({ textQuery: query, maxResultCount: 20, languageCode: "en" })
+      body: JSON.stringify(body)
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      console.warn("Google Places search failed:", response.status, errText.slice(0, 200));
+      return null;
+    }
     const data = await response.json();
-    if (!data.places || !data.places.length) return null;
-    return data.places
+    return data.places || [];
+  }
+
+  try {
+    let places = await runSearch(true);
+    if (!places?.length && activityIncludedTypes[typeId]) {
+      places = await runSearch(false);
+    }
+    if (!places?.length) return null;
+    return places
       .filter((place) => !exclude.has((place.displayName?.text || "").toLowerCase()))
       .slice(0, maxResults)
-      .map((place) => mapGooglePlace(place, areaLabel, typeLabel, query));
+      .map((place) => mapGooglePlace(place, areaLabel, typeLabel, typeId));
   } catch (e) {
     console.warn("Google Places search error:", e.message);
     return null;
@@ -382,7 +487,13 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
     const refined = [];
     parsed.forEach((item) => {
       const match = byTitle.get(String(item.place || "").toLowerCase());
-      if (match) refined.push({ ...match, description: item.reason || match.description });
+      if (match) {
+        const reason = String(item.reason || "").trim();
+        refined.push({
+          ...match,
+          description: reason ? `${reason} — ${match.address || match.description}` : match.description
+        });
+      }
     });
     return refined.length ? refined.slice(0, maxCount) : googlePlaces.slice(0, maxCount);
   } catch (e) {
@@ -391,10 +502,15 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
   }
 }
 
-async function loadPlacesForGroup(areaLabel, typeLabel, count = 5, excludeTitles = []) {
-  const query = `${typeLabel} in ${areaLabel}`;
+async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles = []) {
+  const { areaOption, typeOption } = normalizePlaceOptions(areaInput, typeInput);
+  const areaLabel = areaOption.label || areaOption.id || "Athens";
+  const typeLabel = typeOption.label || typeOption.id || "Activity";
+  const typeId = typeOption.id || "";
+  const query = buildPlaceSearchQuery(areaOption, typeOption);
+
   if (googleApiKey) {
-    const googlePlaces = await googleTextSearch(query, areaLabel, typeLabel, 20, excludeTitles);
+    const googlePlaces = await googleTextSearch(query, areaLabel, typeLabel, typeId, 20, excludeTitles);
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count);
       return { places: refined, source: "google", query };
@@ -711,7 +827,10 @@ async function handleApi(request, response) {
     if (body.customLabel) {
       const id = `custom_${Date.now()}`;
       if (!group.options[kind]) group.options[kind] = [];
-      group.options[kind].push({ id, label: body.customLabel, description: "" });
+      const customOption = { id, label: body.customLabel, description: "" };
+      if (kind === "area") customOption.queryArea = `${body.customLabel}, Athens`;
+      else customOption.queryType = body.customLabel;
+      group.options[kind].push(customOption);
       if (!group.choices[kind]) group.choices[kind] = {};
       group.choices[kind][body.userId] = id;
     } else {
@@ -730,10 +849,10 @@ async function handleApi(request, response) {
       group.consensus[kind] = selectedId;
       if (kind === "area") group.consensus.type = null;
       if (kind === "type" && group.consensus.area) {
-        const areaLabel = (group.options.area || []).find((o) => o.id === group.consensus.area)?.label || "";
-        const typeLabel = (group.options.type || []).find((o) => o.id === selectedId)?.label || "";
-        const loaded = await loadPlacesForGroup(areaLabel, typeLabel, 5);
-        group.search = { source: loaded.source, query: loaded.query };
+        const areaOption = findGroupOption(group, "area", group.consensus.area);
+        const typeOption = findGroupOption(group, "type", selectedId);
+        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5);
+        group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
         group.places = loaded.places;
       }
     } else {
@@ -771,13 +890,13 @@ async function handleApi(request, response) {
     const areaId = group.consensus?.area;
     const typeId = group.consensus?.type;
     if (!areaId || !typeId) { sendJson(response, 400, { error: "Area and activity must be agreed first." }); return; }
-    const areaLabel = (group.options.area || []).find((o) => o.id === areaId)?.label || "";
-    const typeLabel = (group.options.type || []).find((o) => o.id === typeId)?.label || "";
+    const areaOption = findGroupOption(group, "area", areaId);
+    const typeOption = findGroupOption(group, "type", typeId);
     const excludeTitles = (group.places || []).map((p) => p.title);
-    const loaded = await loadPlacesForGroup(areaLabel, typeLabel, 5, excludeTitles);
+    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles);
     if (!loaded.places.length) { sendJson(response, 400, { error: "No more places found for this area and activity." }); return; }
     group.places = [...(group.places || []), ...loaded.places];
-    group.search = { source: loaded.source, query: loaded.query };
+    group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places });
     return;
