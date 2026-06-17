@@ -98,19 +98,19 @@ const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
 // ====== I18N ======
 const optionTranslations = {
   el: {
-    northsuburbs: { label: "Βόρεια προάστια",  description: "Χαλάνδρι, Μαρούσι, Κηφισιά και γειτονικές περιοχές." },
-    athenscenter: { label: "Κέντρο Αθηνών",    description: "Σύνταγμα, Μοναστηράκι, Ψυρρή και κεντρικές περιοχές." },
-    southsuburbs: { label: "Νότια προάστια",    description: "Φλοίσβος, Γλυφάδα, Άλιμος και η παραλιακή πλευρά." },
-    restaurant:    { label: "Εστιατόρια",        description: "Βγαίνουμε για φαγητό, πιτσαρία ή επιλογές που ξεκινούν με φαγητό." },
-    gaming:        { label: "Παιχνίδια",         description: "Μπόουλινγκ, escape rooms, arcades και διασκεδαστικές δραστηριότητες." },
-    bars:          { label: "Μπαρ",              description: "Cocktail bars, wine bars, pubs και νυχτερινά μέρη." },
-    movies:        { label: "Ταινίες",           description: "Σινεμά, θερινά σινεμά, προβολές ταινιών." },
-    addArea:        "Προσθήκη περιοχής",
-    addActivity:    "Προσθήκη δραστηριότητας",
-    addAreaText:    "Πρότεινε άλλη γειτονιά ή μέρος.",
-    addActivityText:"Πρότεινε άλλο είδος δραστηριότητας.",
-    addOwn:         "Πρόσθεσε δικό σου",
-    liveChoices:    "Ζωντανές επιλογές"
+    northsuburbs: { label: "\u0392\u03cc\u03c1\u03b5\u03b9\u03b1 \u03c0\u03c1\u03bf\u03ac\u03c3\u03c4\u03b9\u03b1",  description: "\u03a7\u03b1\u03bb\u03ac\u03bd\u03b4\u03c1\u03b9, \u039c\u03b1\u03c1\u03bf\u03cd\u03c3\u03b9, \u039a\u03b7\u03c6\u03b9\u03c3\u03b9\u03ac \u03ba\u03b1\u03b9 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
+    athenscenter: { label: "\u039a\u03ad\u03bd\u03c4\u03c1\u03bf \u0391\u03b8\u03b7\u03bd\u03ce\u03bd",    description: "\u03a3\u03cd\u03bd\u03c4\u03b1\u03b3\u03bc\u03b1, \u039c\u03bf\u03bd\u03b1\u03c3\u03c4\u03b7\u03c1\u03ac\u03ba\u03b9, \u03a8\u03c5\u03c1\u03c1\u03ae \u03ba\u03b1\u03b9 \u03ba\u03b5\u03bd\u03c4\u03c1\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
+    southsuburbs: { label: "\u039d\u03cc\u03c4\u03b9\u03b1 \u03c0\u03c1\u03bf\u03ac\u03c3\u03c4\u03b9\u03b1",    description: "\u03a6\u03bb\u03bf\u03af\u03c3\u03b2\u03bf\u03c2, \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1, \u0386\u03bb\u03b9\u03bc\u03bf\u03c2 \u03ba\u03b1\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03b1\u03bb\u03b9\u03b1\u03ba\u03ae \u03c0\u03bb\u03b5\u03c5\u03c1\u03ac." },
+    restaurant:    { label: "\u0395\u03c3\u03c4\u03b9\u03b1\u03c4\u03cc\u03c1\u03b9\u03b1",        description: "\u0392\u03b3\u03b1\u03af\u03bd\u03bf\u03c5\u03bc\u03b5 \u03b3\u03b9\u03b1 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc, \u03c0\u03b9\u03c4\u03c3\u03b1\u03c1\u03af\u03b1 \u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c0\u03bf\u03c5 \u03be\u03b5\u03ba\u03b9\u03bd\u03bf\u03cd\u03bd \u03bc\u03b5 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc." },
+    gaming:        { label: "\u03a0\u03b1\u03b9\u03c7\u03bd\u03af\u03b4\u03b9\u03b1",         description: "\u039c\u03c0\u03cc\u03c9\u03bb\u03b9\u03bd\u03b3\u03ba, escape rooms, arcades \u03ba\u03b1\u03b9 \u03b4\u03b9\u03b1\u03c3\u03ba\u03b5\u03b4\u03b1\u03c3\u03c4\u03b9\u03ba\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2." },
+    bars:          { label: "\u039c\u03c0\u03b1\u03c1",              description: "Cocktail bars, wine bars, pubs \u03ba\u03b1\u03b9 \u03bd\u03c5\u03c7\u03c4\u03b5\u03c1\u03b9\u03bd\u03ac \u03bc\u03ad\u03c1\u03b7." },
+    movies:        { label: "\u03a4\u03b1\u03b9\u03bd\u03af\u03b5\u03c2",           description: "\u03a3\u03b9\u03bd\u03b5\u03bc\u03ac, \u03b8\u03b5\u03c1\u03b9\u03bd\u03ac \u03c3\u03b9\u03bd\u03b5\u03bc\u03ac, \u03c0\u03c1\u03bf\u03b2\u03bf\u03bb\u03ad\u03c2 \u03c4\u03b1\u03b9\u03bd\u03b9\u03ce\u03bd." },
+    addArea:        "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
+    addActivity:    "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    addAreaText:    "\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03bc\u03ad\u03c1\u03bf\u03c2.",
+    addActivityText:"\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
+    addOwn:         "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5",
+    liveChoices:    "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2"
   }
 };
 
@@ -175,7 +175,7 @@ const copy = {
     noPending: "No pending requests", inboxClear: "No notifications",
     noPastActivities: "No past activities yet",
     continueBrowsing: "Would you like to continue browsing places?",
-    noMoreSuggestions: "No more suggestions available", aiGenerating: "Getting AI suggestions…",
+    noMoreSuggestions: "No more suggestions available", aiGenerating: "Getting AI suggestions\u2026",
     exitGroupPermanent: "Exit Group Permanently",
     confirmExitGroup: "Are you sure you want to permanently leave this group?",
     accountManagement: "Account Management",
@@ -194,99 +194,99 @@ const copy = {
     favouritePlaces: "Favourite Places",
     addAnotherArea: "Add another area", addAnotherActivity: "Add another activity",
     addAnotherPlace: "Add another place",
-    groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message…",
-    closeChat: "Close", waitingForOthers: "Waiting for others to vote…",
+    groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
+    closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
     aiToggleOff: "Sample places will be used", aiToggleLabel: "AI Suggestions mode"
   },
   el: {
-    login: "Σύνδεση", createAccount: "Δημιουργία λογαριασμού",
-    enterPlanswipe: "Είσοδος στο PlanSwipe",
-    groupPlans: "Ομαδικά σχέδια", leaveGroup: "Έξοδος από ομάδα", exitGroup: "Πίσω",
-    home: "Αρχική", likedPlaces: "Αρεστά μέρη", groups: "Οι ομάδες μου", friends: "Φίλοι",
-    past: "Παλιές δραστηριότητες", personal: "Προσωπικά στοιχεία",
-    settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
-    heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
-    heroTitle: "Βρείτε το σχέδιο που η παρέα σας μπορεί να συμφωνήσει.",
-    heroDescription: "Επιλέξτε τα βασικά μαζί, κάντε swipe σε κοντινές ιδέες και αφήστε το PlanSwipe να αναδείξει τα μέρη που θα απολαύσει η παρέα.",
-    heroNote: "Για ομαδικές συνομιλίες που ποτέ δεν αποφασίζουν.",
-    whatPlanswipeIs: "Τι είναι το PlanSwipe",
-    sharedDecisionTool: "Ένα εργαλείο κοινών αποφάσεων",
-    offerText: "Αντί για ατελείωτες ομαδικές συζητήσεις, όλοι επιλέγουν τα βασικά, κάνουν swipe σε επιλογές και βλέπουν ποιες δραστηριότητες έχουν τη μεγαλύτερη υποστήριξη.",
-    agreeFaster: "Συμφωνήστε πιο γρήγορα",
-    agreeFasterText: "Επιλέξτε περιοχή και είδος μαζί πριν δείτε προτάσεις.",
-    discoverOptions: "Ανακαλύψτε επιλογές",
-    discoverOptionsText: "Χρησιμοποιήστε δείγματα ή αποτελέσματα Google Places όταν ρυθμιστεί το API key.",
-    voteAsGroup: "Ψηφίστε ως ομάδα",
-    voteAsGroupText: "Σημειώστε δραστηριότητες ως Όχι, Ίσως ή Ναι και συγκρίνετε άμεσα.",
-    dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
-    seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
-    startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
-    startPlanningText: "Διαλέξτε αν θέλετε να δημιουργήσετε νέα ομάδα ή να μπείτε σε υπάρχουσα.",
-    createGroup: "Δημιουργία ομάδας",
-    createGroupText: "Επιλέξτε όνομα ομάδας και λάβετε έναν νέο 8ψήφιο κωδικό.",
-    joinGroup: "Συμμετοχή σε ομάδα",
-    joinGroupText: "Εισάγετε τον 8ψήφιο κωδικό από έναν φίλο.",
-    groupName: "Όνομα ομάδας", groupCodeLabel: "8ψήφιος κωδικός ομάδας", back: "Πίσω",
-    currentGroup: "Τρέχουσα ομάδα", stepArea: "Βήμα 1 από 2", stepType: "Βήμα 2 από 2",
-    areaTitle: "Πού θέλετε να πάτε;", typeTitle: "Τι είδους δραστηριότητα θέλετε;",
-    decisionHint: "Όλοι πρέπει να ψηφίσουν πριν προχωρήσει η ομάδα.",
-    addArea: "Προσθήκη περιοχής", addActivity: "Προσθήκη δραστηριότητας",
-    addAreaText: "Προτείνετε άλλη γειτονιά ή περιοχή.",
-    addActivityText: "Προτείνετε άλλο είδος δραστηριότητας.",
-    addOwn: "Πρόσθεσε δικό σου", liveChoices: "Ζωντανές επιλογές",
-    resultsTitle: "Τι μπορείτε να κάνετε", aiSuggestions: "Προτάσεις AI",
-    changeBasics: "Αλλαγή βασικών", noStrongChoice: "Δεν υπάρχει ακόμα δυνατή επιλογή",
-    keepSwiping: "Συνεχίστε το swipe ή περιμένετε την υπόλοιπη ομάδα.",
-    noFriends: "Δεν έχετε ακόμα φίλους",
-    searchByUsername: "Αναζήτηση με όνομα χρήστη", search: "Αναζήτηση",
-    requests: "Αιτήματα", saveProfile: "Αποθήκευση προφίλ",
-    age: "Ηλικία", bio: "Βιογραφικό", preferences: "Προτιμήσεις",
-    logPastActivity: "Καταχώρηση δραστηριότητας",
-    area: "Περιοχή", activity: "Δραστηριότητα", place: "Μέρος",
-    saveActivity: "Αποθήκευση δραστηριότητας",
-    suggestedPlaces: "Προτεινόμενα μέρη", noLikedPlaces: "Δεν υπάρχουν ακόμα αρεστά μέρη",
-    notifications: "Ειδοποιήσεις", friendRequestNotif: "Ειδοποιήσεις αιτημάτων φιλίας",
-    groupInviteNotif: "Ειδοποιήσεις προσκλήσεων", privacy: "Απόρρητο",
-    showOnlineStatus: "Εμφάνιση online κατάστασης", showProfilePublicly: "Δημόσιο προφίλ",
-    saveSettings: "Αποθήκευση ρυθμίσεων", settingsSaved: "Οι ρυθμίσεις αποθηκεύτηκαν",
-    deleteAccount: "Διαγραφή Λογαριασμού",
-    deleteAccountConfirm: "Είστε σίγουροι ότι θέλετε να διαγράψετε τον λογαριασμό; Αυτή η ενέργεια είναι μιατή.",
-    deleteAccountSuccess: "Ο λογαριασμός διαγράφηκε επιτυχώς.",
-    removeFriend: "Αφαίρεση φίλου", removeFriendConfirm: "Να αφαιρεθεί αυτός ο φίλος;",
-    activeGroups: "Ενεργές ομάδες", pastGroups: "Παλιές ομάδες",
-    noActiveGroups: "Δεν υπάρχουν ενεργές ομάδες", noPastGroups: "Δεν υπάρχουν παλιές ομάδες",
-    you: "εσείς", friends: "Φίλοι", requestSent: "Το αίτημα στάλθηκε",
-    noPending: "Δεν υπάρχουν εκκρεμή αιτήματα", inboxClear: "Δεν υπάρχουν ειδοποιήσεις",
-    noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
-    continueBrowsing: "Θέλετε να συνεχίσετε να βλέπετε μέρη;",
-    noMoreSuggestions: "Δεν υπάρχουν άλλες προτάσεις", aiGenerating: "Λήψη προτάσεων AI…",
-    exitGroupPermanent: "Μόνιμη έξοδος από ομάδα",
-    confirmExitGroup: "Είστε σίγουροι ότι θέλετε να φύγετε μόνιμα;",
-    accountManagement: "Διαχείριση Λογαριασμού",
-    choiceNo: "Όχι", choiceMaybe: "Ίσως", choiceYes: "Ναι",
-    searchFrom: "Αναζήτηση από", searchGooglePlaces: "Google Places",
-    searchSample: "δείγματα δεδομένων", searchCustom: "προσαρμοσμένη ιδέα",
-    areaSelected: "Συμφωνήθηκε περιοχή! Τώρα ψηφίστε για δραστηριότητα.",
-    fridayCrew: "Παρέα Παρασκευής",
-    forgotPassword: "Ξεχάσατε τον κωδικό;",
-    username: "Όνομα χρήστη", email: "Email", password: "Κωδικός",
-    oldPassword: "Παλιός κωδικός", newPassword: "Νέος κωδικός",
-    verifyPassword: "Επιβεβαίωση νέου κωδικού",
-    changePassword: "Αλλαγή κωδικού", passwordChanged: "Ο κωδικός αλλάχτηκε επιτυχώς",
-    passwordMismatch: "Οι νέοι κωδικοί δεν ταιριάζουν",
-    editProfilePicture: "Επεξεργασία φωτογραφίας προφίλ",
-    bioPlaceholder: "Πείτε στους φίλους τι σχέδια σας αρέσουν.",
-    favouriteAreas: "Αγαπημένες περιοχές", favouriteActivities: "Αγαπημένες δραστηριότητες",
-    favouritePlaces: "Αγαπημένα μέρη",
-    addAnotherArea: "Προσθήκη άλλης περιοχής",
-    addAnotherActivity: "Προσθήκη άλλης δραστηριότητας",
-    addAnotherPlace: "Προσθήκη άλλου μέρους",
-    groupChat: "Ομαδική Συνομιλία", sendMessage: "Αποστολή",
-    messagePlaceholder: "Γράψε μήνυμα…", closeChat: "Κλείσιμο",
-    waitingForOthers: "Αναμονή για ψήφους…", voted: "ψήφισε", of: "από",
-    aiToggleOn: "Θα χρησιμοποιηθούν AI προτάσεις",
-    aiToggleOff: "Θα χρησιμοποιηθούν δείγματα", aiToggleLabel: "Λειτουργία AI προτάσεων"
+    login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7", createAccount: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    enterPlanswipe: "\u0395\u03af\u03c3\u03bf\u03b4\u03bf\u03c2 \u03c3\u03c4\u03bf PlanSwipe",
+    groupPlans: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1", leaveGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1", exitGroup: "\u03a0\u03af\u03c3\u03c9",
+    home: "\u0391\u03c1\u03c7\u03b9\u03ba\u03ae", likedPlaces: "\u0391\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7", groups: "\u039f\u03b9 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2 \u03bc\u03bf\u03c5", friends: "\u03a6\u03af\u03bb\u03bf\u03b9",
+    past: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2", personal: "\u03a0\u03c1\u03bf\u03c3\u03c9\u03c0\u03b9\u03ba\u03ac \u03c3\u03c4\u03bf\u03b9\u03c7\u03b5\u03af\u03b1",
+    settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2", logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
+    heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
+    heroTitle: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03c0\u03bf\u03c5 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1 \u03c3\u03b1\u03c2 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9.",
+    heroDescription: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac \u03bc\u03b1\u03b6\u03af, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ad\u03c2 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03b8\u03b1 \u03b1\u03c0\u03bf\u03bb\u03b1\u03cd\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
+    heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03c0\u03bf\u03c4\u03ad \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd.",
+    whatPlanswipeIs: "\u03a4\u03b9 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c4\u03bf PlanSwipe",
+    sharedDecisionTool: "\u0388\u03bd\u03b1 \u03b5\u03c1\u03b3\u03b1\u03bb\u03b5\u03af\u03bf \u03ba\u03bf\u03b9\u03bd\u03ce\u03bd \u03b1\u03c0\u03bf\u03c6\u03ac\u03c3\u03b5\u03c9\u03bd",
+    offerText: "\u0391\u03bd\u03c4\u03af \u03b3\u03b9\u03b1 \u03b1\u03c4\u03b5\u03bb\u03b5\u03af\u03c9\u03c4\u03b5\u03c2 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03b6\u03b7\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2, \u03cc\u03bb\u03bf\u03b9 \u03b5\u03c0\u03b9\u03bb\u03ad\u03b3\u03bf\u03c5\u03bd \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03bf\u03c5\u03bd swipe \u03c3\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03ba\u03b1\u03b9 \u03b2\u03bb\u03ad\u03c0\u03bf\u03c5\u03bd \u03c0\u03bf\u03b9\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7.",
+    agreeFaster: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c0\u03b9\u03bf \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03b1",
+    agreeFasterText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af \u03c0\u03c1\u03b9\u03bd \u03b4\u03b5\u03af\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2.",
+    discoverOptions: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
+    discoverOptionsText: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03ae \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1 Google Places \u03cc\u03c4\u03b1\u03bd \u03c1\u03c5\u03b8\u03bc\u03b9\u03c3\u03c4\u03b5\u03af \u03c4\u03bf API key.",
+    voteAsGroup: "\u03a8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03c9\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1",
+    voteAsGroupText: "\u03a3\u03b7\u03bc\u03b5\u03b9\u03ce\u03c3\u03c4\u03b5 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03c9\u03c2 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9 \u03ba\u03b1\u03b9 \u03c3\u03c5\u03b3\u03ba\u03c1\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1.",
+    dinnerNearSea: "\u0392\u03c1\u03b1\u03b4\u03b9\u03bd\u03cc \u03b4\u03af\u03c0\u03bb\u03b1 \u03c3\u03c4\u03b7 \u03b8\u03ac\u03bb\u03b1\u03c3\u03c3\u03b1", glyfadaTaverna: "\u03a8\u03b1\u03c1\u03bf\u03c4\u03b1\u03b2\u03ad\u03c1\u03bd\u03b1 \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1\u03c2",
+    seeWhatFriendsThink: "\u0394\u03b5\u03af\u03c4\u03b5 \u03c4\u03b9 \u03c0\u03b9\u03c3\u03c4\u03b5\u03cd\u03bf\u03c5\u03bd \u03bf\u03b9 \u03c6\u03af\u03bb\u03bf\u03b9 \u03c3\u03b1\u03c2.", findSimilar: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c0\u03b1\u03c1\u03cc\u03bc\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7",
+    startPlanning: "\u039e\u03b5\u03ba\u03b9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf\u03bd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03b1\u03c2",
+    startPlanningText: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03bd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03ae\u03c3\u03b5\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03bd\u03ad\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ae \u03bd\u03b1 \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03c3\u03b1.",
+    createGroup: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
+    createGroupText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03bb\u03ac\u03b2\u03c4\u03b5 \u03ad\u03bd\u03b1\u03bd \u03bd\u03ad\u03bf 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc.",
+    joinGroup: "\u03a3\u03c5\u03bc\u03bc\u03b5\u03c4\u03bf\u03c7\u03ae \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1",
+    joinGroupText: "\u0395\u03b9\u03c3\u03ac\u03b3\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03b1\u03c0\u03cc \u03ad\u03bd\u03b1\u03bd \u03c6\u03af\u03bb\u03bf.",
+    groupName: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", groupCodeLabel: "8\u03c8\u03ae\u03c6\u03b9\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", back: "\u03a0\u03af\u03c3\u03c9",
+    currentGroup: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1", stepArea: "\u0392\u03ae\u03bc\u03b1 1 \u03b1\u03c0\u03cc 2", stepType: "\u0392\u03ae\u03bc\u03b1 2 \u03b1\u03c0\u03cc 2",
+    areaTitle: "\u03a0\u03bf\u03cd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03ac\u03c4\u03b5;", typeTitle: "\u03a4\u03b9 \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5;",
+    decisionHint: "\u038c\u03bb\u03bf\u03b9 \u03c0\u03c1\u03ad\u03c0\u03b5\u03b9 \u03bd\u03b1 \u03c8\u03b7\u03c6\u03af\u03c3\u03bf\u03c5\u03bd \u03c0\u03c1\u03b9\u03bd \u03c0\u03c1\u03bf\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
+    addArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2", addActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    addAreaText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae.",
+    addActivityText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
+    addOwn: "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5", liveChoices: "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
+    resultsTitle: "\u03a4\u03b9 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af\u03c4\u03b5 \u03bd\u03b1 \u03ba\u03ac\u03bd\u03b5\u03c4\u03b5", aiSuggestions: "\u03a0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 AI",
+    changeBasics: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03b2\u03b1\u03c3\u03b9\u03ba\u03ce\u03bd", noStrongChoice: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b4\u03c5\u03bd\u03b1\u03c4\u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae",
+    keepSwiping: "\u03a3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03c4\u03b5 \u03c4\u03bf swipe \u03ae \u03c0\u03b5\u03c1\u03b9\u03bc\u03ad\u03bd\u03b5\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c5\u03c0\u03cc\u03bb\u03bf\u03b9\u03c0\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
+    noFriends: "\u0394\u03b5\u03bd \u03ad\u03c7\u03b5\u03c4\u03b5 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
+    searchByUsername: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03bc\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", search: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7",
+    requests: "\u0391\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", saveProfile: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1", bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc", preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
+    logPastActivity: "\u039a\u03b1\u03c4\u03b1\u03c7\u03ce\u03c1\u03b7\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    area: "\u03a0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae", activity: "\u0394\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1", place: "\u039c\u03ad\u03c1\u03bf\u03c2",
+    saveActivity: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    suggestedPlaces: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03b9\u03bd\u03cc\u03bc\u03b5\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7", noLikedPlaces: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b1\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7",
+    notifications: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2", friendRequestNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03b1\u03b9\u03c4\u03b7\u03bc\u03ac\u03c4\u03c9\u03bd \u03c6\u03b9\u03bb\u03af\u03b1\u03c2",
+    groupInviteNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd", privacy: "\u0391\u03c0\u03cc\u03c1\u03c1\u03b7\u03c4\u03bf",
+    showOnlineStatus: "\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 online \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2", showProfilePublicly: "\u0394\u03b7\u03bc\u03cc\u03c3\u03b9\u03bf \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    saveSettings: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c9\u03bd", settingsSaved: "\u039f\u03b9 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b1\u03bd",
+    deleteAccount: "\u0394\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    deleteAccountConfirm: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c8\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc; \u0391\u03c5\u03c4\u03ae \u03b7 \u03b5\u03bd\u03ad\u03c1\u03b3\u03b5\u03b9\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03b9\u03b1\u03c4\u03ae.",
+    deleteAccountSuccess: "\u039f \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2.",
+    removeFriend: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03c6\u03af\u03bb\u03bf\u03c5", removeFriendConfirm: "\u039d\u03b1 \u03b1\u03c6\u03b1\u03b9\u03c1\u03b5\u03b8\u03b5\u03af \u03b1\u03c5\u03c4\u03cc\u03c2 \u03bf \u03c6\u03af\u03bb\u03bf\u03c2;",
+    activeGroups: "\u0395\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", pastGroups: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    noActiveGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", noPastGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
+    you: "\u03b5\u03c3\u03b5\u03af\u03c2", friends: "\u03a6\u03af\u03bb\u03bf\u03b9", requestSent: "\u03a4\u03bf \u03b1\u03af\u03c4\u03b7\u03bc\u03b1 \u03c3\u03c4\u03ac\u03bb\u03b8\u03b7\u03ba\u03b5",
+    noPending: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03ba\u03ba\u03c1\u03b5\u03bc\u03ae \u03b1\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", inboxClear: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
+    noPastActivities: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
+    continueBrowsing: "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b2\u03bb\u03ad\u03c0\u03b5\u03c4\u03b5 \u03bc\u03ad\u03c1\u03b7;",
+    noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b5\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2", aiGenerating: "\u039b\u03ae\u03c8\u03b7 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd AI\u2026",
+    exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
+    confirmExitGroup: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03c4\u03b5 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1;",
+    accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
+    choiceNo: "\u038c\u03c7\u03b9", choiceMaybe: "\u038a\u03c3\u03c9\u03c2", choiceYes: "\u039d\u03b1\u03b9",
+    searchFrom: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03b1\u03c0\u03cc", searchGooglePlaces: "Google Places",
+    searchSample: "\u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd", searchCustom: "\u03c0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03bf\u03c3\u03bc\u03ad\u03bd\u03b7 \u03b9\u03b4\u03ad\u03b1",
+    areaSelected: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03b8\u03b7\u03ba\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae! \u03a4\u03ce\u03c1\u03b1 \u03c8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1.",
+    fridayCrew: "\u03a0\u03b1\u03c1\u03ad\u03b1 \u03a0\u03b1\u03c1\u03b1\u03c3\u03ba\u03b5\u03c5\u03ae\u03c2",
+    forgotPassword: "\u039e\u03b5\u03c7\u03ac\u03c3\u03b1\u03c4\u03b5 \u03c4\u03bf\u03bd \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc;",
+    username: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", email: "Email", password: "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+    oldPassword: "\u03a0\u03b1\u03bb\u03b9\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2", newPassword: "\u039d\u03ad\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
+    verifyPassword: "\u0395\u03c0\u03b9\u03b2\u03b5\u03b2\u03b1\u03af\u03c9\u03c3\u03b7 \u03bd\u03ad\u03bf\u03c5 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd",
+    changePassword: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd", passwordChanged: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b1\u03bb\u03bb\u03ac\u03c7\u03c4\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2",
+    passwordMismatch: "\u039f\u03b9 \u03bd\u03ad\u03bf\u03b9 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03af \u03b4\u03b5\u03bd \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd",
+    editProfilePicture: "\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c6\u03c9\u03c4\u03bf\u03b3\u03c1\u03b1\u03c6\u03af\u03b1\u03c2 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+    bioPlaceholder: "\u03a0\u03b5\u03af\u03c4\u03b5 \u03c3\u03c4\u03bf\u03c5\u03c2 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c4\u03b9 \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c3\u03b1\u03c2 \u03b1\u03c1\u03ad\u03c3\u03bf\u03c5\u03bd.",
+    favouriteAreas: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2", favouriteActivities: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
+    favouritePlaces: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7",
+    addAnotherArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
+    addAnotherActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    addAnotherPlace: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03bf\u03c5 \u03bc\u03ad\u03c1\u03bf\u03c5\u03c2",
+    groupChat: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03a3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1", sendMessage: "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae",
+    messagePlaceholder: "\u0393\u03c1\u03ac\u03c8\u03b5 \u03bc\u03ae\u03bd\u03c5\u03bc\u03b1\u2026", closeChat: "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf",
+    waitingForOthers: "\u0391\u03bd\u03b1\u03bc\u03bf\u03bd\u03ae \u03b3\u03b9\u03b1 \u03c8\u03ae\u03c6\u03bf\u03c5\u03c2\u2026", voted: "\u03c8\u03ae\u03c6\u03b9\u03c3\u03b5", of: "\u03b1\u03c0\u03cc",
+    aiToggleOn: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2",
+    aiToggleOff: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1", aiToggleLabel: "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd"
   }
 };
 
@@ -376,7 +376,6 @@ function applyLanguage() {
   const rH2 = document.querySelector(".results-panel h2");
   if (rH2 && rH2.id !== "groupName") rH2.textContent = t("resultsTitle");
 
-  // Update chat UI strings if open
   const chatTitle = document.querySelector("#chatTitle");
   if (chatTitle) chatTitle.textContent = t("groupChat");
   const chatInput = document.querySelector("#chatMessageInput");
@@ -398,12 +397,18 @@ function isLoggedIn()    { return Boolean(localStorage.getItem("planswipe:login"
 function currentUsername() { return localStorage.getItem("planswipe:login") || ""; }
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  var s = String(value ?? "");
+  var amp = "&" + "amp;";
+  var lt = "&" + "lt;";
+  var gt = "&" + "gt;";
+  var quot = "&" + "quot;";
+  var apos = "&#" + "39;";
+  s = s.replace(/&/g, amp);
+  s = s.replace(/</g, lt);
+  s = s.replace(/>/g, gt);
+  s = s.replace(/\u0022/g, quot);
+  s = s.replace(/'/g, apos);
+  return s;
 }
 
 function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim()); }
@@ -450,7 +455,7 @@ function saveAccount(user) {
   state.account = user;
   localStorage.setItem("planswipe:account", JSON.stringify(user));
   if (user?.profile?.picture) {
-    profileInitial.style.backgroundImage = url("${user.profile.picture}");
+    profileInitial.style.backgroundImage = `url("${user.profile.picture}")`;
     profileInitial.textContent = "";
   } else {
     profileInitial.style.backgroundImage = "";
@@ -460,7 +465,7 @@ function saveAccount(user) {
 
 async function loadAccount() {
   if (!isLoggedIn()) return null;
-  const data = await api(/api/account?username=${encodeURIComponent(currentUsername())}&viewer=${encodeURIComponent(currentUsername())});
+  const data = await api(`/api/account?username=${encodeURIComponent(currentUsername())}&viewer=${encodeURIComponent(currentUsername())}`);
   saveAccount(data.user);
   return data.user;
 }
@@ -512,13 +517,13 @@ function optionScore(kind, id) { return state.group?.counts?.[kind]?.[id] || 0; 
 
 // ====== RENDER ======
 function renderMembers() {
-  memberRow.innerHTML = (state.group.members || []).map((m) => 
+  memberRow.innerHTML = (state.group.members || []).map((m) => `
     <button class="member-chip" type="button" data-username="${escapeHtml(m.username || m.name)}">
       <span class="avatar">${m.profile?.picture
-        ? <img src="${escapeHtml(m.profile.picture)}" alt="">
+        ? `<img src="${escapeHtml(m.profile.picture)}" alt="">`
         : escapeHtml(initials(m.name))}</span>
-      ${escapeHtml(m.name)}${m.id === state.user.id ?  (${t("you")}) : ""}
-    </button>).join("");
+      ${escapeHtml(m.name)}${m.id === state.user.id ? ` (${t("you")})` : ""}
+    </button>`).join("");
 }
 
 function renderSetup() {
@@ -538,25 +543,25 @@ function renderDecisionStep(kind) {
   decisionTitle.textContent = isAreaStep ? t("areaTitle") : t("typeTitle");
 
   if (votedCount > 0 && votedCount < total) {
-    decisionHint.textContent = ${votedCount} ${t("of")} ${total} ${t("voted")} — ${t("waitingForOthers")};
+    decisionHint.textContent = `${votedCount} ${t("of")} ${total} ${t("voted")} \u2014 ${t("waitingForOthers")}`;
   } else {
     decisionHint.textContent = t("decisionHint");
   }
 
   setVisible(backChoiceButton, kind === "type" || Boolean(chosen));
 
-  // AI toggle — CSS-driven, no setInterval (#11 fix)
+  // AI toggle
   if (isAreaStep) {
     if (!document.querySelector(".ai-toggle-row")) {
       const row = document.createElement("div");
       row.className = "ai-toggle-row";
-      row.innerHTML = 
+      row.innerHTML = `
         <span class="ai-toggle-label">${t("aiToggleLabel")}</span>
         <label class="css-toggle">
           <input type="checkbox" id="aiToggleCheckbox" ${state.aiToggle ? "checked" : ""}>
           <span class="css-toggle-track"><span class="css-toggle-knob"></span></span>
         </label>
-        <span class="ai-toggle-desc" id="aiToggleDesc">${state.aiToggle ? t("aiToggleOn") : t("aiToggleOff")}</span>;
+        <span class="ai-toggle-desc" id="aiToggleDesc">${state.aiToggle ? t("aiToggleOn") : t("aiToggleOff")}</span>`;
       const ref = decisionPanel.querySelector(".option-grid") || decisionPanel.querySelector(".decision-header")?.nextSibling;
       if (ref) {
         decisionPanel.insertBefore(row, ref);
@@ -573,9 +578,8 @@ function renderDecisionStep(kind) {
     document.querySelector(".ai-toggle-row")?.remove();
   }
 
-  // Build option cards — guard against empty options array
   if (!options || options.length === 0) {
-    optionGrid.innerHTML = <p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>;
+    optionGrid.innerHTML = `<p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>`;
     return;
   }
 
@@ -585,11 +589,11 @@ function renderDecisionStep(kind) {
     const translated = translateOption(kind, option.id);
     const label       = translated?.label       ?? option.label       ?? option.id;
     const description = translated?.description ?? option.description ?? "";
-    return <button class="option-card${isSelected ? " is-selected" : ""}" type="button"
+    return `<button class="option-card${isSelected ? " is-selected" : ""}" type="button"
         data-kind="${escapeHtml(kind)}" data-id="${escapeHtml(option.id)}">
       <span class="option-score">${score}/${total} ${t("liveChoices")}</span>
       <span><h3>${escapeHtml(label)}</h3><p>${escapeHtml(description)}</p></span>
-    </button>;
+    </button>`;
   }).join("");
 
   const addOwn   = state.language === "el" ? optionTranslations.el.addOwn    : t("addOwn");
@@ -600,11 +604,11 @@ function renderDecisionStep(kind) {
     ? (isAreaStep ? optionTranslations.el.addAreaText : optionTranslations.el.addActivityText)
     : (isAreaStep ? t("addAreaText") : t("addActivityText"));
 
-  optionGrid.innerHTML = ${optionCards}
+  optionGrid.innerHTML = `${optionCards}
     <button class="option-card add-option-card" type="button" data-kind="${escapeHtml(kind)}" data-custom="true">
       <span class="option-score">${escapeHtml(addOwn)}</span>
       <span><h3>${escapeHtml(addLabel)}</h3><p>${escapeHtml(addText)}</p></span>
-    </button>;
+    </button>`;
 }
 
 function renderCard() {
@@ -614,7 +618,7 @@ function renderCard() {
   activityCard.classList.remove("swipe-yes", "swipe-no");
   activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt               = place.title;
-  activityCategory.textContent    = ${place.category} | ${Number(place.rating || 4).toFixed(1)} ★;
+  activityCategory.textContent    = `${place.category} | ${Number(place.rating || 4).toFixed(1)} \u2605`;
   activityTitle.textContent       = place.title;
   activityDescription.textContent = place.description;
   activityArea.textContent        = place.areaLabel;
@@ -628,7 +632,7 @@ function renderCard() {
 function renderResults() {
   const allPlaces = [...(state.group.places || []), ...(state.aiPlacesBatch || [])];
   if (!allPlaces.length) {
-    resultList.innerHTML = <article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>;
+    resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`;
     return;
   }
   const votesByPlace = {};
@@ -645,28 +649,28 @@ function renderResults() {
   const ranked = allPlaces
     .map((p) => {
       const v = votesByPlace[p.id] || { yes: 0, maybe: 0, no: 0 };
-      const percent = Math.round((v.yes / total)  100);
+      const percent = Math.round((v.yes / total) * 100);
       return { ...p, ...v, total, percent };
     })
     .filter((p) => p.yes > 0 || p.maybe > 0)
     .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
 
   if (!ranked.length) {
-    resultList.innerHTML = <article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>;
+    resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`;
     return;
   }
 
-  resultList.innerHTML = ranked.map((item) => 
+  resultList.innerHTML = ranked.map((item) => `
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
       <div><h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(item.category)} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p></div>
       <strong class="result-score">${item.percent}%</strong>
-    </article>).join("");
+    </article>`).join("");
 
   const existingBtn = document.querySelector("#continueBrowseBtn");
   if (state.aiPlacesBatch.length > 0 && !existingBtn) {
-    resultList.insertAdjacentHTML("afterend", <button class="continue-button" id="continueBrowseBtn">${t("continueBrowsing")}</button>);
+    resultList.insertAdjacentHTML("afterend", `<button class="continue-button" id="continueBrowseBtn">${t("continueBrowsing")}</button>`);
     document.querySelector("#continueBrowseBtn").addEventListener("click", loadMoreAiSuggestions);
   } else if (!state.aiPlacesBatch.length && existingBtn) {
     existingBtn.remove();
@@ -682,7 +686,7 @@ function renderStatus() {
   if (!typeReady) { statusPanel.textContent = t("areaSelected"); return; }
   const src = state.group.search?.source;
   const sourceLabel = src === "google" ? t("searchGooglePlaces") : src === "custom" ? t("searchCustom") : t("searchSample");
-  statusPanel.textContent = ${t("searchFrom")} ${sourceLabel}: "${state.group.search?.query || ""}";
+  statusPanel.textContent = `${t("searchFrom")} ${sourceLabel}: "${state.group.search?.query || ""}"`;
 }
 
 // ====== GROUP CHAT ======
@@ -692,7 +696,7 @@ function ensureChatButton() {
   fab.id        = "chatFab";
   fab.className = "chat-fab";
   fab.setAttribute("aria-label", t("groupChat"));
-  fab.innerHTML = <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="chatUnreadBadge" class="chat-unread-badge is-hidden"></span>;
+  fab.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="chatUnreadBadge" class="chat-unread-badge is-hidden"></span>`;
   document.body.appendChild(fab);
   fab.addEventListener("click", toggleChat);
 }
@@ -720,19 +724,19 @@ function openChatPanel() {
   const overlay = document.createElement("div");
   overlay.id        = "chatOverlay";
   overlay.className = "chat-overlay";
-  overlay.innerHTML = 
+  overlay.innerHTML = `
     <div class="chat-panel" id="chatPanel">
       <div class="chat-header">
-        <span id="chatTitle">${escapeHtml(t("groupChat"))} — ${escapeHtml(state.group?.name || "")}</span>
-        <button class="chat-close-btn" id="chatCloseBtn" aria-label="${t("closeChat")}">✕</button>
+        <span id="chatTitle">${escapeHtml(t("groupChat"))} \u2014 ${escapeHtml(state.group?.name || "")}</span>
+        <button class="chat-close-btn" id="chatCloseBtn" aria-label="${t("closeChat")}">\u2715</button>
       </div>
-      <div class="chat-messages" id="chatMessages"><div class="chat-loading">…</div></div>
+      <div class="chat-messages" id="chatMessages"><div class="chat-loading">\u2026</div></div>
       <div class="chat-input-row">
         <input id="chatMessageInput" type="text" maxlength="500"
                placeholder="${escapeHtml(t("messagePlaceholder"))}" autocomplete="off">
         <button id="chatSendButton" class="btn-primary">${t("sendMessage")}</button>
       </div>
-    </div>;
+    </div>`;
   document.body.appendChild(overlay);
 
   overlay.querySelector("#chatCloseBtn").addEventListener("click", () => {
@@ -748,7 +752,6 @@ function openChatPanel() {
   sendBtn.addEventListener("click", () => sendChatMessage(input));
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChatMessage(input); });
 
-  // Dismiss on backdrop click
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       state.chatOpen = false;
@@ -759,7 +762,6 @@ function openChatPanel() {
   });
 
   loadChatMessages(true);
-  // Poll for new messages every 3 seconds while chat is open
   clearInterval(state.chatTimer);
   state.chatTimer = setInterval(() => { if (state.chatOpen) loadChatMessages(false); }, 3000);
 }
@@ -770,19 +772,18 @@ async function loadChatMessages(scrollToBottom) {
   if (!container) return;
   try {
     const params = state.chatLastTimestamp
-      ? ?since=${encodeURIComponent(state.chatLastTimestamp)}
+      ? `?since=${encodeURIComponent(state.chatLastTimestamp)}`
       : "";
-    const data = await api(/api/groups/${state.groupCode}/messages${params});
+    const data = await api(`/api/groups/${state.groupCode}/messages${params}`);
     const messages = data.messages || [];
 
     if (messages.length === 0 && !state.chatLastTimestamp) {
-      container.innerHTML = <div class="chat-empty">No messages yet. Say hello!</div>;
+      container.innerHTML = `<div class="chat-empty">No messages yet. Say hello!</div>`;
       return;
     }
 
     if (messages.length > 0) {
-      state.chatLastTimestamp = messages[messages.length - 1].createdat;
-      // Remove placeholder
+      state.chatLastTimestamp = messages[messages.length - 1].created_at;
       const loading = container.querySelector(".chat-loading, .chat-empty");
       if (loading) loading.remove();
 
@@ -791,8 +792,8 @@ async function loadChatMessages(scrollToBottom) {
         const isMine = msg.username === me;
         const bubble = document.createElement("div");
         bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
-        bubble.innerHTML = ${!isMine ? <span class="chat-sender">${escapeHtml(msg.username)}</span> : ""}
-          <span class="chat-text">${escapeHtml(msg.message)}</span>;
+        bubble.innerHTML = `${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}
+          <span class="chat-text">${escapeHtml(msg.message)}</span>`;
         container.appendChild(bubble);
       });
 
@@ -800,7 +801,6 @@ async function loadChatMessages(scrollToBottom) {
         container.scrollTop = container.scrollHeight;
       }
 
-      // Clear unread badge since user is looking at chat
       const badge = document.querySelector("#chatUnreadBadge");
       if (badge) badge.classList.add("is-hidden");
     }
@@ -815,12 +815,10 @@ async function sendChatMessage(input) {
   input.value    = "";
   input.disabled = true;
   try {
-    await api(/api/groups/${state.groupCode}/messages, {
+    await api(`/api/groups/${state.groupCode}/messages`, {
       method: "POST",
       body:   { username: currentUsername(), message }
     });
-    // Reset last timestamp to get the latest message immediately
-    // (server returns the inserted row, but we re-fetch for consistency)
     await loadChatMessages(true);
   } catch (e) {
     showError(e.message);
@@ -834,7 +832,7 @@ async function sendChatMessage(input) {
 async function refreshNotifications() {
   if (!isLoggedIn()) return;
   try {
-    const data = await api(/api/notifications?username=${encodeURIComponent(currentUsername())});
+    const data = await api(`/api/notifications?username=${encodeURIComponent(currentUsername())}`);
     state.notifications = data;
     const badge = notificationBadge;
     if (data.total > 0) {
@@ -852,7 +850,7 @@ async function refreshNotifications() {
         btn.classList.add("has-notif");
         const sp = document.createElement("span");
         sp.className   = "notif-count";
-        sp.textContent = (${count});
+        sp.textContent = `(${count})`;
         btn.appendChild(sp);
       }
     });
@@ -935,10 +933,9 @@ function renderApp() {
     setVisible(heroLoginButton, false);
     hideAppPanels();
     removeChatButton();
-    // Ensure the hero button navigates to /main
     const heroActions = document.querySelector(".hero-actions");
     if (heroActions && !document.querySelector("#heroBackButton")) {
-      heroActions.innerHTML = <button class="btn-primary" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>;
+      heroActions.innerHTML = `<button class="btn-primary" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>`;
       document.querySelector("#heroBackButton").addEventListener("click", () => navigate("/main"));
     }
     return;
@@ -948,7 +945,7 @@ function renderApp() {
   setVisible(topbar,     true);
 
   if (state.account?.profile?.picture) {
-    profileInitial.style.backgroundImage = url("${state.account.profile.picture}");
+    profileInitial.style.backgroundImage = `url("${state.account.profile.picture}")`;
     profileInitial.textContent = "";
   } else {
     profileInitial.style.backgroundImage = "";
@@ -956,9 +953,8 @@ function renderApp() {
   }
 
   setVisible(resetButton, Boolean(state.group && state.user));
-  await refreshNotifications();
+  refreshNotifications();
 
-  // Page panel (profile sub-pages)
   if (state.activePage) {
     hideAppPanels();
     setVisible(pagePanel, true);
@@ -969,7 +965,6 @@ function renderApp() {
 
   setVisible(pagePanel, false);
 
-  // No group yet — show setup
   if (!state.group || !state.user) {
     setVisible(setupPanel,    true);
     setVisible(groupPanel,    false);
@@ -982,7 +977,6 @@ function renderApp() {
     return;
   }
 
-  // Inside a group
   groupName.textContent = state.group.name;
   groupCode.textContent = state.group.code;
   renderMembers();
@@ -1010,8 +1004,7 @@ function renderApp() {
     return;
   }
 
-  // Both agreed — show places
-  searchSummary.textContent = ${t("searchFrom")}: "${state.group.search?.query || ""}";
+  searchSummary.textContent = `${t("searchFrom")}: "${state.group.search?.query || ""}"`;
   setVisible(decisionPanel, false);
   setVisible(resultsPanel,  true);
   renderResults();
@@ -1029,13 +1022,12 @@ function renderApp() {
 async function refreshGroup() {
   if (!state.groupCode) return;
   try {
-    const data = await api(/api/groups/${state.groupCode});
+    const data = await api(`/api/groups/${state.groupCode}`);
     state.group          = data.group;
     state.pollErrorCount = 0;
     renderApp();
   } catch (error) {
     state.pollErrorCount = (state.pollErrorCount || 0) + 1;
-    // Only leave the group after 5 consecutive failures (not a transient glitch)
     if (state.pollErrorCount >= 5) {
       showError(error.message);
       leaveGroup();
@@ -1078,7 +1070,7 @@ async function joinGroup() {
   const username = currentUsername() || "Friend";
   const code     = codeInput.value.trim();
   if (!/^\d{8}$/.test(code)) { showError("Enter an 8-digit group code."); return; }
-  const data = await api(/api/groups/${code}/join, {
+  const data = await api(`/api/groups/${code}/join`, {
     method: "POST",
     body:   { username, profile: state.account?.profile }
   });
@@ -1086,7 +1078,7 @@ async function joinGroup() {
 }
 
 async function chooseOption(kind, optionId, customLabel = "") {
-  const data = await api(/api/groups/${state.group.code}/choice, {
+  const data = await api(`/api/groups/${state.group.code}/choice`, {
     method: "POST",
     body:   { userId: state.user.id, kind, optionId, customLabel }
   });
@@ -1097,10 +1089,8 @@ async function chooseOption(kind, optionId, customLabel = "") {
 
 async function goBackChoice() {
   if (!state.group || !state.user) return;
-  // If area is agreed but type is not — go back to type step
-  // If neither or going back from area — reset area
   const step = (consensus("area") && !consensus("type")) ? "type" : "area";
-  const data = await api(/api/groups/${state.group.code}/back, {
+  const data = await api(`/api/groups/${state.group.code}/back`, {
     method: "POST",
     body:   { userId: state.user.id, step }
   });
@@ -1114,7 +1104,7 @@ async function vote(value) {
   const place       = totalPlaces[state.index];
   if (!place) return;
   activityCard.classList.add(value === "yes" ? "swipe-yes" : "swipe-no");
-  const data = await api(/api/groups/${state.group.code}/vote, {
+  const data = await api(`/api/groups/${state.group.code}/vote`, {
     method: "POST",
     body:   { userId: state.user.id, placeId: place.id, vote: value }
   });
@@ -1162,7 +1152,7 @@ async function loadMoreAiSuggestions() {
     });
     if (!data.suggestions?.length) { showError(t("noMoreSuggestions")); return; }
     const newPlaces = data.suggestions.map((s, i) => ({
-      id:          ai${Date.now()}${i},
+      id:          `ai_${Date.now()}_${i}`,
       title:       s.place || "Suggestion",
       category:    typeLabel,
       areaLabel,
@@ -1189,7 +1179,7 @@ async function getAiSuggestions() {
   const typeId = consensus("type") || selected("type");
   if (!areaId || !typeId) { showError("Choose an area and activity first."); return; }
   setVisible(suggestionPanel, true);
-  suggestionPanel.innerHTML = <p>${t("aiGenerating")}</p>;
+  suggestionPanel.innerHTML = `<p>${t("aiGenerating")}</p>`;
   const data = await api("/api/suggestions", {
     method: "POST",
     body:   { username: currentUsername(), area: selectedOptionLabel("area", areaId), activity: selectedOptionLabel("type", typeId) }
@@ -1197,7 +1187,7 @@ async function getAiSuggestions() {
   const suggestions = data.suggestions || [];
   if (suggestions.length > 0) {
     const newPlaces = suggestions.map((s, i) => ({
-      id:          ai${Date.now()}${i},
+      id:          `ai_${Date.now()}_${i}`,
       title:       s.place || "Suggestion",
       category:    selectedOptionLabel("type", typeId),
       areaLabel:   selectedOptionLabel("area", areaId),
@@ -1212,12 +1202,12 @@ async function getAiSuggestions() {
     state.index          = state.group.places.length - newPlaces.length;
     renderApp();
   }
-  suggestionPanel.innerHTML = <h3>${t("suggestedPlaces")}</h3>
+  suggestionPanel.innerHTML = `<h3>${t("suggestedPlaces")}</h3>
     <div class="suggestion-list">${suggestions.map((item) =>
-      <article class="suggestion-card">
+      `<article class="suggestion-card">
         <h4>${escapeHtml(item.place || item.name || "Suggestion")}</h4>
         <p>${escapeHtml(item.reason || item.description || "")}</p>
-      </article>).join("")}</div>;
+      </article>`).join("")}</div>`;
 }
 
 // ====== PAGE PANEL RENDERS ======
@@ -1232,29 +1222,29 @@ const pageContent = {
 
 function preferenceList(title, key, items, placeholder) {
   const readonly = key.startsWith("readonly-");
-  return <div class="preference-box">
+  return `<div class="preference-box">
     <h3>${escapeHtml(title)}</h3>
-    <div class="pill-row">${(items || []).map((item) => <span class="preference-pill">${escapeHtml(item)}</span>).join("") || <span class="muted-text">Nothing saved yet.</span>}</div>
-    ${!readonly ? <div class="inline-add"><input type="text" data-pref-input="${escapeHtml(key)}" placeholder="${escapeHtml(placeholder)}"><button type="button" data-pref-add="${escapeHtml(key)}">Add</button></div> : ""}
-  </div>;
+    <div class="pill-row">${(items || []).map((item) => `<span class="preference-pill">${escapeHtml(item)}</span>`).join("") || `<span class="muted-text">Nothing saved yet.</span>`}</div>
+    ${!readonly ? `<div class="inline-add"><input type="text" data-pref-input="${escapeHtml(key)}" placeholder="${escapeHtml(placeholder)}"><button type="button" data-pref-add="${escapeHtml(key)}">Add</button></div>` : ""}
+  </div>`;
 }
 
 function profileImage(user, sizeClass = "profile-preview") {
   const picture = user?.profile?.picture || "";
-  if (picture) return <span class="${sizeClass} image-avatar" style="background-image:url('${escapeHtml(picture)}')"></span>;
-  return <span class="${sizeClass}">${escapeHtml(initials(user?.username || currentUsername()) || "P")}</span>;
+  if (picture) return `<span class="${sizeClass} image-avatar" style="background-image:url('${escapeHtml(picture)}')"></span>`;
+  return `<span class="${sizeClass}">${escapeHtml(initials(user?.username || currentUsername()) || "P")}</span>`;
 }
 
 async function renderPersonalInformation() {
   const account    = await loadAccount();
   const profile    = account.profile || {};
   const preferences = profile.preferences || {};
-  pageDemo.innerHTML = 
+  pageDemo.innerHTML = `
     <form class="personal-form">
       <section>
         <h3>${t("personal")}</h3>
         <label class="profile-upload">${profileImage(account)}<span>${t("editProfilePicture")}</span>
-          <input id="profilePictureInput" type="file" accept="image/"></label>
+          <input id="profilePictureInput" type="file" accept="image/*"></label>
         <label class="field"><span>${t("username")}</span>
           <input type="text" value="${escapeHtml(account.username)}" disabled></label>
         <label class="field"><span>${t("email")}</span>
@@ -1278,23 +1268,23 @@ async function renderPersonalInformation() {
         ${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}
         ${preferenceList(t("favouritePlaces"),     "places",     preferences.places,     t("addAnotherPlace"))}
       </section>
-    </form>;
+    </form>`;
 }
 
 function userCard(user, action = "") {
   const preferences   = user.profile?.preferences || {};
   const preferenceText = [...(preferences.areas || []), ...(preferences.activities || []), ...(preferences.places || [])].slice(0, 4).join(", ");
-  return <article class="demo-card user-card">
+  return `<article class="demo-card user-card">
     <div class="user-card-head">${profileImage(user, "small-profile-preview")}
       <div><h3>${escapeHtml(user.username)}</h3><p>${escapeHtml(user.profile?.bio || "")}</p></div>
     </div>
     <p>${escapeHtml(preferenceText || "")}</p>
     ${action}
-  </article>;
+  </article>`;
 }
 
 async function renderFriendsPage() {
-  pageDemo.innerHTML = 
+  pageDemo.innerHTML = `
     <section class="wide-panel">
       <div class="inline-add">
         <input id="friendSearchInput" type="text" placeholder="${t("searchByUsername")}">
@@ -1303,12 +1293,12 @@ async function renderFriendsPage() {
       <div id="friendSearchResults" class="demo-grid"></div>
     </section>
     <section class="wide-panel"><h3>${t("friends")}</h3><div id="friendList" class="demo-grid"></div></section>
-    <section class="wide-panel"><h3>${t("requests")}</h3><div id="requestList" class="demo-grid"></div></section>;
+    <section class="wide-panel"><h3>${t("requests")}</h3><div id="requestList" class="demo-grid"></div></section>`;
   await refreshFriendsPage();
 }
 
 async function refreshFriendsPage() {
-  const data       = await api(/api/friends?username=${encodeURIComponent(currentUsername())});
+  const data       = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
   state.friendsData = data;
   state.friendsDataLoaded = true;
   const friendList  = document.querySelector("#friendList");
@@ -1316,28 +1306,28 @@ async function refreshFriendsPage() {
   if (!friendList || !requestList) return;
 
   friendList.innerHTML = data.friends.length
-    ? data.friends.map((u) => userCard(u, <button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("personal")}</button>)).join("")
-    : <article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>;
+    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("personal")}</button>`)).join("")
+    : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const allRequests = [
-    ...data.incoming.map((u) => userCard(u, <button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">Accept</button>)),
-    ...data.outgoing.map((u) => userCard(u, <span class="request-status">${t("requestSent")}</span>))
+    ...data.incoming.map((u) => userCard(u, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">Accept</button>`)),
+    ...data.outgoing.map((u) => userCard(u, `<span class="request-status">${t("requestSent")}</span>`))
   ];
   requestList.innerHTML = allRequests.length
     ? allRequests.join("")
-    : <article class="demo-card"><h3>${t("noPending")}</h3></article>;
+    : `<article class="demo-card"><h3>${t("noPending")}</h3></article>`;
 }
 
 async function renderGroupsPage() {
-  const data       = await api(/api/groups/mine?username=${encodeURIComponent(currentUsername())});
+  const data       = await api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`);
   const allGroups  = data.groups || [];
   const exitedCodes = state.exitedGroups || [];
   const active = allGroups.filter((g) => !exitedCodes.includes(g.code));
   const past   = allGroups.filter((g) =>  exitedCodes.includes(g.code));
 
-  let html = <h3 class="group-section-title">${t("activeGroups")}</h3>;
+  let html = `<h3 class="group-section-title">${t("activeGroups")}</h3>`;
   html += active.length
-    ? active.map((g) => 
+    ? active.map((g) => `
         <article class="group-card">
           <h3>${escapeHtml(g.name)}</h3>
           <p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p>
@@ -1345,17 +1335,17 @@ async function renderGroupsPage() {
             <button class="btn-primary"   type="button" data-open-group="${escapeHtml(g.code)}">Open</button>
             <button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button>
           </div>
-        </article>).join("")
-    : <article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>;
+        </article>`).join("")
+    : `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
 
-  html += <h3 class="group-section-title">${t("pastGroups")}</h3>;
+  html += `<h3 class="group-section-title">${t("pastGroups")}</h3>`;
   html += past.length
-    ? past.map((g) => 
+    ? past.map((g) => `
         <article class="group-card">
           <h3>${escapeHtml(g.name)}</h3>
           <p class="group-meta">Code ${escapeHtml(g.code)} | ${t("pastGroups")}</p>
-        </article>).join("")
-    : <article class="demo-card"><h3>${t("noPastGroups")}</h3></article>;
+        </article>`).join("")
+    : `<article class="demo-card"><h3>${t("noPastGroups")}</h3></article>`;
 
   pageDemo.innerHTML = html;
 }
@@ -1364,17 +1354,17 @@ async function renderLikedPlacesPage() {
   pageEyebrow.textContent = t("likedPlaces");
   pageTitle.textContent   = t("likedPlaces");
   try {
-    const data   = await api(/api/liked-places?username=${encodeURIComponent(currentUsername())});
+    const data   = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
     const places = data.places || [];
     pageDemo.innerHTML = places.length
-      ? places.map((item) => 
+      ? places.map((item) => `
           <div class="liked-place-card">
             <h3>${escapeHtml(item.place)}</h3>
             <p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p>
             <span class="vote-tag ${escapeHtml(item.vote)}">${escapeHtml(item.vote)}</span>
             <span class="group-meta">${escapeHtml(item.groupName || "")}</span>
-          </div>).join("")
-      : <article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>;
+          </div>`).join("")
+      : `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
   } catch (e) {
     console.warn("Liked places load error:", e.message);
     pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
@@ -1384,7 +1374,7 @@ async function renderLikedPlacesPage() {
 async function renderPastPage() {
   const account    = await loadAccount();
   const activities = account.profile?.pastActivities || [];
-  pageDemo.innerHTML = 
+  pageDemo.innerHTML = `
     <section class="wide-panel">
       <button class="btn-primary" type="button" id="showPastActivityForm">${t("logPastActivity")}</button>
       <form class="setup-form is-hidden" id="pastActivityForm">
@@ -1395,8 +1385,8 @@ async function renderPastPage() {
       </form>
     </section>
     ${activities.length
-      ? activities.map((a) => <article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p></article>).join("")
-      : <article class="demo-card"><h3>${t("noPastActivities")}</h3></article>};
+      ? activities.map((a) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p></article>`).join("")
+      : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}`;
 }
 
 async function savePastActivity() {
@@ -1412,7 +1402,7 @@ async function savePastActivity() {
 }
 
 async function renderAccountProfile(username) {
-  const data = await api(/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(currentUsername())});
+  const data = await api(`/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(currentUsername())}`);
   const user = data.user;
   const preferences = user.profile?.preferences || {};
   pageEyebrow.textContent = t("personal");
@@ -1421,33 +1411,33 @@ async function renderAccountProfile(username) {
   const friendAction = user.username === currentUsername()
     ? ""
     : user.friendStatus === "friends"
-      ? <span class="request-status">${t("friends")}</span>
+      ? `<span class="request-status">${t("friends")}</span>`
       : user.friendStatus === "incoming"
-        ? <button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>
+        ? `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`
         : user.friendStatus === "requested"
-          ? <span class="request-status">${t("requestSent")}</span>
-          : <button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>;
+          ? `<span class="request-status">${t("requestSent")}</span>`
+          : `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
 
   const removeAction = user.friendStatus === "friends" && user.username !== currentUsername()
-    ? <button class="danger-button" type="button" data-remove-friend="${escapeHtml(user.username)}">${t("removeFriend")}</button>
+    ? `<button class="danger-button" type="button" data-remove-friend="${escapeHtml(user.username)}">${t("removeFriend")}</button>`
     : "";
 
-  pageDemo.innerHTML = 
+  pageDemo.innerHTML = `
     ${userCard(user, friendAction)}
-    ${removeAction ? <section class="wide-panel">${removeAction}</section> : ""}
+    ${removeAction ? `<section class="wide-panel">${removeAction}</section>` : ""}
     <section class="wide-panel">
       <h3>${t("preferences")}</h3>
       ${preferenceList(t("favouriteAreas"),      "readonly-areas",       preferences.areas,      "")}
       ${preferenceList(t("favouriteActivities"), "readonly-activities",  preferences.activities, "")}
       ${preferenceList(t("favouritePlaces"),     "readonly-places",      preferences.places,     "")}
-    </section>;
+    </section>`;
 }
 
 async function renderSettingsPage() {
   const settings = state.account?.profile?.settings || {};
   pageEyebrow.textContent = t("settings");
   pageTitle.textContent   = t("settings");
-  pageDemo.innerHTML = 
+  pageDemo.innerHTML = `
     <section class="wide-panel personal-form">
       <h3>${t("notifications")}</h3>
       <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label>
@@ -1487,7 +1477,7 @@ async function saveSettings() {
     }
   });
   saveAccount(data.user);
-    alert(t("settingsSaved"));
+  alert(t("settingsSaved"));
 }
 
 async function deleteAccount() {
@@ -1626,7 +1616,6 @@ async function boot() {
   applyLanguage();
   await configureSupabaseAuth();
 
-  // Handle Supabase email confirmation / OAuth redirect hash
   if (state.supabaseClient && window.location.hash) {
     const hash = window.location.hash;
     if (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery")) {
@@ -1651,11 +1640,9 @@ async function boot() {
     }
   }
 
-  // Check stored session is still valid
   if (isLoggedIn() && state.supabaseClient) {
     const { data } = await state.supabaseClient.auth.getSession();
     if (!data.session) {
-      // Supabase session expired — clear local storage to force re-login
       localStorage.removeItem("planswipe:login");
       localStorage.removeItem("planswipe:email");
       localStorage.removeItem("planswipe:account");
