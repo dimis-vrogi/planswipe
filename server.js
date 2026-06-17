@@ -137,7 +137,6 @@ function serveStatic(request, response) {
   fs.readFile(filePath, (error, data) => {
     if (error) {
       if (error.code === "ENOENT") {
-        // SPA fallback - serve index.html for client-side routing
         const fallback = path.join(publicRoot, "index.html");
         fs.readFile(fallback, (fallbackError, fallbackData) => {
           if (fallbackError) {
@@ -242,25 +241,21 @@ async function handleApi(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const parts = url.pathname.replace(/^\/|\/$/g, "").split("/");
 
-  // CORS
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (request.method === "OPTIONS") { sendJson(response, 200, {}); return; }
 
-  // Configuration
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "config") {
     sendJson(response, 200, { supabaseUrl, supabaseAnonKey });
     return;
   }
 
-  // Options
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "options") {
     sendJson(response, 200, { areas: areaOptions, types: typeOptions });
     return;
   }
 
-  // Get user account / profile
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "account") {
     const username = url.searchParams.get("username") || "";
     const viewer = url.searchParams.get("viewer") || "";
@@ -273,7 +268,6 @@ async function handleApi(request, response) {
       const incoming = data.profile?.friendRequests?.includes?.(data.username);
       friendStatus = isFriend ? "friends" : outgoing ? "requested" : "incoming" ? "incoming" : "";
     }
-    // Determine incoming requests
     const viewerProfile = await getProfileByUsername(viewer);
     const viewerIncoming = (viewerProfile?.profile?.friendRequests || []).includes(username) ? "incoming" : "";
     const viewerFriends = (viewerProfile?.profile?.friends || []).includes(username);
@@ -285,7 +279,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Update account / profile
   if (request.method === "PATCH" && parts[0] === "api" && parts[1] === "account") {
     const body = await readBody(request);
     const existing = await getProfileByUsername(body.username);
@@ -297,7 +290,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Login
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "login") {
     const body = await readBody(request);
     const data = await getProfileByUsername(body.username);
@@ -309,7 +301,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Register
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "register") {
     const body = await readBody(request);
     const existing = await getProfileByUsername(body.username);
@@ -320,7 +311,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Sync Supabase auth profile
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "auth" && parts[2] === "profile") {
     const body = await readBody(request);
     const existing = await getProfileByUsername(body.username);
@@ -335,13 +325,24 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Delete Account
+  if (request.method === "POST" && parts[0] === "api" && parts[1] === "change-password") {
+    const body = await readBody(request);
+    const existing = await getProfileByUsername(body.username);
+    if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
+    if (existing.profile?.password !== hashPassword(body.oldPassword)) {
+      sendJson(response, 401, { error: "Wrong password" }); return;
+    }
+    const profile = { ...(existing.profile || {}), password: hashPassword(body.newPassword) };
+    await upsertProfile({ username: body.username, email: existing.email || "", profile });
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "account" && parts[2] === "delete") {
     const body = await readBody(request);
     const username = body.username;
     if (!username) { sendJson(response, 400, { error: "Username required" }); return; }
     
-    // Delete all friend requests involving this user
     const allProfiles = await getAllProfiles();
     for (const profile of allProfiles) {
       if (profile.profile?.friendRequests) {
@@ -355,7 +356,6 @@ async function handleApi(request, response) {
       }
     }
     
-    // Remove user from all groups
     const allGroups = await getAllGroups();
     for (const groupData of allGroups) {
       const group = groupData.data;
@@ -366,33 +366,30 @@ async function handleApi(request, response) {
       }
     }
     
-    // Delete the user's profile from supabase
+    const profileBeforeDelete = await getProfileByUsername(username);
+    const userEmail = profileBeforeDelete?.email || "";
+    
     const { error: deleteError } = await supabase.from("profiles").delete().eq("username", username);
     if (deleteError) throw new Error(deleteError.message);
     
-    // Also delete the user from Supabase Auth if we have the service role key
-    try {
-      // Find the user by email in auth
-      const userProfile = await getProfileByUsername(username);
-      if (userProfile && userProfile.email) {
-        // Try to find and delete the auth user
+    if (userEmail) {
+      try {
         const { data: authUsers } = await supabase.auth.admin.listUsers();
         if (authUsers) {
-          const authUser = authUsers.users.find((u) => u.email === userProfile.email);
+          const authUser = authUsers.users.find((u) => u.email === userEmail);
           if (authUser) {
             await supabase.auth.admin.deleteUser(authUser.id);
           }
         }
+      } catch (authError) {
+        console.warn("Could not delete auth user:", authError.message);
       }
-    } catch (authError) {
-      console.warn("Could not delete auth user:", authError.message);
     }
     
     sendJson(response, 200, { success: true });
     return;
   }
 
-  // Exit Group (move to past groups)
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[2] === "exit") {
     const body = await readBody(request);
     const group = await loadGroup(body.groupCode);
@@ -405,7 +402,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Create group
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && !parts[2]) {
     const body = await readBody(request);
     const code = generateCode();
@@ -431,7 +427,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Join group
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "join") {
     const groupCode = parts[2];
     const body = await readBody(request);
@@ -450,7 +445,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // User groups (MUST be before generic GET group)
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] === "mine") {
     const username = url.searchParams.get("username") || "";
     const allGroups = await getAllGroups();
@@ -463,7 +457,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Get group details
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "groups" && parts[2] && !parts[3]) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
@@ -471,7 +464,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Submit choice
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "choice") {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
@@ -488,7 +480,6 @@ async function handleApi(request, response) {
       if (!group.choices[kind]) group.choices[kind] = {};
       group.choices[kind][body.userId] = body.optionId;
     }
-    // Recalculate consensus for this kind
     const tally = {};
     Object.values(group.choices[kind] || {}).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
     const maxVotes = Math.max(...Object.values(tally), 1);
@@ -504,15 +495,12 @@ async function handleApi(request, response) {
         const areaId = group.consensus.area;
         const areaLabel = (group.options.area || []).find((option) => option.id === areaId)?.label || "";
         const typeLabel = (group.options.type || []).find((option) => option.id === selectedId)?.label || "";
-        const groupsLabel = areaOptions.find((option) => option.id === areaId)?.queryArea || areaLabel;
-        const groupsType = typeOptions.find((option) => option.id === selectedId)?.queryType || typeLabel;
         group.search = { source: "opensource", query: `${typeLabel} near ${areaLabel}` };
         if (googleApiKey) {
           group.search.source = "google";
         } else {
           group.search.source = "sample";
         }
-        // Generate sample places
         group.places = generateSamplePlaces(areaLabel, typeLabel);
       }
     } else {
@@ -523,7 +511,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Go back choice
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "back") {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
@@ -547,7 +534,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Vote
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "groups" && parts[3] === "vote") {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
@@ -563,7 +549,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Friends endpoints
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "friends") {
     const username = url.searchParams.get("username") || "";
     const profile = await getProfileByUsername(username);
@@ -580,7 +565,6 @@ async function handleApi(request, response) {
       const requesterProfile = await getProfileByUsername(requester);
       if (requesterProfile) incoming.push(requesterProfile);
     }
-    // Outgoing requests (users I requested but haven't accepted me back)
     const allProfiles = await getAllProfiles();
     const outgoing = allProfiles.filter((p) => 
       p.username !== username && 
@@ -644,7 +628,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // User search
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "users" && parts[2] === "search") {
     const q = url.searchParams.get("q") || "";
     const username = url.searchParams.get("username") || "";
@@ -666,7 +649,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Liked places
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "liked-places") {
     const username = url.searchParams.get("username") || "";
     const profile = await getProfileByUsername(username);
@@ -694,7 +676,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // AI Suggestions
   if (request.method === "POST" && parts[0] === "api" && parts[1] === "suggestions") {
     const body = await readBody(request);
     if (!openAiApiKey) {
@@ -708,7 +689,7 @@ async function handleApi(request, response) {
         body: JSON.stringify({
           model: openAiModel,
           messages: [
-            { role: "system", content: `You are a helpful assistant that suggests places based on area and activity. Return a JSON array of objects with "place" and "reason" keys.` },
+            { role: "system", content: "You are a helpful assistant that suggests places based on area and activity. Return a JSON array of objects with \"place\" and \"reason\" keys." },
             { role: "user", content: `Suggest 5 places for ${body.activity} in ${body.area}. Return ONLY JSON.` }
           ],
           temperature: 0.7,
@@ -732,7 +713,6 @@ async function handleApi(request, response) {
     return;
   }
 
-  // Notifications
   if (request.method === "GET" && parts[0] === "api" && parts[1] === "notifications") {
     const username = url.searchParams.get("username") || "";
     const profile = await getProfileByUsername(username);
@@ -752,10 +732,6 @@ function hashPassword(password) {
 function removeUserFromGroup(group, username) {
   const before = group.members?.length || 0;
   group.members = (group.members || []).filter((member) => member.username !== username);
-  if (group.choices?.area) delete group.choices.area[group.members.find((m) => m.username === username)?.id || ""];
-  if (group.choices?.type) delete group.choices.type[group.members.find((m) => m.username === username)?.id || ""];
-  if (group.votes) delete group.votes[group.members.find((m) => m.username === username)?.id || ""];
-  // Clean up any references by username directly too
   Object.keys(group.choices?.area || {}).forEach((key) => {
     const member = group.members.find((m) => m.id === key);
     if (!member) delete group.choices.area[key];
