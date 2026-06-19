@@ -128,7 +128,7 @@ function t(key) {
   return copy[state.language]?.[key] ?? copy.en[key] ?? key;
 }
 
-const ageGroups = ["<12", "12-17", "18-24", "25-34", "35-44", "45-54"];
+const ageGroups = ["<12", "12-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
 
 function passwordScore(password) {
   let score = 0;
@@ -182,9 +182,9 @@ const copy = {
     whatPlanswipeIs: "What PlanSwipe is",
     sharedDecisionTool: "A shared decision tool for real plans",
     offerText: "Instead of long group chats, everyone chooses the basics, swipes through options, and sees which activities have the strongest support.",
-    agreeFaster: "Agree faster", agreeFasterText: "Pick an area and activity type together before looking at suggestions.",
-    discoverOptions: "Discover options", discoverOptionsText: "Use sample ideas or Google Places results when the API key is configured.",
-    voteAsGroup: "Vote as a group", voteAsGroupText: "Mark activities as No, Maybe, or Yes and compare support instantly.",
+    agreeFaster: "Agree faster", agreeFasterText: "Everyone picks an area and activity type together. No more endless back-and-forth in the group chat.",
+    discoverOptions: "Discover options", discoverOptionsText: "Get real suggestions from Google Maps or sample data. Browse places your group will actually enjoy.",
+    voteAsGroup: "Vote as a group", voteAsGroupText: "Swipe through options and vote No, Maybe, or Yes. See instantly which places have the most support.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
@@ -1071,6 +1071,7 @@ function renderApp() {
     loginForm.querySelector("h2").textContent = state.authMode === "signup" ? t("createAccount") : t("enterPlanswipe");
     setVisible(loginButton, state.authMode !== "signup");
     setVisible(registerButton, state.authMode === "signup");
+    setVisible(forgotPasswordButton, state.authMode !== "signup");
     renderPasswordStrength();
     hideAppPanels(); removeChatButton(); return;
   }
@@ -1365,7 +1366,7 @@ async function refreshFriendsPage() {
   if (!friendList || !requestList) return;
 
   friendList.innerHTML = data.friends.length
-    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("personal")}</button>`)).join("")
+    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">View Profile</button>`)).join("")
     : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const allRequests = [
@@ -1602,7 +1603,7 @@ async function searchFriends() {
   if (!results || !query) return;
   const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
   results.innerHTML = data.users.length ? data.users.map((user) => {
-    if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("personal")}</button>`);
+    if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`);
     if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`);
     if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
     return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
