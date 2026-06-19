@@ -118,14 +118,17 @@ h3 {
 }
 
 .btn-outline {
-  background: transparent;
-  color: var(--purple);
-  border: 2px solid rgba(48, 24, 96, 0.2);
+  background: var(--purple);
+  color: #fff;
+  border: 2px solid var(--purple);
+  box-shadow: 0 4px 14px rgba(48, 24, 96, 0.25);
 }
 
 .btn-outline:hover {
-  border-color: var(--purple);
-  background: rgba(48, 24, 96, 0.04);
+  background: #3d1f7a;
+  border-color: #3d1f7a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(48, 24, 96, 0.35);
 }
 
 .btn-ghost {
@@ -185,16 +188,17 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   padding: 0 14px;
   border: 2px solid rgba(48, 24, 96, 0.15);
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--purple);
+  background: var(--purple);
+  color: #fff;
   font-weight: 800;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .language-button:hover {
+  background: #3d1f7a;
   border-color: var(--purple);
-  background: rgba(48, 24, 96, 0.04);
+  transform: translateY(-1px);
 }
 
 .hero-layout {
