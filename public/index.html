@@ -18,7 +18,7 @@
           <img src="logo.png" alt="PlanSwipe logo" class="hero-logo-img">
           <div class="nav-actions">
             <button class="language-button" id="languageButton" type="button">EL</button>
-            <button id="heroLoginButton" type="button" class="btn-outline">Login</button>
+            <button id="heroLoginButton" type="button" class="btn-primary">Login</button>
             <button id="heroSignupButton" type="button" class="btn-primary">Create Account</button>
             <button class="btn-primary hero-enter-button is-hidden" id="heroEnterButton" type="button">Enter PlanSwipe</button>
           </div>
@@ -76,15 +76,15 @@
           <div class="offer-grid">
             <article>
               <h3>Agree faster</h3>
-              <p>Pick an area and activity type together before looking at suggestions.</p>
+              <p>Everyone picks an area and activity type together. No more endless back-and-forth in the group chat.</p>
             </article>
             <article>
               <h3>Discover options</h3>
-              <p>Use sample ideas or Google Places results when the API key is configured.</p>
+              <p>Get real suggestions from Google Maps tailored to your group's area and activity. Browse places you'll actually enjoy.</p>
             </article>
             <article>
               <h3>Vote as a group</h3>
-              <p>Mark activities as No, Maybe, or Yes and compare support instantly.</p>
+              <p>Swipe through options and vote No, Maybe, or Yes. See instantly which places have the most support from your friends.</p>
             </article>
           </div>
         </section>
@@ -170,7 +170,7 @@
             <p class="eyebrow" id="pageEyebrow">Profile</p>
             <h2 id="pageTitle">Inbox</h2>
           </div>
-          <button class="btn-ghost" id="closePageButton" type="button">Exit Group</button>
+          <button class="btn-ghost" id="closePageButton" type="button">Back</button>
         </div>
         <div class="demo-grid" id="pageDemo"></div>
       </section>
@@ -181,6 +181,9 @@
           <p class="eyebrow">Current group</p>
           <h2 id="groupName">Group</h2>
           <p class="group-code">Code: <strong id="groupCode">12345678</strong></p>
+        </div>
+        <div class="group-actions-row">
+          <button class="btn-primary" id="inviteToGroupButton" type="button">Invite to Group</button>
         </div>
         <div class="member-row" id="memberRow" aria-label="Group members"></div>
       </section>
@@ -226,6 +229,7 @@
           <button class="choice-button no" id="noButton" type="button" aria-label="No">No</button>
           <button class="choice-button maybe" id="maybeButton" type="button" aria-label="Maybe">Maybe</button>
           <button class="choice-button yes" id="yesButton" type="button" aria-label="Yes">Yes</button>
+          <button class="choice-button favourite" id="favButton" type="button" aria-label="Add to Favourites">Add to Favourites</button>
         </div>
       </section>
 
@@ -235,6 +239,7 @@
           <div>
             <p class="eyebrow">Live choices</p>
             <h2>What you can do</h2>
+            <p class="results-selected-count" id="resultsSelectedCount"></p>
           </div>
           <div class="results-actions">
             <button class="btn-ghost" id="continueBrowseButton" type="button">Continue Browsing</button>
