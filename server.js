@@ -259,6 +259,7 @@ function summarizeGroup(group) {
     matches:   group.matches  || [],
     votes:     group.votes    || {},
     search:    group.search   || null,
+    placesExhausted: Boolean(group.placesExhausted),
     createdAt: group.createdAt
   };
 }
@@ -536,13 +537,14 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
         : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || []);
-      return { places: refined, source: options.useAi === false ? "google" : "google-ai", query };
+      return { places: refined, source: options.useAi === false ? "google" : "google-ai", query, exhausted: false };
     }
+    return { places: [], source: "google", query, exhausted: true };
   }
   const samples = generateSamplePlaces(areaLabel, typeLabel)
     .filter((p) => !excludeTitles.map((t) => t.toLowerCase()).includes(p.title.toLowerCase()))
     .slice(0, count);
-  return { places: samples, source: googleApiKey ? "sample" : "sample", query };
+  return { places: samples, source: "sample", query, exhausted: false };
 }
 
 function priceLabel(priceLevel) {
@@ -883,6 +885,7 @@ async function handleApi(request, response) {
         const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
         group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
         group.places = loaded.places;
+        group.placesExhausted = Boolean(loaded.exhausted);
         group.placeSelections = {};
       }
     } else {
@@ -907,7 +910,7 @@ async function handleApi(request, response) {
       delete group.choices.type[userId];
       if (group.votes) delete group.votes[userId];
       group.consensus.area = null; group.consensus.type = null;
-      group.search = null; group.places = [];
+      group.search = null; group.places = []; group.placesExhausted = false;
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
@@ -925,11 +928,17 @@ async function handleApi(request, response) {
     const typeOption = findGroupOption(group, "type", typeId);
     const excludeTitles = (group.places || []).map((p) => p.title);
     const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
-    if (!loaded.places.length) { sendJson(response, 400, { error: "No more places found for this area and activity." }); return; }
+    if (!loaded.places.length) {
+      group.placesExhausted = true;
+      await saveGroup(group);
+      sendJson(response, 200, { group: summarizeGroup(group), places: [], exhausted: true });
+      return;
+    }
     group.places = [...(group.places || []), ...loaded.places];
+    group.placesExhausted = false;
     group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
     await saveGroup(group);
-    sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places });
+    sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places, exhausted: false });
     return;
   }
 
@@ -986,6 +995,33 @@ async function handleApi(request, response) {
     group.votes[body.userId][body.placeId] = value;
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "invite") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const body = await readBody(request);
+    const fromUsername = String(body.fromUsername || "").trim();
+    const usernames = Array.isArray(body.usernames) ? body.usernames.map((u) => String(u).trim()).filter(Boolean) : [];
+    if (!fromUsername || !usernames.length) { sendJson(response, 400, { error: "fromUsername and usernames required" }); return; }
+    const memberNames = new Set((group.members || []).map((m) => m.username));
+    let sent = 0;
+    for (const username of usernames) {
+      if (memberNames.has(username) || username === fromUsername) continue;
+      const profileRow = await getProfileByUsername(username);
+      if (!profileRow) continue;
+      const invites = profileRow.profile?.groupInvites || [];
+      if (invites.some((inv) => inv.groupCode === group.code)) continue;
+      invites.unshift({ groupCode: group.code, groupName: group.name, fromUsername, invitedAt: Date.now() });
+      await upsertProfile({
+        username,
+        email: profileRow.email || "",
+        profile: { ...profileRow.profile, groupInvites: invites.slice(0, 50) }
+      });
+      sent++;
+    }
+    sendJson(response, 200, { success: true, sent });
     return;
   }
 
@@ -1144,7 +1180,8 @@ async function handleApi(request, response) {
     const profile  = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 }); return; }
     const friendRequests = profile.profile?.friendRequests?.length || 0;
-    sendJson(response, 200, { total: friendRequests, friendRequests, groupInvites: 0, messages: 0 });
+    const groupInvites = profile.profile?.groupInvites?.length || 0;
+    sendJson(response, 200, { total: friendRequests + groupInvites, friendRequests, groupInvites, messages: 0 });
     return;
   }
 
