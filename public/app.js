@@ -24,11 +24,17 @@ const state = {
   pageShellRendered: "",
   chatOpen: false,
   chatLastTimestamp: null,
+  chatLastReadTimestamp: null,
+  chatLoadTimer: null,
   pollErrorCount: 0,
   authMode: "login",
   pendingAreaOption: null,
   useAiSuggestions: localStorage.getItem("planswipe:useAiSuggestions") !== "false",
-  selectedBookPlaceId: ""
+  selectedBookPlaceId: "",
+  returnRoute: "/main",
+  votingInProgress: false,
+  placesExhausted: false,
+  showAgeGroupModal: false
 };
 
 // ====== DOM REFERENCES ======
@@ -72,7 +78,10 @@ const activityCost         = document.querySelector("#activityCost");
 const noButton             = document.querySelector("#noButton");
 const maybeButton          = document.querySelector("#maybeButton");
 const yesButton            = document.querySelector("#yesButton");
+const favButton            = document.querySelector("#favButton");
 const resultList           = document.querySelector("#resultList");
+const resultsSelectedCount = document.querySelector("#resultsSelectedCount");
+const inviteToGroupButton  = document.querySelector("#inviteToGroupButton");
 const loginPanel           = document.querySelector("#loginPanel");
 const loginForm            = document.querySelector("#loginForm");
 const heroLoginButton      = document.querySelector("#heroLoginButton");
@@ -183,8 +192,8 @@ const copy = {
     sharedDecisionTool: "A shared decision tool for real plans",
     offerText: "Instead of long group chats, everyone chooses the basics, swipes through options, and sees which activities have the strongest support.",
     agreeFaster: "Agree faster", agreeFasterText: "Everyone picks an area and activity type together. No more endless back-and-forth in the group chat.",
-    discoverOptions: "Discover options", discoverOptionsText: "Get real suggestions from Google Maps or sample data. Browse places your group will actually enjoy.",
-    voteAsGroup: "Vote as a group", voteAsGroupText: "Swipe through options and vote No, Maybe, or Yes. See instantly which places have the most support.",
+    discoverOptions: "Discover options", discoverOptionsText: "Get real suggestions from Google Maps tailored to your group's area and activity. Browse places you'll actually enjoy.",
+    voteAsGroup: "Vote as a group", voteAsGroupText: "Swipe through options and vote No, Maybe, or Yes. See instantly which places have the most support from your friends.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
@@ -222,7 +231,7 @@ const copy = {
     noPastActivities: "No past activities yet",
     continueBrowsing: "Continue Browsing",
     loadingPlaces: "Loading more places\u2026",
-    noMoreSuggestions: "No more places available",
+    noMoreSuggestions: "No more places matching your selections. Would you like to change your basics?",
     exitGroupPermanent: "Exit Group Permanently",
     confirmExitGroup: "Are you sure you want to permanently leave this group?",
     accountManagement: "Account Management",
@@ -245,7 +254,19 @@ const copy = {
     bookNow: "Book now", website: "Website", reservations: "Reservations", noBookingDetails: "No website or phone number is available yet.",
     passwordWeak: "Weak password", passwordOk: "Password is OK", passwordStrong: "Strong password",
     passwordRequirements: "Use at least 8 characters with uppercase, lowercase, and a number.",
-    ageGroupRequired: "Select your age group before entering a group.",
+    ageGroupRequired: "You must first select your age group before entering a group.",
+    viewProfile: "View Profile",
+    addToFavourites: "Add to Favourites",
+    favourited: "Favourited",
+    inviteToGroup: "Invite to Group",
+    inviteFriends: "Invite friends",
+    inviteSelectFriends: "Select in-app friends to invite to this group.",
+    inviteSent: "Invites sent!",
+    noFriendsToInvite: "Add friends first to invite them to a group.",
+    sendInvites: "Send Invites",
+    cancel: "Cancel",
+    ok: "OK",
+    selectedCount: "selected",
     groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
     closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
@@ -336,7 +357,19 @@ const copy = {
     bookNow: "Book now", website: "Website", reservations: "Reservations", noBookingDetails: "No website or phone number is available yet.",
     passwordWeak: "Weak password", passwordOk: "Password is OK", passwordStrong: "Strong password",
     passwordRequirements: "Use at least 8 characters with uppercase, lowercase, and a number.",
-    ageGroupRequired: "Select your age group before entering a group.",
+    ageGroupRequired: "You must first select your age group before entering a group.",
+    viewProfile: "View Profile",
+    addToFavourites: "Add to Favourites",
+    favourited: "Favourited",
+    inviteToGroup: "Invite to Group",
+    inviteFriends: "Invite friends",
+    inviteSelectFriends: "Select in-app friends to invite to this group.",
+    inviteSent: "Invites sent!",
+    noFriendsToInvite: "Add friends first to invite them to a group.",
+    sendInvites: "Send Invites",
+    cancel: "Cancel",
+    ok: "OK",
+    selectedCount: "selected",
     groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
     closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
@@ -448,7 +481,23 @@ Object.assign(copy.el, {
   passwordOk: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b5\u03af\u03bd\u03b1\u03b9 OK",
   passwordStrong: "\u0394\u03c5\u03bd\u03b1\u03c4\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
   passwordRequirements: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 8+ \u03c7\u03b1\u03c1\u03b1\u03ba\u03c4\u03ae\u03c1\u03b5\u03c2 \u03bc\u03b5 \u03ba\u03b5\u03c6\u03b1\u03bb\u03b1\u03af\u03bf, \u03c0\u03b5\u03b6\u03cc \u03ba\u03b1\u03b9 \u03b1\u03c1\u03b9\u03b8\u03bc\u03cc.",
-  ageGroupRequired: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b7\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c0\u03c1\u03b9\u03bd \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1."
+  ageGroupRequired: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03c1\u03ce\u03c4\u03b1 \u03c4\u03b7\u03bd \u03b7\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03c3\u03b1\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c0\u03c1\u03b9\u03bd \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1.",
+  viewProfile: "\u03a0\u03c1\u03bf\u03b2\u03bf\u03bb\u03ae \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
+  addToFavourites: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c3\u03c4\u03b1 \u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1",
+  favourited: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf",
+  inviteToGroup: "\u03a0\u03c1\u03bf\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7 \u03c3\u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1",
+  inviteFriends: "\u03a0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
+  inviteSelectFriends: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03b3\u03b9\u03b1 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7 \u03c3\u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1.",
+  inviteSent: "\u039f\u03b9 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c3\u03c4\u03ac\u03bb\u03b7\u03ba\u03b1\u03bd!",
+  noFriendsToInvite: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c0\u03c1\u03ce\u03c4\u03b1 \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03c4\u03bf\u03c5\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03b1\u03bb\u03ad\u03c3\u03b5\u03c4\u03b5.",
+  sendInvites: "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd",
+  cancel: "\u0391\u03ba\u03cd\u03c1\u03c9\u03c3\u03b7",
+  ok: "OK",
+  selectedCount: "\u03b5\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b1\u03bd",
+  noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03bc\u03b5 \u03c4\u03b9\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c3\u03b1\u03c2. \u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03bb\u03bb\u03ac\u03be\u03b5\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac;",
+  agreeFasterText: "\u0388\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2 \u03bc\u03b1\u03b6\u03af. \u0387\u03c4\u03b1 \u03b4\u03b5\u03bd \u03c7\u03b1\u03bd\u03b5\u03af \u03b7 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1.",
+  discoverOptionsText: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ad\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps \u03b3\u03b9\u03b1 \u03c4\u03b7\u03bd \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03c4\u03b7\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03c3\u03b1\u03c2.",
+  voteAsGroupText: "\u039a\u03ac\u03bd\u03c4\u03b5 swipe \u03ba\u03b1\u03b9 \u03c8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9. \u0394\u03b5\u03af\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1 \u03c0\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7."
 });
 optionTranslations.el.north_suburbs = optionTranslations.el.northsuburbs;
 optionTranslations.el.athens_center = optionTranslations.el.athenscenter;
@@ -501,7 +550,8 @@ function applyLanguage() {
   const topbarEyb = document.querySelector(".topbar .eyebrow");
   if (topbarEyb) topbarEyb.textContent = t("groupPlans");
   resetButton.textContent       = t("leaveGroup");
-  closePageButton.textContent   = t("exitGroup");
+  closePageButton.textContent   = t("back");
+  if (inviteToGroupButton) inviteToGroupButton.textContent = t("inviteToGroup");
   if (continueBrowseButton) continueBrowseButton.textContent = t("continueBrowsing");
   reviewButton.textContent      = t("changeBasics");
 
@@ -720,7 +770,7 @@ function renderDecisionStep(kind) {
     decisionHint.textContent = t("decisionHint");
   }
 
-  setVisible(backChoiceButton, kind === "type" || Boolean(chosen));
+  setVisible(backChoiceButton, kind === "type" || Boolean(chosen) || Boolean(state.pendingAreaOption));
 
   if (!options || options.length === 0) {
     optionGrid.innerHTML = `<p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>`;
@@ -775,7 +825,12 @@ function renderDecisionStep(kind) {
 function renderCard() {
   const places = state.group.places || [];
   const place  = places[state.index];
-  if (!place) { setVisible(swipeLayout, false); setVisible(resultsPanel, true); renderResults(); return; }
+  if (!place) {
+    setVisible(swipeLayout, false);
+    setVisible(resultsPanel, true);
+    renderResults();
+    return;
+  }
   activityCard.classList.remove("swipe-yes", "swipe-no");
   activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt               = place.title;
@@ -787,16 +842,32 @@ function renderCard() {
   activityArea.textContent        = place.areaLabel || place.address || "";
   activityTime.textContent        = place.time;
   activityCost.textContent        = place.cost;
-  noButton.textContent    = t("choiceNo");
-  maybeButton.textContent = t("choiceMaybe");
-  yesButton.textContent   = t("choiceYes");
+  noButton.textContent      = t("choiceNo");
+  maybeButton.textContent   = t("choiceMaybe");
+  yesButton.textContent     = t("choiceYes");
+  [noButton, maybeButton, yesButton, favButton].forEach((btn) => {
+    if (btn) btn.classList.toggle("is-voting", state.votingInProgress);
+  });
+  if (favButton) {
+    const preferences = getPreferences();
+    const alreadyFav = (preferences.places || []).some((p) => p.toLowerCase() === place.title?.toLowerCase());
+    favButton.textContent = alreadyFav ? `\u2605 ${t("favourited")}` : `\u2606 ${t("addToFavourites")}`;
+    favButton.classList.toggle("is-favourited", alreadyFav);
+  }
 }
 
 function renderResults() {
   const allPlaces = state.group.places || [];
+  const totalMembers = state.group.members?.length || 1;
+  const selectedCount = Object.keys(state.group.placeSelections || {}).length;
+  if (resultsSelectedCount) {
+    resultsSelectedCount.textContent = selectedCount > 0 ? `${selectedCount}/${totalMembers} ${t("selectedCount")}` : "";
+  }
   const canAddOwnPlace = state.index >= Math.min(5, allPlaces.length || 5);
+  const exhaustedMsg = (state.placesExhausted || state.group.placesExhausted) && state.index >= allPlaces.length
+    ? `<div class="places-exhausted-message">${escapeHtml(t("noMoreSuggestions"))}</div>` : "";
   if (!allPlaces.length) {
-    resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`;
+    resultList.innerHTML = `${exhaustedMsg || `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>`}`;
     return;
   }
   const votesByPlace = {};
@@ -846,7 +917,7 @@ function renderResults() {
       </div>${booking}</div>
       <strong class="result-score">${item.percent}%</strong>
     </article>`;
-  }).join("") + (canAddOwnPlace ? `<button class="btn-primary add-own-place-button" type="button" id="addOwnPlaceButton">${t("addYourOwnPlace")}</button>` : "");
+  }).join("") + (canAddOwnPlace ? `<button class="btn-primary add-own-place-button" type="button" id="addOwnPlaceButton">${t("addYourOwnPlace")}</button>` : "") + exhaustedMsg;
 }
 
 function renderStatus() {
@@ -865,6 +936,36 @@ function renderStatus() {
 }
 
 // ====== GROUP CHAT ======
+async function refreshChatUnreadCount() {
+  if (!state.groupCode || !document.querySelector("#chatFab")) return;
+  try {
+    const since = state.chatLastReadTimestamp ? `&since=${encodeURIComponent(state.chatLastReadTimestamp)}` : "";
+    const data = await api(`/api/groups/${state.groupCode}/messages?limit=50${since}`);
+    const messages = data.messages || [];
+    const badge = document.querySelector("#chatUnreadBadge");
+    if (!badge) return;
+    const unread = state.chatOpen ? 0 : messages.length;
+    if (unread > 0) {
+      badge.textContent = unread > 99 ? "99+" : String(unread);
+      badge.classList.remove("is-hidden");
+    } else {
+      badge.textContent = "";
+      badge.classList.add("is-hidden");
+    }
+  } catch (_) {}
+}
+
+function startChatUnreadPolling() {
+  if (state.chatTimer) clearInterval(state.chatTimer);
+  state.chatTimer = setInterval(refreshChatUnreadCount, 5000);
+  refreshChatUnreadCount();
+}
+
+function stopChatUnreadPolling() {
+  clearInterval(state.chatTimer);
+  state.chatTimer = null;
+}
+
 function ensureChatButton() {
   if (document.querySelector("#chatFab")) return;
   const fab = document.createElement("button");
@@ -874,13 +975,15 @@ function ensureChatButton() {
   fab.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="chatUnreadBadge" class="chat-unread-badge is-hidden"></span>`;
   document.body.appendChild(fab);
   fab.addEventListener("click", toggleChat);
+  startChatUnreadPolling();
 }
 
 function removeChatButton() {
   document.querySelector("#chatFab")?.remove();
   document.querySelector("#chatOverlay")?.remove();
-  clearInterval(state.chatTimer);
-  state.chatTimer = null;
+  stopChatUnreadPolling();
+  clearInterval(state.chatLoadTimer);
+  state.chatLoadTimer = null;
   state.chatOpen  = false;
 }
 
@@ -912,7 +1015,8 @@ function openChatPanel() {
 
   overlay.querySelector("#chatCloseBtn").addEventListener("click", () => {
     state.chatOpen = false; overlay.remove();
-    clearInterval(state.chatTimer); state.chatTimer = null;
+    clearInterval(state.chatLoadTimer); state.chatLoadTimer = null;
+    startChatUnreadPolling();
   });
 
   const input   = overlay.querySelector("#chatMessageInput");
@@ -924,13 +1028,14 @@ function openChatPanel() {
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       state.chatOpen = false; overlay.remove();
-      clearInterval(state.chatTimer); state.chatTimer = null;
+      clearInterval(state.chatLoadTimer); state.chatLoadTimer = null;
+      startChatUnreadPolling();
     }
   });
 
   loadChatMessages(true);
-  clearInterval(state.chatTimer);
-  state.chatTimer = setInterval(() => { if (state.chatOpen) loadChatMessages(false); }, 3000);
+  clearInterval(state.chatLoadTimer);
+  state.chatLoadTimer = setInterval(() => { if (state.chatOpen) loadChatMessages(false); }, 3000);
 }
 
 async function loadChatMessages(scrollToBottom) {
@@ -949,6 +1054,7 @@ async function loadChatMessages(scrollToBottom) {
 
     if (messages.length > 0) {
       state.chatLastTimestamp = messages[messages.length - 1].created_at;
+      if (state.chatOpen) state.chatLastReadTimestamp = state.chatLastTimestamp;
       const loading = container.querySelector(".chat-loading, .chat-empty");
       if (loading) loading.remove();
 
@@ -1105,7 +1211,11 @@ function renderApp() {
 
   if (state.activePage) {
     hideAppPanels(); setVisible(pagePanel, true);
-    renderProfilePage(); removeChatButton(); return;
+    renderProfilePage();
+    if (state.group && state.groupCode) ensureChatButton();
+    else removeChatButton();
+    if (state.showAgeGroupModal) showAgeGroupPopup();
+    return;
   }
   setVisible(pagePanel, false);
 
@@ -1120,7 +1230,9 @@ function renderApp() {
   groupCode.textContent = state.group.code;
   renderMembers(); renderStatus();
   setVisible(setupPanel, false); setVisible(groupPanel, true);
+  if (inviteToGroupButton) setVisible(inviteToGroupButton, true);
   ensureChatButton();
+  state.placesExhausted = Boolean(state.group.placesExhausted);
 
   const areaReady = consensus("area");
   const typeReady = consensus("type");
@@ -1140,9 +1252,13 @@ function renderApp() {
 
   const totalPlaces = state.group.places || [];
   if (state.index < totalPlaces.length) { setVisible(swipeLayout, true); renderCard(); }
-  else { setVisible(swipeLayout, false); }
+  else {
+    setVisible(swipeLayout, false);
+    if (state.placesExhausted || state.group.placesExhausted) renderResults();
+  }
   if (continueBrowseButton) {
-    setVisible(continueBrowseButton, Boolean(consensus("area") && consensus("type") && state.index >= totalPlaces.length));
+    const exhausted = state.placesExhausted || state.group.placesExhausted;
+    setVisible(continueBrowseButton, Boolean(consensus("area") && consensus("type") && state.index >= totalPlaces.length && !exhausted));
   }
 }
 
@@ -1182,18 +1298,25 @@ function saveSession(user, group) {
 // ====== GROUP ACTIONS ======
 async function createGroup() {
   const username = currentUsername() || "Friend";
-  if (!state.account?.profile?.ageGroup) { showError(t("ageGroupRequired")); state.activePage = "personal"; navigate("/personal"); return; }
+  if (!state.account?.profile?.ageGroup) { redirectForAgeGroup(); return; }
   const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim() } });
   saveSession(data.user, data.group);
 }
 
 async function joinGroup() {
   const username = currentUsername() || "Friend";
-  if (!state.account?.profile?.ageGroup) { showError(t("ageGroupRequired")); state.activePage = "personal"; navigate("/personal"); return; }
+  if (!state.account?.profile?.ageGroup) { redirectForAgeGroup(); return; }
   const code = codeInput.value.trim();
   if (!/^\d{8}$/.test(code)) { showError("Enter an 8-digit group code."); return; }
   const data = await api(`/api/groups/${code}/join`, { method: "POST", body: { username, profile: state.account?.profile } });
   saveSession(data.user, data.group);
+}
+
+function redirectForAgeGroup() {
+  state.showAgeGroupModal = true;
+  state.returnRoute = state.activePage ? window.location.pathname : "/main";
+  state.activePage = "personal";
+  navigate("/personal");
 }
 
 async function chooseOption(kind, optionId, customLabel = "") {
@@ -1204,19 +1327,35 @@ async function chooseOption(kind, optionId, customLabel = "") {
 
 async function goBackChoice() {
   if (!state.group || !state.user) return;
+  if (state.pendingAreaOption) {
+    state.pendingAreaOption = null;
+    renderDecisionStep("area");
+    return;
+  }
   const step = (consensus("area") && !consensus("type")) ? "type" : "area";
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step } });
-  state.index = 0; state.pendingAreaOption = null; state.group = data.group; renderApp();
+  state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
+  state.group = data.group; renderApp();
 }
 
 async function vote(value) {
+  if (state.votingInProgress) return;
   const places = state.group.places || [];
   const place = places[state.index];
   if (!place) return;
+  state.votingInProgress = true;
+  [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.add("is-voting"); });
   activityCard.classList.add(value === "yes" ? "swipe-yes" : "swipe-no");
-  const data = await api(`/api/groups/${state.group.code}/vote`, { method: "POST", body: { userId: state.user.id, placeId: place.id, vote: value } });
-  state.group = data.group;
-  setTimeout(() => { state.index += 1; renderApp(); }, 170);
+  try {
+    const data = await api(`/api/groups/${state.group.code}/vote`, { method: "POST", body: { userId: state.user.id, placeId: place.id, vote: value } });
+    state.group = data.group;
+    setTimeout(() => { state.index += 1; state.votingInProgress = false; renderApp(); }, 170);
+  } catch (e) {
+    state.votingInProgress = false;
+    activityCard.classList.remove("swipe-yes", "swipe-no");
+    [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.remove("is-voting"); });
+    throw e;
+  }
 }
 
 async function selectPlace(placeId) {
@@ -1263,6 +1402,21 @@ function logout() {
   navigate("/home");
 }
 
+function addToFavourites(place) {
+  if (!place || !place.title) return;
+  const profile = state.account?.profile || {};
+  const preferences = { ...(profile.preferences || {}), places: [...(profile.preferences?.places || [])] };
+  const title = place.title.trim();
+  if (!preferences.places.some((p) => p.toLowerCase() === title.toLowerCase())) {
+    preferences.places.push(title);
+    api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } })
+      .then((data) => { saveAccount(data.user); renderCard(); })
+      .catch((err) => showError(err.message));
+  } else {
+    showError("Already in your favourites!");
+  }
+}
+
 // ====== CONTINUE BROWSING ======
 async function continueBrowsing() {
   if (!state.group) return;
@@ -1275,10 +1429,21 @@ async function continueBrowsing() {
       body: { username: currentUsername(), useAiSuggestions: state.useAiSuggestions }
     });
     state.group = data.group;
-    state.index = prevCount;
+    if (data.exhausted || !data.places?.length) {
+      state.placesExhausted = true;
+      state.group.placesExhausted = true;
+    } else {
+      state.index = prevCount;
+    }
     renderApp();
   } catch (e) {
-    showError(e.message);
+    if (e.message.includes("No more places")) {
+      state.placesExhausted = true;
+      if (state.group) state.group.placesExhausted = true;
+      renderApp();
+    } else {
+      showError(e.message);
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t("continueBrowsing"); }
   }
@@ -1366,7 +1531,7 @@ async function refreshFriendsPage() {
   if (!friendList || !requestList) return;
 
   friendList.innerHTML = data.friends.length
-    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">View Profile</button>`)).join("")
+    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("viewProfile")}</button>`)).join("")
     : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const allRequests = [
@@ -1444,7 +1609,7 @@ async function renderAccountProfile(username) {
   const data = await api(`/api/account?username=${encodeURIComponent(username)}&viewer=${encodeURIComponent(currentUsername())}`);
   const user = data.user;
   const preferences = user.profile?.preferences || {};
-  pageEyebrow.textContent = t("personal");
+  pageEyebrow.textContent = t("viewProfile");
   pageTitle.textContent = user.username;
 
   const friendAction = user.username === currentUsername() ? "" :
@@ -1496,7 +1661,9 @@ function renderProfilePage() {
   if (content) { pageEyebrow.textContent = content.eyebrow; pageTitle.textContent = content.title; }
   if (state.activePage === "personal") {
     state.pageShellRendered = "personal";
-    renderPersonalInformation().catch((e) => showError(e.message));
+    renderPersonalInformation().then(() => {
+      if (state.showAgeGroupModal) showAgeGroupPopup();
+    }).catch((e) => showError(e.message));
     return;
   }
   if (state.activePage === "friends") {
@@ -1546,6 +1713,7 @@ async function saveProfile() {
   const profile = { ...(state.account?.profile || {}), bio, ageGroup, preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] } };
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile } });
   saveAccount(data.user);
+  if (ageGroup) state.showAgeGroupModal = false;
   await renderPersonalInformation();
 }
 
@@ -1603,7 +1771,7 @@ async function searchFriends() {
   if (!results || !query) return;
   const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
   results.innerHTML = data.users.length ? data.users.map((user) => {
-    if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">View Profile</button>`);
+    if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button>`);
     if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`);
     if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
     return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
@@ -1617,6 +1785,88 @@ async function exitGroupPermanently(code) {
   state.pageShellRendered = "";
   state.activePage = "groups";
   navigate("/groups");
+}
+
+function showModal(title, message, buttons = [{ label: t("ok"), primary: true, action: () => {} }]) {
+  document.querySelector("#appModal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "appModal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(message)}</p>
+      <div class="modal-actions">${buttons.map((btn, i) =>
+        `<button class="${btn.primary ? "btn-primary" : "btn-ghost"}" type="button" data-modal-btn="${i}">${escapeHtml(btn.label)}</button>`
+      ).join("")}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll("[data-modal-btn]").forEach((el, i) => {
+    el.addEventListener("click", () => { overlay.remove(); buttons[i]?.action?.(); });
+  });
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+function showAgeGroupPopup() {
+  if (!state.showAgeGroupModal) return;
+  showModal(t("personal"), t("ageGroupRequired"), [{
+    label: t("ok"),
+    primary: true,
+    action: () => { state.showAgeGroupModal = false; }
+  }]);
+}
+
+async function openInviteModal() {
+  if (!state.group) return;
+  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
+  const memberNames = new Set((state.group.members || []).map((m) => m.username));
+  const friends = (data.friends || []).filter((f) => !memberNames.has(f.username));
+  if (!friends.length) {
+    showModal(t("inviteToGroup"), t("noFriendsToInvite"), [{ label: t("ok"), primary: true }]);
+    return;
+  }
+  document.querySelector("#appModal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "appModal";
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <h3>${escapeHtml(t("inviteFriends"))}</h3>
+      <p>${escapeHtml(t("inviteSelectFriends"))}</p>
+      <div class="invite-friend-list" id="inviteFriendList">
+        ${friends.map((f) => `<label class="invite-friend-item"><input type="checkbox" value="${escapeHtml(f.username)}"> ${escapeHtml(f.username)}</label>`).join("")}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" id="inviteCancelBtn">${escapeHtml(t("cancel"))}</button>
+        <button class="btn-primary" type="button" id="inviteSendBtn">${escapeHtml(t("sendInvites"))}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#inviteCancelBtn").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelectorAll(".invite-friend-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      if (e.target.tagName === "INPUT") return;
+      const cb = item.querySelector("input");
+      cb.checked = !cb.checked;
+      item.classList.toggle("is-selected", cb.checked);
+    });
+    item.querySelector("input").addEventListener("change", (e) => {
+      item.classList.toggle("is-selected", e.target.checked);
+    });
+  });
+  overlay.querySelector("#inviteSendBtn").addEventListener("click", async () => {
+    const selected = [...overlay.querySelectorAll("#inviteFriendList input:checked")].map((el) => el.value);
+    if (!selected.length) return;
+    try {
+      await api(`/api/groups/${state.group.code}/invite`, {
+        method: "POST",
+        body: { fromUsername: currentUsername(), usernames: selected }
+      });
+      overlay.remove();
+      showModal(t("inviteToGroup"), t("inviteSent"), [{ label: t("ok"), primary: true }]);
+    } catch (e) { showError(e.message); }
+  });
 }
 
 function showError(message) {
@@ -1718,15 +1968,29 @@ logoutButton.addEventListener("click", logout);
 profileButton.addEventListener("click", (e) => { e.stopPropagation(); profileMenu.classList.toggle("is-hidden"); });
 profileMenu.addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-page]");
-  if (btn) { state.activePage = btn.dataset.page; profileMenu.classList.add("is-hidden"); navigate({ groups: "/groups", friends: "/friends", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings" }[btn.dataset.page] || "/main"); return; }
+  if (btn) {
+    state.activePage = btn.dataset.page;
+    state.returnRoute = "/main";
+    profileMenu.classList.add("is-hidden");
+    navigate({ groups: "/groups", friends: "/friends", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings" }[btn.dataset.page] || "/main");
+    return;
+  }
   if (e.target.closest("#logoutButton")) profileMenu.classList.add("is-hidden");
 });
-closePageButton.addEventListener("click", () => { state.activePage = ""; navigate("/main"); });
+closePageButton.addEventListener("click", () => {
+  const dest = state.activePage.startsWith("profile:") ? "/friends"
+    : state.activePage === "personal" && state.returnRoute ? state.returnRoute
+    : "/main";
+  state.activePage = "";
+  state.returnRoute = "/main";
+  navigate(dest);
+});
 document.addEventListener("click", (e) => { if (!e.target.closest(".profile-wrap")) profileMenu.classList.add("is-hidden"); });
 
 memberRow.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-username]");
   if (!btn) return;
+  state.returnRoute = "/main";
   state.activePage = `profile:${btn.dataset.username}`;
   navigate("/profile/" + encodeURIComponent(btn.dataset.username));
 });
@@ -1748,6 +2012,17 @@ resultList.addEventListener("click", (e) => {
 });
 [languageButton, appLanguageButton].forEach((btn) => btn.addEventListener("click", toggleLanguage));
 
+if (inviteToGroupButton) {
+  inviteToGroupButton.addEventListener("click", () => openInviteModal().catch((e) => showError(e.message)));
+}
+if (favButton) {
+  favButton.addEventListener("click", () => {
+    const places = state.group?.places || [];
+    const place = places[state.index];
+    if (place) addToFavourites(place);
+  });
+}
+
 optionGrid.addEventListener("click", (e) => {
   const btn = e.target.closest(".option-card");
   if (!btn) return;
@@ -1757,12 +2032,14 @@ optionGrid.addEventListener("click", (e) => {
     renderDecisionStep("area");
     return;
   }
+  optionGrid.querySelectorAll(".option-card").forEach((card) => card.classList.remove("is-selected"));
+  btn.classList.add("is-selected");
   if (btn.dataset.favourite) {
     chooseOption(kind, "", btn.dataset.favourite).catch((err) => showError(err.message)); return;
   }
   if (btn.dataset.custom === "true") {
     const label = prompt(kind === "area" ? "Add an area" : "Add an activity");
-    if (!label?.trim()) return;
+    if (!label?.trim()) { btn.classList.remove("is-selected"); return; }
     chooseOption(kind, "", label.trim()).catch((err) => showError(err.message)); return;
   }
   if (btn.dataset.customLabel) {
@@ -1789,7 +2066,12 @@ pageDemo.addEventListener("click", (e) => {
   const removeFriendBtn = e.target.closest("[data-remove-friend]");
   if (removeFriendBtn) { removeFriend(removeFriendBtn.dataset.removeFriend).catch((err) => showError(err.message)); return; }
   const viewProfileBtn = e.target.closest("[data-view-profile]");
-  if (viewProfileBtn) { state.activePage = `profile:${viewProfileBtn.dataset.viewProfile}`; navigate("/profile/" + encodeURIComponent(viewProfileBtn.dataset.viewProfile)); return; }
+  if (viewProfileBtn) {
+    state.returnRoute = "/friends";
+    state.activePage = `profile:${viewProfileBtn.dataset.viewProfile}`;
+    navigate("/profile/" + encodeURIComponent(viewProfileBtn.dataset.viewProfile));
+    return;
+  }
   const openGroupBtn = e.target.closest("[data-open-group]");
   if (openGroupBtn) { codeInput.value = openGroupBtn.dataset.openGroup; state.activePage = ""; joinGroup().catch((err) => showError(err.message)); return; }
   const exitGroupBtn = e.target.closest("[data-exit-group]");
