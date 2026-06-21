@@ -270,116 +270,19 @@ const copy = {
     groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
     closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
     voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
-    aiToggleOff: "Sample places will be used", aiToggleLabel: "AI Suggestions mode"
+    aiToggleOff: "Sample places will be used", aiToggleLabel: "AI Suggestions mode",
+    subscription: "Subscription", subscribe: "Subscribe",
+    free: "Free", pro: "Pro", currentPlan: "Current Plan",
+    freePlanDesc: "Basic features for casual groups", proPlanDesc: "Everything you need for serious planning",
+    upgradeToPro: "Upgrade to Pro", subscribedThanks: "Thank you for subscribing! You now have access to all Pro features.",
+    subscriptionError: "There was an error processing your subscription. Please try again.",
+    manageSubscription: "Manage Subscription"
   },
   el: {
     login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7", createAccount: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
     enterPlanswipe: "\u0395\u03af\u03c3\u03bf\u03b4\u03bf\u03c2 \u03c3\u03c4\u03bf PlanSwipe",
     groupPlans: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1", leaveGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1", exitGroup: "\u03a0\u03af\u03c3\u03c9",
     home: "\u0391\u03c1\u03c7\u03b9\u03ba\u03ae", likedPlaces: "\u0391\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7", groups: "\u039f\u03b9 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2 \u03bc\u03bf\u03c5", friends: "\u03a6\u03af\u03bb\u03bf\u03b9",
-    past: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2", personal: "\u03a0\u03c1\u03bf\u03c3\u03c9\u03c0\u03b9\u03ba\u03ac \u03c3\u03c4\u03bf\u03b9\u03c7\u03b5\u03af\u03b1",
-    settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2", logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
-    heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
-    heroTitle: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03c0\u03bf\u03c5 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1 \u03c3\u03b1\u03c2 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9.",
-    heroDescription: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac \u03bc\u03b1\u03b6\u03af, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ad\u03c2 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03b8\u03b1 \u03b1\u03c0\u03bf\u03bb\u03b1\u03cd\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
-    heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03c0\u03bf\u03c4\u03ad \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd.",
-    whatPlanswipeIs: "\u03a4\u03b9 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c4\u03bf PlanSwipe",
-    sharedDecisionTool: "\u0388\u03bd\u03b1 \u03b5\u03c1\u03b3\u03b1\u03bb\u03b5\u03af\u03bf \u03ba\u03bf\u03b9\u03bd\u03ce\u03bd \u03b1\u03c0\u03bf\u03c6\u03ac\u03c3\u03b5\u03c9\u03bd",
-    offerText: "\u0391\u03bd\u03c4\u03af \u03b3\u03b9\u03b1 \u03b1\u03c4\u03b5\u03bb\u03b5\u03af\u03c9\u03c4\u03b5\u03c2 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03b6\u03b7\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2, \u03cc\u03bb\u03bf\u03b9 \u03b5\u03c0\u03b9\u03bb\u03ad\u03b3\u03bf\u03c5\u03bd \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03bf\u03c5\u03bd swipe \u03c3\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03ba\u03b1\u03b9 \u03b2\u03bb\u03ad\u03c0\u03bf\u03c5\u03bd \u03c0\u03bf\u03b9\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7.",
-    agreeFaster: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c0\u03b9\u03bf \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03b1",
-    agreeFasterText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af \u03c0\u03c1\u03b9\u03bd \u03b4\u03b5\u03af\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2.",
-    discoverOptions: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
-    discoverOptionsText: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03ae \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1 Google Places \u03cc\u03c4\u03b1\u03bd \u03c1\u03c5\u03b8\u03bc\u03b9\u03c3\u03c4\u03b5\u03af \u03c4\u03bf API key.",
-    voteAsGroup: "\u03a8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03c9\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1",
-    voteAsGroupText: "\u03a3\u03b7\u03bc\u03b5\u03b9\u03ce\u03c3\u03c4\u03b5 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03c9\u03c2 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9 \u03ba\u03b1\u03b9 \u03c3\u03c5\u03b3\u03ba\u03c1\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1.",
-    dinnerNearSea: "\u0392\u03c1\u03b1\u03b4\u03b9\u03bd\u03cc \u03b4\u03af\u03c0\u03bb\u03b1 \u03c3\u03c4\u03b7 \u03b8\u03ac\u03bb\u03b1\u03c3\u03c3\u03b1", glyfadaTaverna: "\u03a8\u03b1\u03c1\u03bf\u03c4\u03b1\u03b2\u03ad\u03c1\u03bd\u03b1 \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1\u03c2",
-    seeWhatFriendsThink: "\u0394\u03b5\u03af\u03c4\u03b5 \u03c4\u03b9 \u03c0\u03b9\u03c3\u03c4\u03b5\u03cd\u03bf\u03c5\u03bd \u03bf\u03b9 \u03c6\u03af\u03bb\u03bf\u03b9 \u03c3\u03b1\u03c2.", findSimilar: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c0\u03b1\u03c1\u03cc\u03bc\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7",
-    startPlanning: "\u039e\u03b5\u03ba\u03b9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf\u03bd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03b1\u03c2",
-    startPlanningText: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03bd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03ae\u03c3\u03b5\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03bd\u03ad\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ae \u03bd\u03b1 \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03c3\u03b1.",
-    createGroup: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
-    createGroupText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03bb\u03ac\u03b2\u03c4\u03b5 \u03ad\u03bd\u03b1\u03bd \u03bd\u03ad\u03bf 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc.",
-    joinGroup: "\u03a3\u03c5\u03bc\u03bc\u03b5\u03c4\u03bf\u03c7\u03ae \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1",
-    joinGroupText: "\u0395\u03b9\u03c3\u03ac\u03b3\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03b1\u03c0\u03cc \u03ad\u03bd\u03b1\u03bd \u03c6\u03af\u03bb\u03bf.",
-    groupName: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", groupCodeLabel: "8\u03c8\u03ae\u03c6\u03b9\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", back: "\u03a0\u03af\u03c3\u03c9",
-    currentGroup: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1", stepArea: "\u0392\u03ae\u03bc\u03b1 1 \u03b1\u03c0\u03cc 2", stepType: "\u0392\u03ae\u03bc\u03b1 2 \u03b1\u03c0\u03cc 2",
-    areaTitle: "\u03a0\u03bf\u03cd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03ac\u03c4\u03b5;", typeTitle: "\u03a4\u03b9 \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5;",
-    decisionHint: "\u038c\u03bb\u03bf\u03b9 \u03c0\u03c1\u03ad\u03c0\u03b5\u03b9 \u03bd\u03b1 \u03c8\u03b7\u03c6\u03af\u03c3\u03bf\u03c5\u03bd \u03c0\u03c1\u03b9\u03bd \u03c0\u03c1\u03bf\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
-    addArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2", addActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    addAreaText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae.",
-    addActivityText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
-    addOwn: "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5", liveChoices: "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
-    resultsTitle: "\u03a4\u03b9 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af\u03c4\u03b5 \u03bd\u03b1 \u03ba\u03ac\u03bd\u03b5\u03c4\u03b5", aiSuggestions: "\u03a0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 AI",
-    changeBasics: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03b2\u03b1\u03c3\u03b9\u03ba\u03ce\u03bd", noStrongChoice: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b4\u03c5\u03bd\u03b1\u03c4\u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae",
-    keepSwiping: "\u03a3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03c4\u03b5 \u03c4\u03bf swipe \u03ae \u03c0\u03b5\u03c1\u03b9\u03bc\u03ad\u03bd\u03b5\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c5\u03c0\u03cc\u03bb\u03bf\u03b9\u03c0\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
-    noFriends: "\u0394\u03b5\u03bd \u03ad\u03c7\u03b5\u03c4\u03b5 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
-    searchByUsername: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03bc\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", search: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7",
-    requests: "\u0391\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", saveProfile: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1", ageGroup: "\u0397\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1", bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc", preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
-    logPastActivity: "\u039a\u03b1\u03c4\u03b1\u03c7\u03ce\u03c1\u03b7\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    area: "\u03a0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae", activity: "\u0394\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1", place: "\u039c\u03ad\u03c1\u03bf\u03c2",
-    saveActivity: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    suggestedPlaces: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03b9\u03bd\u03cc\u03bc\u03b5\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7", noLikedPlaces: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b1\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7",
-    notifications: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2", friendRequestNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03b1\u03b9\u03c4\u03b7\u03bc\u03ac\u03c4\u03c9\u03bd \u03c6\u03b9\u03bb\u03af\u03b1\u03c2",
-    groupInviteNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd", privacy: "\u0391\u03c0\u03cc\u03c1\u03c1\u03b7\u03c4\u03bf",
-    showOnlineStatus: "\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 online \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2", showProfilePublicly: "\u0394\u03b7\u03bc\u03cc\u03c3\u03b9\u03bf \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    saveSettings: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c9\u03bd", settingsSaved: "\u039f\u03b9 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b1\u03bd",
-    deleteAccount: "\u0394\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
-    deleteAccountConfirm: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c8\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc; \u0391\u03c5\u03c4\u03ae \u03b7 \u03b5\u03bd\u03ad\u03c1\u03b3\u03b5\u03b9\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03b9\u03b1\u03c4\u03ae.",
-    deleteAccountSuccess: "\u039f \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2.",
-    removeFriend: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03c6\u03af\u03bb\u03bf\u03c5", removeFriendConfirm: "\u039d\u03b1 \u03b1\u03c6\u03b1\u03b9\u03c1\u03b5\u03b8\u03b5\u03af \u03b1\u03c5\u03c4\u03cc\u03c2 \u03bf \u03c6\u03af\u03bb\u03bf\u03c2;",
-    activeGroups: "\u0395\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", pastGroups: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
-    noActiveGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", noPastGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
-    you: "\u03b5\u03c3\u03b5\u03af\u03c2", friends: "\u03a6\u03af\u03bb\u03bf\u03b9", requestSent: "\u03a4\u03bf \u03b1\u03af\u03c4\u03b7\u03bc\u03b1 \u03c3\u03c4\u03ac\u03bb\u03b8\u03b7\u03ba\u03b5",
-    noPending: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03ba\u03ba\u03c1\u03b5\u03bc\u03ae \u03b1\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", inboxClear: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
-    noPastActivities: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
-    continueBrowsing: "Continue Browsing",
-    loadingPlaces: "Loading more places\u2026",
-    noMoreSuggestions: "No more places available",
-    exitGroupPermanent: "Exit Group Permanently",
-    confirmExitGroup: "Are you sure you want to permanently leave this group?",
-    accountManagement: "Account Management",
-    choiceNo: "No", choiceMaybe: "Maybe", choiceYes: "Yes",
-    searchFrom: "Search from", searchGooglePlaces: "Google Places",
-    searchSample: "sample data", searchCustom: "custom group idea",
-    areaSelected: "Area agreed! Now vote on an activity type.",
-    fridayCrew: "Friday crew",
-    forgotPassword: "Forgot Password?", username: "Username", email: "Email", password: "Password",
-    oldPassword: "Old password", newPassword: "New password", verifyPassword: "Verify new password",
-    changePassword: "Change Password", passwordChanged: "Password changed successfully",
-    passwordMismatch: "New passwords do not match",
-    editProfilePicture: "Edit profile picture",
-    bioPlaceholder: "Tell friends what kind of plans you like.",
-    favouriteAreas: "Favourite Areas", favouriteActivities: "Favourite Activities",
-    favouritePlaces: "Favourite Places",
-    addAnotherArea: "Add another area", addAnotherActivity: "Add another activity",
-    addAnotherPlace: "Add another place", useFavourite: "Use a favourite", selectSpecificArea: "Select a specific area",
-    addYourOwnPlace: "Add your Own Place", selectThisPlace: "Select this Place", selectedThisPlace: "Selected",
-    bookNow: "Book now", website: "Website", reservations: "Reservations", noBookingDetails: "No website or phone number is available yet.",
-    passwordWeak: "Weak password", passwordOk: "Password is OK", passwordStrong: "Strong password",
-    passwordRequirements: "Use at least 8 characters with uppercase, lowercase, and a number.",
-    ageGroupRequired: "You must first select your age group before entering a group.",
-    viewProfile: "View Profile",
-    addToFavourites: "Add to Favourites",
-    favourited: "Favourited",
-    inviteToGroup: "Invite to Group",
-    inviteFriends: "Invite friends",
-    inviteSelectFriends: "Select in-app friends to invite to this group.",
-    inviteSent: "Invites sent!",
-    noFriendsToInvite: "Add friends first to invite them to a group.",
-    sendInvites: "Send Invites",
-    cancel: "Cancel",
-    ok: "OK",
-    selectedCount: "selected",
-    groupChat: "Group Chat", sendMessage: "Send", messagePlaceholder: "Type a message\u2026",
-    closeChat: "Close", waitingForOthers: "Waiting for others to vote\u2026",
-    voted: "voted", of: "of", aiToggleOn: "AI suggestions will be used",
-    aiToggleOff: "Sample places will be used", aiToggleLabel: "AI Suggestions mode"
-  },
-  el: {
-    login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7", createAccount: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
-    enterPlanswipe: "\u0395\u03af\u03c3\u03bf\u03b4\u03bf\u03c2 \u03c3\u03c4\u03bf PlanSwipe",
-    groupPlans: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1", leaveGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1", exitGroup: "\u03a0\u03af\u03c3\u03c9",
-    home: "\u0391\u03c1\u03c7\u03b9\u03ba\u03ae", likedPlaces: "\u0391\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ac\u03c1\u03b7", groups: "\u039f\u03b9 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2 \u03bc\u03bf\u03c5", friends: "\u03a6\u03af\u03bb\u03bf\u03b9",
     past: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2", personal: "\u03a0\u03c1\u03bf\u03c3\u03c9\u03c0\u03b9\u03ba\u03ac \u03c3\u03c4\u03bf\u03b9\u03c7\u03b5\u03af\u03b1",
     settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2", logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
     heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
@@ -436,7 +339,7 @@ const copy = {
     noPending: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03ba\u03ba\u03c1\u03b5\u03bc\u03ae \u03b1\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", inboxClear: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
     noPastActivities: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
     continueBrowsing: "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b2\u03bb\u03ad\u03c0\u03b5\u03c4\u03b5 \u03bc\u03ad\u03c1\u03b7;",
-    noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b5\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2", aiGenerating: "\u039b\u03ae\u03c8\u03b7 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd AI\u2026",
+    noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03bc\u03b5 \u03c4\u03b9\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c3\u03b1\u03c2. \u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03bb\u03bb\u03ac\u03be\u03b5\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac;",
     exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
     confirmExitGroup: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03c4\u03b5 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1;",
     accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
@@ -462,7 +365,13 @@ const copy = {
     messagePlaceholder: "\u0393\u03c1\u03ac\u03c8\u03b5 \u03bc\u03ae\u03bd\u03c5\u03bc\u03b1\u2026", closeChat: "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf",
     waitingForOthers: "\u0391\u03bd\u03b1\u03bc\u03bf\u03bd\u03ae \u03b3\u03b9\u03b1 \u03c8\u03ae\u03c6\u03bf\u03c5\u03c2\u2026", voted: "\u03c8\u03ae\u03c6\u03b9\u03c3\u03b5", of: "\u03b1\u03c0\u03cc",
     aiToggleOn: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2",
-    aiToggleOff: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1", aiToggleLabel: "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd"
+    aiToggleOff: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1", aiToggleLabel: "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd",
+    subscription: "\u03a3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae", subscribe: "\u0395\u03b3\u03b3\u03c1\u03b1\u03c6\u03ae",
+    free: "\u0394\u03c9\u03c1\u03b5\u03ac\u03bd", pro: "Pro", currentPlan: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03c3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae",
+    freePlanDesc: "\u0392\u03b1\u03c3\u03b9\u03ba\u03ad\u03c2 \u03b4\u03c5\u03bd\u03b1\u03c4\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03b3\u03b9\u03b1 \u03b1\u03c0\u03bb\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", proPlanDesc: "\u038c\u03bb\u03b1 \u03cc\u03c3\u03b1 \u03c7\u03c1\u03b5\u03b9\u03ac\u03b6\u03b5\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03c3\u03bf\u03b2\u03b1\u03c1\u03cc \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc",
+    upgradeToPro: "\u0391\u03bd\u03b1\u03b2\u03ac\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c3\u03b5 Pro", subscribedThanks: "\u0395\u03c5\u03c7\u03b1\u03c1\u03b9\u03c3\u03c4\u03bf\u03cd\u03bc\u03b5! \u03a4\u03ce\u03c1\u03b1 \u03ad\u03c7\u03b5\u03c4\u03b5 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7 \u03c3\u03b5 \u03cc\u03bb\u03b5\u03c2 \u03c4\u03b9\u03c2 Pro \u03b4\u03c5\u03bd\u03b1\u03c4\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2.",
+    subscriptionError: "\u03a5\u03c0\u03ae\u03c1\u03be\u03b5 \u03c3\u03c6\u03ac\u03bb\u03bc\u03b1 \u03ba\u03b1\u03c4\u03ac \u03c4\u03b7\u03bd \u03b5\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1. \u03a0\u03b1\u03c1\u03b1\u03ba\u03b1\u03bb\u03ce \u03b4\u03bf\u03ba\u03b9\u03bc\u03ac\u03c3\u03c4\u03b5 \u03be\u03b1\u03bd\u03ac.",
+    manageSubscription: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u03a3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2"
   }
 };
 
@@ -495,7 +404,7 @@ Object.assign(copy.el, {
   ok: "OK",
   selectedCount: "\u03b5\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b1\u03bd",
   noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03bc\u03b5 \u03c4\u03b9\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c3\u03b1\u03c2. \u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03bb\u03bb\u03ac\u03be\u03b5\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac;",
-  agreeFasterText: "\u0388\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2 \u03bc\u03b1\u03b6\u03af. \u0387\u03c4\u03b1 \u03b4\u03b5\u03bd \u03c7\u03b1\u03bd\u03b5\u03af \u03b7 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1.",
+  agreeFasterText: "\u0388\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af. \u0387\u03c4\u03b1 \u03b4\u03b5\u03bd \u03c7\u03b1\u03bd\u03b5\u03af \u03b7 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1.",
   discoverOptionsText: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ad\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps \u03b3\u03b9\u03b1 \u03c4\u03b7\u03bd \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03c4\u03b7\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03c3\u03b1\u03c2.",
   voteAsGroupText: "\u039a\u03ac\u03bd\u03c4\u03b5 swipe \u03ba\u03b1\u03b9 \u03c8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9. \u0394\u03b5\u03af\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1 \u03c0\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7."
 });
@@ -1153,7 +1062,7 @@ function onUrlChange() {
   if (route === "/home") { state.showHero = true; state.activePage = ""; renderApp(); return; }
   if (route === "/main") { state.showHero = false; state.activePage = ""; renderApp(); return; }
 
-  const pageMatch = route.match(/^\/(groups|friends|likedplaces|past|personal|settings)$/);
+  const pageMatch = route.match(/^\/(groups|friends|likedplaces|past|personal|settings|subscription)$/);
   if (pageMatch) { state.showHero = false; state.activePage = pageMatch[1]; renderApp(); return; }
 
   const profileMatch = route.match(/^\/profile\/(.+)$/);
@@ -1269,7 +1178,6 @@ async function refreshGroup() {
     const data = await api(`/api/groups/${state.groupCode}`);
     state.group = data.group;
     state.pollErrorCount = 0;
-    // Don't re-render full app if on a profile page — just update notifications
     if (state.activePage) {
       return;
     }
@@ -1449,6 +1357,77 @@ async function continueBrowsing() {
   }
 }
 
+// ====== SUBSCRIPTION PAGE ======
+async function renderSubscriptionPage() {
+  pageEyebrow.textContent = t("subscription");
+  pageTitle.textContent = t("subscription");
+  let currentPlan = "free";
+  try {
+    const subData = await api(`/api/subscription/status?username=${encodeURIComponent(currentUsername())}`);
+    currentPlan = subData.plan || "free";
+  } catch (_) {}
+  const isPro = currentPlan === "pro";
+  pageDemo.innerHTML = `
+    <div class="subscription-layout">
+      <div class="subscription-card${!isPro ? " pro-card" : ""}">
+        <h3>${t("free")}</h3>
+        <div class="price">\u20ac0 <small>/month</small></div>
+        <p>${t("freePlanDesc")}</p>
+        <ul class="features">
+          <li>Join up to 3 groups</li>
+          <li>Basic swiping & voting</li>
+          <li>Limited group chat</li>
+          <li>Standard support</li>
+          <li class="disabled">AI-powered suggestions</li>
+          <li class="disabled">Priority support</li>
+          <li class="disabled">Unlimited chat history</li>
+        </ul>
+        ${!isPro ? `<span class="current-plan-badge">${t("currentPlan")}</span>` : `<button class="btn-ghost" type="button" disabled>${t("currentPlan")}</button>`}
+      </div>
+      <div class="subscription-card pro-card${isPro ? "" : ""}">
+        ${isPro ? `<span class="pro-badge">${t("pro")}</span>` : ""}
+        <h3>${t("pro")}</h3>
+        <div class="price">\u20ac5.99 <small>/month</small></div>
+        <p>${t("proPlanDesc")}</p>
+        <ul class="features">
+          <li>Unlimited groups</li>
+          <li>AI-powered suggestions</li>
+          <li>Priority support</li>
+          <li>Advanced filters</li>
+          <li>Unlimited chat history</li>
+          <li>Early access to new features</li>
+        </ul>
+        ${isPro ? `<span class="current-plan-badge">${t("currentPlan")}</span>` : `<button class="btn-primary" type="button" id="upgradeToProBtn">${t("upgradeToPro")}</button>`}
+      </div>
+    </div>`;
+}
+
+async function handleUpgradeToPro() {
+  const btn = document.querySelector("#upgradeToProBtn");
+  if (btn) { btn.disabled = true; btn.textContent = t("loadingPlaces"); }
+  try {
+    const data = await api("/api/subscription/create-checkout", {
+      method: "POST",
+      body: {
+        username: currentUsername(),
+        priceId: "pro_monthly",
+        successUrl: window.location.origin + "/subscription?success=1",
+        cancelUrl: window.location.origin + "/subscription?canceled=1"
+      }
+    });
+    if (data.demo) {
+      alert(t("subscribedThanks"));
+      await renderSubscriptionPage();
+    } else if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch (e) {
+    alert(t("subscriptionError"));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = t("upgradeToPro"); }
+  }
+}
+
 // ====== PAGE PANEL RENDERS ======
 const pageContent = {
   likedplaces: { title: "Liked Places", eyebrow: "History" },
@@ -1456,7 +1435,8 @@ const pageContent = {
   friends: { title: "Friends", eyebrow: "People" },
   past: { title: "Past Activities", eyebrow: "History" },
   personal: { title: "Personal Information", eyebrow: "Profile" },
-  settings: { title: "Settings", eyebrow: "Account" }
+  settings: { title: "Settings", eyebrow: "Account" },
+  subscription: { title: "Subscription", eyebrow: "Plan" }
 };
 
 function preferenceList(title, key, items, placeholder) {
@@ -1553,7 +1533,7 @@ async function renderGroupsPage() {
 
   let html = `<h3 class="group-section-title">${t("activeGroups")}</h3>`;
   html += active.length
-    ? active.map((g) => `<article class="group-card"><h3>${escapeHtml(g.name)}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></article>`).join("")
+    ? active.map((g) => `<article class="group-card"><h3>${escapeHtml(g.name)}${g.unreadCount > 0 ? `<span class="group-unread-badge">${g.unreadCount > 99 ? "99+" : g.unreadCount}</span>` : ""}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></article>`).join("")
     : `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
 
   html += `<h3 class="group-section-title">${t("pastGroups")}</h3>`;
@@ -1697,6 +1677,11 @@ function renderProfilePage() {
   if (state.activePage === "settings") {
     state.pageShellRendered = "settings";
     renderSettingsPage().catch((e) => showError(e.message));
+    return;
+  }
+  if (state.activePage === "subscription") {
+    state.pageShellRendered = "subscription";
+    renderSubscriptionPage().catch((e) => showError(e.message));
     return;
   }
   if (state.activePage.startsWith("profile:")) {
@@ -1929,7 +1914,7 @@ async function boot() {
   if (isLoggedIn() && state.user && state.groupCode) {
     startPolling();
     await refreshGroup();
-    if (["/groups", "/friends", "/likedplaces", "/past", "/personal", "/settings"].includes(window.location.pathname)) {
+    if (["/groups", "/friends", "/likedplaces", "/past", "/personal", "/settings", "/subscription"].includes(window.location.pathname)) {
       onUrlChange();
     }
     return;
@@ -1972,7 +1957,7 @@ profileMenu.addEventListener("click", (e) => {
     state.activePage = btn.dataset.page;
     state.returnRoute = "/main";
     profileMenu.classList.add("is-hidden");
-    navigate({ groups: "/groups", friends: "/friends", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings" }[btn.dataset.page] || "/main");
+    navigate({ groups: "/groups", friends: "/friends", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings", subscription: "/subscription" }[btn.dataset.page] || "/main");
     return;
   }
   if (e.target.closest("#logoutButton")) profileMenu.classList.add("is-hidden");
@@ -2103,6 +2088,8 @@ pageDemo.addEventListener("click", (e) => {
       .catch((err) => showError(err.message));
     return;
   }
+  const upgradeBtn = e.target.closest("#upgradeToProBtn");
+  if (upgradeBtn) { handleUpgradeToPro().catch((err) => showError(err.message)); return; }
 });
 
 pageDemo.addEventListener("change", (e) => { if (e.target.id === "profilePictureInput") updateProfilePicture(e.target.files?.[0]).catch((err) => showError(err.message)); });
