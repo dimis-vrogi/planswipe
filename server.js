@@ -258,6 +258,7 @@ async function getUnreadMessageCount(username) {
       .from("group_messages")
       .select("id", { count: "exact" })
       .eq("group_code", group.code)
+      .neq("username", username)
       .gt("created_at", since);
     if (!error && messages) {
       totalUnread += messages.length;
@@ -281,6 +282,7 @@ async function getGroupUnreadCounts(username) {
       .from("group_messages")
       .select("id", { count: "exact" })
       .eq("group_code", group.code)
+      .neq("username", username)
       .gt("created_at", since);
     if (!error && messages) {
       counts[group.code] = messages.length;
