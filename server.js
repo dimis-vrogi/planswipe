@@ -5,6 +5,7 @@ const crypto = require("crypto");
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcrypt");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
 const publicRoot = path.resolve(__dirname, "public");
@@ -27,6 +28,11 @@ if (!supabase) {
   console.error("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env file.");
   process.exit(1);
 }
+
+// ====== STRIPE PRICES (static for demo) ======
+const STRIPE_PRICE_FREE = "free";
+const STRIPE_PRICE_PRO_MONTHLY = 599; // $5.99 in cents
+const STRIPE_PRICE_PRO_YEARLY = 4999; // $49.99 in cents
 
 // ====== RATE LIMITER ======
 const rateLimitMap = new Map();
@@ -235,6 +241,52 @@ async function getAllProfiles() {
   const { data, error } = await supabase.from("profiles").select("*");
   if (error) throw new Error(error.message);
   return data || [];
+}
+async function getUnreadMessageCount(username) {
+  if (!username) return 0;
+  const profile = await getProfileByUsername(username);
+  if (!profile) return 0;
+  const profileData = profile.profile || {};
+  const lastReadTimestamps = profileData.lastReadTimestamps || {};
+  const allGroups = await getAllGroups();
+  let totalUnread = 0;
+  for (const groupRow of allGroups) {
+    const group = groupRow.data;
+    if (!group || !group.members?.some((m) => m.username === username)) continue;
+    const since = lastReadTimestamps[group.code] || "1970-01-01T00:00:00Z";
+    const { data: messages, error } = await supabase
+      .from("group_messages")
+      .select("id", { count: "exact" })
+      .eq("group_code", group.code)
+      .gt("created_at", since);
+    if (!error && messages) {
+      totalUnread += messages.length;
+    }
+  }
+  return totalUnread;
+}
+async function getGroupUnreadCounts(username) {
+  if (!username) return {};
+  const profile = await getProfileByUsername(username);
+  if (!profile) return {};
+  const profileData = profile.profile || {};
+  const lastReadTimestamps = profileData.lastReadTimestamps || {};
+  const allGroups = await getAllGroups();
+  const counts = {};
+  for (const groupRow of allGroups) {
+    const group = groupRow.data;
+    if (!group || !group.members?.some((m) => m.username === username)) continue;
+    const since = lastReadTimestamps[group.code] || "1970-01-01T00:00:00Z";
+    const { data: messages, error } = await supabase
+      .from("group_messages")
+      .select("id", { count: "exact" })
+      .eq("group_code", group.code)
+      .gt("created_at", since);
+    if (!error && messages) {
+      counts[group.code] = messages.length;
+    }
+  }
+  return counts;
 }
 
 // ====== GROUP HELPERS ======
@@ -584,6 +636,103 @@ async function handleApi(request, response) {
     sendJson(response, 200, { areas: areaOptions, types: typeOptions }); return;
   }
 
+  // ── Subscriptions ──
+  if (request.method === "GET" && parts[1] === "subscription" && parts[2] === "status") {
+    const username = url.searchParams.get("username") || "";
+    const profile = await getProfileByUsername(username);
+    if (!profile) { sendJson(response, 200, { plan: "free" }); return; }
+    const sub = profile.profile?.subscription || {};
+    sendJson(response, 200, { plan: sub.plan || "free", status: sub.status || "active", expiry: sub.expiry || null });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "subscription" && parts[2] === "create-checkout") {
+    const body = await readBody(request);
+    const username = body.username || "";
+    const priceId = body.priceId || "pro_monthly";
+    const successUrl = body.successUrl || "http://localhost:8080/subscription?success=1";
+    const cancelUrl = body.cancelUrl || "http://localhost:8080/subscription?canceled=1";
+
+    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_placeholder") {
+      // Demo mode - simulate success
+      const profile = await getProfileByUsername(username);
+      if (profile) {
+        const updatedProfile = { ...(profile.profile || {}), subscription: { plan: "pro", status: "active", expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date().toISOString() } };
+        await upsertProfile({ username, email: profile.email || "", profile: updatedProfile });
+      }
+      sendJson(response, 200, { url: successUrl, demo: true });
+      return;
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        mode: "subscription",
+        line_items: [{
+          price: priceId,
+          quantity: 1
+        }],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: { username }
+      });
+      sendJson(response, 200, { url: session.url, sessionId: session.id });
+    } catch (e) {
+      sendJson(response, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "subscription" && parts[2] === "webhook") {
+    let rawBody = "";
+    request.on("data", (chunk) => { rawBody += chunk; });
+    request.on("end", async () => {
+      const sig = request.headers["stripe-signature"] || "";
+      let event;
+      try {
+        if (process.env.STRIPE_WEBHOOK_SECRET) {
+          event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+        } else {
+          event = JSON.parse(rawBody);
+        }
+      } catch (e) {
+        response.writeHead(400); response.end(`Webhook Error: ${e.message}`);
+        return;
+      }
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        const username = session.metadata?.username;
+        if (username) {
+          const profile = await getProfileByUsername(username);
+          if (profile) {
+            const updatedProfile = { ...(profile.profile || {}), subscription: { plan: "pro", status: "active", stripeSessionId: session.id, updatedAt: new Date().toISOString() } };
+            await upsertProfile({ username, email: profile.email || "", profile: updatedProfile });
+          }
+        }
+      }
+      sendJson(response, 200, { received: true });
+    });
+    return;
+  }
+
+  // ── Update last read timestamps (for chat unread tracking) ──
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "mark-read") {
+    const groupCode = parts[2];
+    const body = await readBody(request);
+    const username = body.username || "";
+    if (username && groupCode) {
+      const profile = await getProfileByUsername(username);
+      if (profile) {
+        const profileData = profile.profile || {};
+        const lastReadTimestamps = profileData.lastReadTimestamps || {};
+        lastReadTimestamps[groupCode] = new Date().toISOString();
+        await upsertProfile({ username, email: profile.email || "", profile: { ...profileData, lastReadTimestamps } });
+      }
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
   // ── Account ──
   if (request.method === "GET" && parts[1] === "account") {
     const username = url.searchParams.get("username") || "";
@@ -644,7 +793,8 @@ async function handleApi(request, response) {
     const hashed = await hashPassword(body.password);
     const profile = {
       password: hashed, settings: {}, friends: [], friendRequests: [],
-      pastActivities: [], preferences: { areas: [], activities: [], places: [] }
+      pastActivities: [], preferences: { areas: [], activities: [], places: [] },
+      subscription: { plan: "free", status: "active" }
     };
     await upsertProfile({ username: body.username, email: body.email, profile });
     sendJson(response, 200, { username: body.username, email: body.email, profile });
@@ -663,7 +813,8 @@ async function handleApi(request, response) {
     } else {
       const profile = {
         settings: {}, friends: [], friendRequests: [], pastActivities: [],
-        preferences: { areas: [], activities: [], places: [] }
+        preferences: { areas: [], activities: [], places: [] },
+        subscription: { plan: "free", status: "active" }
       };
       if (body.password && isValidPassword(body.password)) {
         profile.password = await hashPassword(body.password);
@@ -835,7 +986,15 @@ async function handleApi(request, response) {
       .filter((g) => g.data?.members?.some((m) => m.username === username))
       .map((g) => ({ name: g.data.name, code: g.data.code, memberCount: g.data.members?.length || 0 }));
     const pastGroups = profile?.profile?.pastGroups || [];
-    sendJson(response, 200, { groups: userGroups, pastGroups });
+
+    // Add unread message counts for each active group
+    const unreadCounts = await getGroupUnreadCounts(username);
+    const userGroupsWithUnread = userGroups.map((g) => ({
+      ...g,
+      unreadCount: unreadCounts[g.code] || 0
+    }));
+
+    sendJson(response, 200, { groups: userGroupsWithUnread, pastGroups });
     return;
   }
 
@@ -1181,7 +1340,8 @@ async function handleApi(request, response) {
     if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 }); return; }
     const friendRequests = profile.profile?.friendRequests?.length || 0;
     const groupInvites = profile.profile?.groupInvites?.length || 0;
-    sendJson(response, 200, { total: friendRequests + groupInvites, friendRequests, groupInvites, messages: 0 });
+    const unreadMessages = await getUnreadMessageCount(username);
+    sendJson(response, 200, { total: friendRequests + groupInvites + unreadMessages, friendRequests, groupInvites, messages: unreadMessages });
     return;
   }
 
