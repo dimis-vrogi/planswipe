@@ -952,7 +952,8 @@ async function loadChatMessages(scrollToBottom) {
   const container = document.querySelector("#chatMessages");
   if (!container) return;
   try {
-    const params = state.chatLastTimestamp ? `?since=${encodeURIComponent(state.chatLastTimestamp)}` : "";
+    // When opening chat (scrollToBottom=true), always load ALL messages
+    const params = scrollToBottom ? "" : (state.chatLastTimestamp ? `?since=${encodeURIComponent(state.chatLastTimestamp)}` : "");
     const data = await api(`/api/groups/${state.groupCode}/messages${params}`);
     const messages = data.messages || [];
 
@@ -1027,6 +1028,22 @@ async function refreshNotifications() {
       btn.querySelector(".notif-count")?.remove();
       let count = 0;
       if (btn.dataset.page === "friends") count = data.friendRequests || 0;
+      if (btn.dataset.page === "groups") {
+        // Fetch unread group message counts
+        api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`).then((gData) => {
+          const groupsWithUnread = (gData.groups || []).filter((g) => g.unreadCount > 0).length;
+          const groupsBtn = [...profileMenu.querySelectorAll("button[data-page]")].find((b) => b.dataset.page === "groups");
+          if (groupsBtn && groupsWithUnread > 0) {
+            groupsBtn.classList.add("has-notif");
+            let sp = groupsBtn.querySelector(".notif-count");
+            if (!sp) { sp = document.createElement("span"); sp.className = "notif-count"; groupsBtn.appendChild(sp); }
+            sp.textContent = `(${groupsWithUnread})`;
+          } else if (groupsBtn) {
+            groupsBtn.classList.remove("has-notif");
+            groupsBtn.querySelector(".notif-count")?.remove();
+          }
+        }).catch(() => {});
+      }
       if (count > 0) {
         btn.classList.add("has-notif");
         const sp = document.createElement("span");
@@ -1474,7 +1491,7 @@ async function renderPersonalInformation() {
         <button class="btn-ghost" type="button" id="changePasswordButton">${t("changePassword")}</button>
       </label>
       <label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="3" placeholder="${t("bioPlaceholder")}">${escapeHtml(profile.bio || "")}</textarea></label>
-      <button class="btn-primary" type="button" id="saveProfileButton">${t("saveProfile")}</button>
+      <button class="btn-ghost" type="button" id="saveProfileButton">${t("saveProfile")}</button>
     </section><section><h3>${t("preferences")}</h3>
       ${preferenceList(t("favouriteAreas"), "areas", preferences.areas, t("addAnotherArea"))}
       ${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}
