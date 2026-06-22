@@ -400,6 +400,13 @@ const activityIncludedTypes = {
   movies: "movie_theater"
 };
 
+// Location bounds for stricter area filtering
+const areaBounds = {
+  north_suburbs: { low: { lat: 38.00, lng: 23.75 }, high: { lat: 38.12, lng: 23.90 } },
+  athens_center: { low: { lat: 37.96, lng: 23.70 }, high: { lat: 38.01, lng: 23.77 } },
+  south_suburbs: { low: { lat: 37.82, lng: 23.68 }, high: { lat: 37.95, lng: 23.78 } }
+};
+
 function findGroupOption(group, kind, optionId) {
   const fromGroup = (group?.options?.[kind] || []).find((o) => o.id === optionId);
   if (fromGroup) return fromGroup;
@@ -500,10 +507,35 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
     "places.internationalPhoneNumber"
   ].join(",");
 
+  // Get location bounds for stricter area filtering
+  const getLocationBounds = (areaId) => {
+    const bounds = areaBounds[areaId];
+    if (!bounds) return null;
+    return {
+      north: bounds.high.lat,
+      south: bounds.low.lat,
+      east: bounds.high.lng,
+      west: bounds.low.lng
+    };
+  };
+
   async function runSearch(useIncludedType) {
     const body = { textQuery: query, maxResultCount: 20, languageCode: "en" };
     const includedType = activityIncludedTypes[typeId];
     if (useIncludedType && includedType) body.includedType = includedType;
+    // Add location restriction to only show places in the selected area
+    const locationBounds = getLocationBounds(typeId === "restaurant" || typeId === "bars" || typeId === "movies" || typeId === "gaming" ? areaOptions.find(o => o.queryArea === query.split(" in ")[1]?.split(",")[0]?.trim() + " suburbs" || o.queryArea === query.split(" in ")[1]?.trim())?.id : null);
+    // Determine which area option matches the query
+    const matchedArea = areaOptions.find(o => query.toLowerCase().includes(o.queryArea.toLowerCase()));
+    const matchedBounds = matchedArea ? getLocationBounds(matchedArea.id) : null;
+    if (matchedBounds) {
+      body.locationRestriction = {
+        rectangle: {
+          low: { latitude: matchedBounds.south, longitude: matchedBounds.west },
+          high: { latitude: matchedBounds.north, longitude: matchedBounds.east }
+        }
+      };
+    }
     const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: {
@@ -538,10 +570,13 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
   }
 }
 
-async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5, ageGroups = []) {
+async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5, ageGroups = [], pastActivities = [], likedPlaces = []) {
   if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
   try {
     const ageContext = ageGroups.length ? `Age groups in the group: ${ageGroups.join(", ")}.` : "Age groups are unknown.";
+    const pastContext = pastActivities.length ? `Group members' past activities (places they've been to): ${pastActivities.join(", ")}.` : "";
+    const likedContext = likedPlaces.length ? `Group members' liked places (places they voted Yes on): ${likedPlaces.join(", ")}.` : "";
+    const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) Past activities (places similar to where they've been before) 2) Liked places (places similar to ones they've liked) 3) Age group suitability. Return the most relevant ones first.";
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
@@ -549,7 +584,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
         model: openAiModel,
         messages: [
           { role: "system", content: "You select places from a provided list only. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
-          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} Consider age suitability, especially minors, when ranking. Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
+          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${pastContext} ${likedContext} ${rankingInstructions} Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
         temperature: 0.4, max_tokens: 500
       })
