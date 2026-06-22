@@ -115,8 +115,9 @@ h3 {
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: scale(0.96);
   box-shadow: 0 2px 8px rgba(48, 24, 96, 0.2);
+  background: #4a2a8a;
 }
 
 .btn-outline {
