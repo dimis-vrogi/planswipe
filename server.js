@@ -574,8 +574,18 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
   if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
   try {
     const ageContext = ageGroups.length ? `Age groups in the group: ${ageGroups.join(", ")}.` : "Age groups are unknown.";
-    const pastContext = pastActivities.length ? `Group members' past activities (places they've been to): ${pastActivities.join(", ")}.` : "";
-    const likedContext = likedPlaces.length ? `Group members' liked places (places they voted Yes on): ${likedPlaces.join(", ")}.` : "";
+    // Filter past activities and liked places to only include those matching the current activity type
+    const activityLower = (activity || "").toLowerCase();
+    const filteredPast = pastActivities.filter((a) => {
+      const act = (a.activity || a || "").toLowerCase();
+      return act.includes(activityLower) || activityLower.includes(act);
+    });
+    const filteredLiked = likedPlaces.filter((p) => {
+      const act = (p.activity || p || "").toLowerCase();
+      return act.includes(activityLower) || activityLower.includes(act);
+    });
+    const pastContext = filteredPast.length ? `Group members' past activities matching "${activity}" (places they've been to): ${filteredPast.join(", ")}.` : "";
+    const likedContext = filteredLiked.length ? `Group members' liked places matching "${activity}" (places they voted Yes on): ${filteredLiked.join(", ")}.` : "";
     const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) Past activities (places similar to where they've been before) 2) Liked places (places similar to ones they've liked) 3) Age group suitability. Return the most relevant ones first.";
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
