@@ -34,7 +34,8 @@ const state = {
   returnRoute: "/main",
   votingInProgress: false,
   placesExhausted: false,
-  showAgeGroupModal: false
+  showAgeGroupModal: false,
+  showResetPasswordForm: false
 };
 
 // ====== DOM REFERENCES ======
@@ -79,6 +80,7 @@ const noButton             = document.querySelector("#noButton");
 const maybeButton          = document.querySelector("#maybeButton");
 const yesButton            = document.querySelector("#yesButton");
 const favButton            = document.querySelector("#favButton");
+const reviewsButton        = document.querySelector("#reviewsButton");
 const resultList           = document.querySelector("#resultList");
 const resultsSelectedCount = document.querySelector("#resultsSelectedCount");
 const inviteToGroupButton  = document.querySelector("#inviteToGroupButton");
@@ -185,7 +187,7 @@ function findOption(kind, id) {
 const copy = {
   en: {
     login: "Login", createAccount: "Create Account", enterPlanswipe: "Enter PlanSwipe",
-    groupPlans: "Group plans", leaveGroup: "Exit Group", exitGroup: "Back",
+    groupPlans: "Group plans", leaveGroup: "Exit Current Group", exitGroup: "Back",
     home: "Home", likedPlaces: "Liked Places", groups: "My Groups", friends: "Friends",
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
     heroEyebrow: "Group plans made easier",
@@ -244,7 +246,7 @@ const copy = {
     searchSample: "sample data", searchCustom: "custom group idea",
     areaSelected: "Area agreed! Now vote on an activity type.",
     fridayCrew: "Friday crew",
-    forgotPassword: "Forgot Password?", username: "Username", email: "Email", password: "Password",
+    forgotPassword: "Recover Password", username: "Username", email: "Email", password: "Password",
     oldPassword: "Old password", newPassword: "New password", verifyPassword: "Verify new password",
     changePassword: "Change Password", passwordChanged: "Password changed successfully",
     passwordMismatch: "New passwords do not match",
@@ -297,12 +299,26 @@ const copy = {
     decline: "Decline",
     groupInvites: "Group Invites",
     noGroupInvites: "No group invites",
-    includedInYourPlanPro: "Included in your Plan"
+    includedInYourPlanPro: "Included in your Plan",
+    nothingSaved: "Nothing saved yet.",
+    optional: "optional",
+    reviews: "Reviews",
+    noReviews: "No reviews available.",
+    remove: "Remove",
+    confirmRemoveActivity: "Remove this past activity?",
+    recoverPassword: "Recover Password",
+    newPasswordPlaceholder: "New password",
+    confirmPasswordPlaceholder: "Confirm new password",
+    resetPassword: "Reset Password",
+    passwordResetSuccess: "Password reset successfully! You can now log in.",
+    selectedBy: "selected by",
+    people: "people",
+    person: "person"
   },
   el: {
     login: "Σύνδεση", createAccount: "Δημιουργία λογαριασμού",
     enterPlanswipe: "Είσοδος στο PlanSwipe",
-    groupPlans: "Ομαδικά σχέδια", leaveGroup: "Έξοδος από ομάδα", exitGroup: "Πίσω",
+    groupPlans: "Ομαδικά σχέδια", leaveGroup: "Έξοδος από τρέχουσα ομάδα", exitGroup: "Πίσω",
     home: "Αρχική", likedPlaces: "Αρεστά μέρη", groups: "Οι ομάδες μου", friends: "Φίλοι",
     past: "Παλιές δραστηριότητες", personal: "Προσωπικά στοιχεία",
     settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
@@ -369,7 +385,7 @@ const copy = {
     searchSample: "δείγματα δεδομένων", searchCustom: "προσαρμοσμένη ιδέα",
     areaSelected: "Συμφωνήθηκε περιοχή! Τώρα ψηφίστε για δραστηριότητα.",
     fridayCrew: "Παρέα Παρασκευής",
-    forgotPassword: "Ξεχάσατε τον κωδικό;",
+    forgotPassword: "Ανάκτηση Κωδικού",
     username: "Όνομα χρήστη", email: "Email", password: "Κωδικός",
     oldPassword: "Παλιός κωδικός", newPassword: "Νέος κωδικός",
     verifyPassword: "Επιβεβαίωση νέου κωδικού",
@@ -431,11 +447,24 @@ const copy = {
     accept: "Αποδοχή",
     decline: "Απόρριψη",
     groupInvites: "Προσκλήσεις Ομάδας",
-    noGroupInvites: "Καμία πρόσκληση"
+    noGroupInvites: "Καμία πρόσκληση",
+    nothingSaved: "Δεν έχει αποθηκευτεί τίποτα ακόμα.",
+    optional: "προαιρετικό",
+    reviews: "Κριτικές",
+    noReviews: "Δεν υπάρχουν κριτικές.",
+    remove: "Αφαίρεση",
+    confirmRemoveActivity: "Να αφαιρεθεί αυτή η δραστηριότητα;",
+    recoverPassword: "Ανάκτηση Κωδικού",
+    newPasswordPlaceholder: "Νέος κωδικός",
+    confirmPasswordPlaceholder: "Επιβεβαίωση νέου κωδικού",
+    resetPassword: "Επαναφορά Κωδικού",
+    passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς! Μπορείτε να συνδεθείτε.",
+    selectedBy: "επιλέχθηκε από",
+    people: "άτομα",
+    person: "άτομο"
   }
 };
 
-// Object.assign for extra keys not in main el block
 Object.assign(copy.el, {
   ageGroup: "Ηλικιακή ομάδα",
   useFavourite: "Χρήση αγαπημένου",
@@ -482,6 +511,7 @@ function applyLanguage() {
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
   forgotPasswordButton.textContent = t("forgotPassword");
+  loginEmail.placeholder = `${t("email")} (${t("optional")})`;
   renderPasswordStrength();
 
   const heroCopy = document.querySelector(".hero-copy");
@@ -677,7 +707,7 @@ async function registerUser() {
   const username = loginUsername.value.trim();
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
-  if (!validEmail(email)) throw new Error(t("validEmailRequired"));
+  if (email && !validEmail(email)) throw new Error(t("validEmailRequired"));
   if (!isStrongPassword(password)) throw new Error(t("passwordRequirements"));
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
@@ -864,6 +894,12 @@ function renderResults() {
     return;
   }
 
+  // Calculate selection counts per place
+  const selectionCounts = {};
+  Object.values(state.group.placeSelections || {}).forEach((placeId) => {
+    selectionCounts[placeId] = (selectionCounts[placeId] || 0) + 1;
+  });
+
   resultList.innerHTML = ranked.map((item) => {
     const ratingPart = item.rating ? ` | ${Number(item.rating).toFixed(1)} \u2605` : "";
     const selectedByMe = state.group.placeSelections?.[state.user?.id] === item.id;
@@ -874,11 +910,14 @@ function renderResults() {
         ${item.phone ? `<a class="btn-ghost" href="tel:${escapeHtml(item.phone)}">${t("reservations")}: ${escapeHtml(item.phone)}</a>` : ""}
         ${!item.website && !item.phone ? `<span class="muted-text">${t("noBookingDetails")}</span>` : ""}
       </div>` : "";
+    const selCount = selectionCounts[item.id] || 0;
+    const selLabel = selCount > 0 ? `<span class="selection-badge">${selCount} ${t(selCount === 1 ? "person" : "people")} ${t("selectedBy")}</span>` : "";
     return `
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
       <div><h3>${escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(optionLabel("type", consensus("type")) || item.category)}${ratingPart} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p>
+      ${selLabel}
       <div class="result-buttons">
         <button class="btn-ghost" type="button" data-select-place="${escapeHtml(item.id)}">${selectedByMe ? t("selectedThisPlace") : t("selectThisPlace")}</button>
         ${canBook ? `<button class="btn-primary" type="button" data-book-place="${escapeHtml(item.id)}">${t("bookNow")}</button>` : ""}
@@ -1012,7 +1051,6 @@ async function loadChatMessages(scrollToBottom) {
   if (!container) return;
   try {
     if (scrollToBottom) {
-      // Full reload — clear container to prevent duplicates
       const data = await api(`/api/groups/${state.groupCode}/messages`);
       const messages = data.messages || [];
       if (messages.length === 0) {
@@ -1029,12 +1067,10 @@ async function loadChatMessages(scrollToBottom) {
       container.scrollTop = container.scrollHeight;
       const badge = document.querySelector("#chatUnreadBadge");
       if (badge) badge.classList.add("is-hidden");
-      // Mark messages as read
       api(`/api/groups/${state.groupCode}/mark-read`, { method: "POST", body: { username: currentUsername() } }).catch(() => {});
       return;
     }
 
-    // Incremental update — only append new messages
     const params = state.chatLastTimestamp ? `?since=${encodeURIComponent(state.chatLastTimestamp)}` : "";
     const data = await api(`/api/groups/${state.groupCode}/messages${params}`);
     const messages = data.messages || [];
@@ -1173,15 +1209,61 @@ function hideAppPanels() {
 
 function renderApp() {
   if (!isLoggedIn()) {
-    setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen);
+    setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen && !state.showResetPasswordForm);
     setVisible(topbar, false); setVisible(pagePanel, false);
     setVisible(heroEnterButton, false); setVisible(heroLoginButton, true); setVisible(heroSignupButton, true);
     loginForm.querySelector("h2").textContent = state.authMode === "signup" ? t("createAccount") : t("enterPlanswipe");
     setVisible(loginButton, state.authMode !== "signup");
     setVisible(registerButton, state.authMode === "signup");
-    setVisible(forgotPasswordButton, state.authMode !== "signup");
+    setVisible(forgotPasswordButton, state.authMode !== "signup" && !state.showResetPasswordForm);
     renderPasswordStrength();
-    hideAppPanels(); removeChatButton(); return;
+    hideAppPanels(); removeChatButton();
+
+    // Show reset password form when user arrives from recovery email link
+    if (state.showResetPasswordForm) {
+      const existingForm = document.querySelector("#resetPasswordForm");
+      if (!existingForm) {
+        const form = document.createElement("div");
+        form.id = "resetPasswordForm";
+        form.className = "login-inner";
+        form.style.marginTop = "10px";
+        form.innerHTML = `
+          <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${escapeHtml(t("resetPassword"))}</h3>
+          <input id="resetNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
+          <input id="resetConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+          <button id="resetPasswordConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
+          <button id="resetPasswordCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
+        `;
+        loginForm.parentNode.insertBefore(form, loginForm.nextSibling);
+
+        document.querySelector("#resetPasswordConfirmBtn").addEventListener("click", async () => {
+          const newPw = document.querySelector("#resetNewPassword")?.value;
+          const confirmPw = document.querySelector("#resetConfirmPassword")?.value;
+          if (!newPw || !confirmPw) { showError(t("fillPasswordFields")); return; }
+          if (newPw !== confirmPw) { showError(t("passwordMismatch")); return; }
+          if (!isStrongPassword(newPw)) { showError(t("passwordRequirements")); return; }
+          try {
+            if (state.supabaseClient) {
+              const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
+              if (error) throw new Error(error.message);
+            }
+            alert(t("passwordResetSuccess"));
+            state.showResetPasswordForm = false;
+            document.querySelector("#resetPasswordForm")?.remove();
+            navigate("/home");
+          } catch (e) { showError(e.message); }
+        });
+
+        document.querySelector("#resetPasswordCancelBtn").addEventListener("click", () => {
+          state.showResetPasswordForm = false;
+          document.querySelector("#resetPasswordForm")?.remove();
+          renderApp();
+        });
+      }
+    } else {
+      document.querySelector("#resetPasswordForm")?.remove();
+    }
+    return;
   }
 
   if (state.showHero) {
@@ -1536,7 +1618,7 @@ function preferenceList(title, key, items, placeholder) {
   const readonly = key.startsWith("readonly-");
   return `<div class="preference-box">
     <h3>${escapeHtml(title)}</h3>
-    <div class="pill-row">${(items || []).map((item) => `<span class="preference-pill">${escapeHtml(item)}</span>`).join("") || `<span class="muted-text">Nothing saved yet.</span>`}</div>
+    <div class="pill-row">${(items || []).map((item) => `<span class="preference-pill">${escapeHtml(item)}</span>`).join("") || `<span class="muted-text">${t("nothingSaved")}</span>`}</div>
     ${!readonly ? `<div class="inline-add"><input type="text" data-pref-input="${escapeHtml(key)}" placeholder="${escapeHtml(placeholder)}"><button type="button" data-pref-add="${escapeHtml(key)}">Add</button></div>` : ""}
   </div>`;
 }
@@ -1624,7 +1706,6 @@ async function renderGroupsPage() {
   const active = data.groups || [];
   const past = data.pastGroups || [];
   
-  // Fetch group invites
   let groupInvites = [];
   try {
     const accountData = await loadAccount();
@@ -1636,7 +1717,6 @@ async function renderGroupsPage() {
     ? active.map((g) => `<article class="group-card"><h3>${escapeHtml(g.name)}${g.unreadCount > 0 ? `<span class="group-unread-badge">${g.unreadCount > 99 ? "99+" : g.unreadCount}</span>` : ""}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></article>`).join("")
     : `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
 
-  // Group invites section
   html += `<h3 class="group-section-title">${t("groupInvites")}</h3>`;
   html += groupInvites.length
     ? groupInvites.map((inv) => `<article class="group-card group-invite-card"><h3>${escapeHtml(inv.groupName)}</h3><p class="group-meta">${t("inviteFriends")}: ${escapeHtml(inv.fromUsername)}</p><div class="group-actions"><button class="btn-primary" type="button" data-accept-invite="${escapeHtml(inv.groupCode)}">${t("accept")}</button><button class="btn-ghost danger-button" type="button" data-decline-invite="${escapeHtml(inv.groupCode)}">${t("decline")}</button></div></article>`).join("")
@@ -1676,7 +1756,7 @@ async function renderPastPage() {
       <label class="field"><span>${t("place")}</span><input id="pastPlaceInput" type="text" placeholder="Restaurant name"></label>
       <button class="btn-primary" type="button" id="savePastActivityButton">${t("saveActivity")}</button>
     </form></section>
-    ${activities.length ? activities.map((a) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p></article>`).join("") : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}`;
+    ${activities.length ? activities.map((a, idx) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p><div class="result-buttons" style="margin-top:8px;"><button class="btn-primary" type="button" data-past-fav="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("addToFavourites")}</button><button class="danger-button" type="button" data-past-remove="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("remove")}</button></div></article>`).join("") : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}`;
 }
 
 async function savePastActivity() {
@@ -1879,7 +1959,6 @@ async function exitGroupPermanently(code) {
 }
 
 async function acceptGroupInvite(groupCode) {
-  // Check if age group is set first
   if (!state.account?.profile?.ageGroup) {
     showModal(t("personal"), t("ageGroupRequired"), [{
       label: t("ok"),
@@ -1898,14 +1977,12 @@ async function acceptGroupInvite(groupCode) {
       method: "POST",
       body: { username: currentUsername(), profile: state.account?.profile }
     });
-    // Remove invite from profile
     const profile = state.account?.profile || {};
     const groupInvites = (profile.groupInvites || []).filter((inv) => inv.groupCode !== groupCode);
     await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, groupInvites } } });
     saveAccount({ ...state.account, profile: { ...profile, groupInvites } });
     state.pageShellRendered = "";
     await renderGroupsPage();
-    // Join the group
     codeInput.value = groupCode;
     state.activePage = "";
     navigate("/main");
@@ -2024,9 +2101,24 @@ async function boot() {
   applyLanguage();
   await configureSupabaseAuth();
 
+  // Handle password reset from email link
   if (state.supabaseClient && window.location.hash) {
     const hash = window.location.hash;
-    if (hash.includes("access_token") || hash.includes("type=signup") || hash.includes("type=recovery")) {
+    if (hash.includes("type=recovery")) {
+      try {
+        const { data, error } = await state.supabaseClient.auth.getSession();
+        if (error) throw error;
+        state.supabaseSession = data.session;
+        if (data.session) {
+          // Show reset password form
+          state.showResetPasswordForm = true;
+          state.loginOpen = true;
+          renderApp();
+          return;
+        }
+      } catch (e) { console.warn("Recovery handler:", e.message); }
+    }
+    if (hash.includes("access_token") || hash.includes("type=signup")) {
       try {
         const { data, error } = await state.supabaseClient.auth.getSession();
         if (error) throw error;
@@ -2089,7 +2181,6 @@ registerButton.addEventListener("click", () => registerUser().catch((e) => showE
 loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
-  // Show forgot password form with username/email input
   const existingForm = document.querySelector("#forgotPasswordForm");
   if (existingForm) { existingForm.remove(); return; }
   const form = document.createElement("div");
@@ -2099,9 +2190,9 @@ forgotPasswordButton.addEventListener("click", () => {
   form.style.borderTop = "1px solid var(--line)";
   form.style.paddingTop = "14px";
   form.innerHTML = `
-    <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${t("forgotPassword")}</h3>
+    <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${t("recoverPassword")}</h3>
     <input id="forgotPasswordInput" type="text" placeholder="${t("username")} / ${t("email")}" autocomplete="off">
-    <button id="recoverPasswordBtn" type="button" class="btn-primary">${t("forgotPassword")}</button>
+    <button id="recoverPasswordBtn" type="button" class="btn-primary">${t("recoverPassword")}</button>
     <button id="cancelForgotBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${t("cancel")}</button>
   `;
   forgotPasswordButton.parentNode.insertBefore(form, forgotPasswordButton.nextSibling);
@@ -2109,11 +2200,9 @@ forgotPasswordButton.addEventListener("click", () => {
   document.querySelector("#recoverPasswordBtn").addEventListener("click", async () => {
     const input = document.querySelector("#forgotPasswordInput")?.value.trim();
     if (!input) { alert(t("enterEmailFirst")); return; }
-    // Try as email first, then as username
     const isEmail = input.includes("@");
     let emailToUse = input;
     if (!isEmail) {
-      // Look up email by username
       try {
         const data = await api(`/api/account?username=${encodeURIComponent(input)}&viewer=${encodeURIComponent(input)}`);
         emailToUse = data.user?.email || input;
@@ -2189,6 +2278,20 @@ if (favButton) {
     const places = state.group?.places || [];
     const place = places[state.index];
     if (place) addToFavourites(place);
+  });
+}
+if (reviewsButton) {
+  reviewsButton.addEventListener("click", async () => {
+    const places = state.group?.places || [];
+    const place = places[state.index];
+    if (!place) return;
+    try {
+      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id } });
+      const reviews = data.reviews || [];
+      if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
+      const reviewsHtml = reviews.map((r) => `<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p style="margin-top:4px;color:var(--muted);">${escapeHtml(r.text)}</p></div>`).join("");
+      showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }]);
+    } catch (e) { showError(e.message); }
   });
 }
 
@@ -2274,11 +2377,48 @@ pageDemo.addEventListener("click", (e) => {
   }
   const upgradeBtn = e.target.closest("#upgradeToProBtn");
   if (upgradeBtn) { handleUpgradeToPro().catch((err) => showError(err.message)); return; }
-  // Handle group invite accept/decline
   const acceptInviteBtn = e.target.closest("[data-accept-invite]");
   if (acceptInviteBtn) { acceptGroupInvite(acceptInviteBtn.dataset.acceptInvite).catch((err) => showError(err.message)); return; }
   const declineInviteBtn = e.target.closest("[data-decline-invite]");
   if (declineInviteBtn) { declineGroupInvite(declineInviteBtn.dataset.declineInvite).catch((err) => showError(err.message)); return; }
+  // Handle past activity add to favourites
+  const pastFavBtn = e.target.closest("[data-past-fav]");
+  if (pastFavBtn) {
+    const account = state.account;
+    const activities = account?.profile?.pastActivities || [];
+    const idx = parseInt(pastFavBtn.dataset.pastFav);
+    const activity = activities[idx];
+    if (activity) addToFavourites({ title: activity.place });
+    return;
+  }
+  // Handle past activity remove
+  const pastRemoveBtn = e.target.closest("[data-past-remove]");
+  if (pastRemoveBtn) {
+    if (!confirm(t("confirmRemoveActivity"))) return;
+    const account = state.account;
+    const activities = account?.profile?.pastActivities || [];
+    const idx = parseInt(pastRemoveBtn.dataset.pastRemove);
+    const newActivities = activities.filter((_, i) => i !== idx);
+    const profile = state.account?.profile || {};
+    api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, pastActivities: newActivities } } })
+      .then((data) => { saveAccount(data.user); renderPastPage(); })
+      .catch((err) => showError(err.message));
+    return;
+  }
+  // Handle reviews button
+  const reviewsBtn = e.target.closest("[data-reviews]");
+  if (reviewsBtn) {
+    const placeId = reviewsBtn.dataset.reviews;
+    api("/api/reviews", { method: "POST", body: { googlePlaceId: placeId } })
+      .then((data) => {
+        const reviews = data.reviews || [];
+        if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
+        const reviewsHtml = reviews.map((r) => `<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p style="margin-top:4px;color:var(--muted);">${escapeHtml(r.text)}</p></div>`).join("");
+        showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }]);
+      })
+      .catch((err) => showError(err.message));
+    return;
+  }
 });
 
 pageDemo.addEventListener("change", (e) => { if (e.target.id === "profilePictureInput") updateProfilePicture(e.target.files?.[0]).catch((err) => showError(err.message)); });
