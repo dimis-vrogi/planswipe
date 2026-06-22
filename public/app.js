@@ -657,7 +657,7 @@ async function loadAccount() {
 }
 
 async function login() {
-  if (!validEmail(loginEmail.value)) throw new Error(t("validEmailRequired"));
+  // Email is no longer required for login
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email: loginEmail.value.trim(), password: loginPassword.value });
     if (error) throw new Error(error.message);
@@ -733,9 +733,9 @@ function renderDecisionStep(kind) {
   decisionTitle.textContent = broadArea ? `${t("selectSpecificArea")}: ${optionLabel("area", broadArea)}` : (isAreaStep ? t("areaTitle") : t("typeTitle"));
 
   if (votedCount > 0 && votedCount < total) {
-    decisionHint.textContent = `${votedCount} ${t("of")} ${total} ${t("voted")} \u2014 ${t("waitingForOthers")}`;
+    decisionHint.innerHTML = `${votedCount} ${t("of")} ${total} ${t("voted")} \u2014 <strong>${t("waitingForOthers")}</strong>`;
   } else {
-    decisionHint.textContent = t("decisionHint");
+    decisionHint.innerHTML = t("decisionHint");
   }
 
   setVisible(backChoiceButton, kind === "type" || Boolean(chosen) || Boolean(state.pendingAreaOption));
@@ -1104,14 +1104,16 @@ async function refreshNotifications() {
       let count = 0;
       if (btn.dataset.page === "friends") count = data.friendRequests || 0;
       if (btn.dataset.page === "groups") {
+        const groupsTotal = (data.groupInvites || 0);
         api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`).then((gData) => {
           const groupsWithUnread = (gData.groups || []).filter((g) => g.unreadCount > 0).length;
+          const totalNotifs = groupsWithUnread + groupsTotal;
           const groupsBtn = [...profileMenu.querySelectorAll("button[data-page]")].find((b) => b.dataset.page === "groups");
-          if (groupsBtn && groupsWithUnread > 0) {
+          if (groupsBtn && totalNotifs > 0) {
             groupsBtn.classList.add("has-notif");
             let sp = groupsBtn.querySelector(".notif-count");
             if (!sp) { sp = document.createElement("span"); sp.className = "notif-count"; groupsBtn.appendChild(sp); }
-            sp.textContent = `(${groupsWithUnread})`;
+            sp.textContent = `(${totalNotifs})`;
           } else if (groupsBtn) {
             groupsBtn.classList.remove("has-notif");
             groupsBtn.querySelector(".notif-count")?.remove();
@@ -1877,6 +1879,20 @@ async function exitGroupPermanently(code) {
 }
 
 async function acceptGroupInvite(groupCode) {
+  // Check if age group is set first
+  if (!state.account?.profile?.ageGroup) {
+    showModal(t("personal"), t("ageGroupRequired"), [{
+      label: t("ok"),
+      primary: true,
+      action: () => {
+        state.showAgeGroupModal = true;
+        state.returnRoute = "/groups";
+        state.activePage = "personal";
+        navigate("/personal");
+      }
+    }]);
+    return;
+  }
   try {
     const data = await api(`/api/groups/${groupCode}/join`, {
       method: "POST",
@@ -2073,10 +2089,45 @@ registerButton.addEventListener("click", () => registerUser().catch((e) => showE
 loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
-  const email = loginEmail.value.trim();
-  if (!email) { alert(t("enterEmailFirst")); return; }
-  if (state.supabaseClient) { state.supabaseClient.auth.resetPasswordForEmail(email).catch(console.warn); alert(t("recoveryEmailSent").replace("{email}", email)); }
-  else { alert(t("passwordResetRequires")); }
+  // Show forgot password form with username/email input
+  const existingForm = document.querySelector("#forgotPasswordForm");
+  if (existingForm) { existingForm.remove(); return; }
+  const form = document.createElement("div");
+  form.id = "forgotPasswordForm";
+  form.className = "login-inner";
+  form.style.marginTop = "10px";
+  form.style.borderTop = "1px solid var(--line)";
+  form.style.paddingTop = "14px";
+  form.innerHTML = `
+    <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${t("forgotPassword")}</h3>
+    <input id="forgotPasswordInput" type="text" placeholder="${t("username")} / ${t("email")}" autocomplete="off">
+    <button id="recoverPasswordBtn" type="button" class="btn-primary">${t("forgotPassword")}</button>
+    <button id="cancelForgotBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${t("cancel")}</button>
+  `;
+  forgotPasswordButton.parentNode.insertBefore(form, forgotPasswordButton.nextSibling);
+  document.querySelector("#forgotPasswordInput").focus();
+  document.querySelector("#recoverPasswordBtn").addEventListener("click", async () => {
+    const input = document.querySelector("#forgotPasswordInput")?.value.trim();
+    if (!input) { alert(t("enterEmailFirst")); return; }
+    // Try as email first, then as username
+    const isEmail = input.includes("@");
+    let emailToUse = input;
+    if (!isEmail) {
+      // Look up email by username
+      try {
+        const data = await api(`/api/account?username=${encodeURIComponent(input)}&viewer=${encodeURIComponent(input)}`);
+        emailToUse = data.user?.email || input;
+      } catch (_) { emailToUse = input; }
+    }
+    if (state.supabaseClient) {
+      state.supabaseClient.auth.resetPasswordForEmail(emailToUse).catch(console.warn);
+      alert(t("recoveryEmailSent").replace("{email}", emailToUse));
+    } else {
+      alert(t("passwordResetRequires"));
+    }
+    form.remove();
+  });
+  document.querySelector("#cancelForgotBtn").addEventListener("click", () => form.remove());
 });
 
 homeButton.addEventListener("click", () => navigate("/home"));
