@@ -1431,15 +1431,105 @@ async function handleApi(request, response) {
     return;
   }
 
+  // ── Direct Messages ──
+  if (request.method === "GET" && parts[1] === "messages" && parts[2] === "conversations") {
+    const username = url.searchParams.get("username") || "";
+    const profile = await getProfileByUsername(username);
+    if (!profile) { sendJson(response, 200, { conversations: [] }); return; }
+    const friendsList = profile.profile?.friends || [];
+    const conversations = [];
+    for (const friend of friendsList) {
+      const { data: msgs, error } = await supabase
+        .from("direct_messages")
+        .select("sender, message, created_at")
+        .or(`and(sender.eq.${username},recipient.eq.${friend}),and(sender.eq.${friend},recipient.eq.${username})`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) continue;
+      const lastMsg = msgs?.[0];
+      // Count unread messages from this friend
+      const { count } = await supabase
+        .from("direct_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("sender", friend)
+        .eq("recipient", username)
+        .is("read_at", null);
+      conversations.push({
+        with: friend,
+        lastMessage: lastMsg?.message || "",
+        lastTimestamp: lastMsg?.created_at || null,
+        unread: count || 0
+      });
+    }
+    sendJson(response, 200, { conversations });
+    return;
+  }
+
+  if (request.method === "GET" && parts[1] === "messages" && !parts[2]) {
+    const username = url.searchParams.get("username") || "";
+    const withUser = url.searchParams.get("with") || "";
+    const since    = url.searchParams.get("since") || null;
+    if (!username || !withUser) { sendJson(response, 200, { messages: [] }); return; }
+    let query = supabase
+      .from("direct_messages")
+      .select("id, sender, recipient, message, created_at")
+      .or(`and(sender.eq.${username},recipient.eq.${withUser}),and(sender.eq.${withUser},recipient.eq.${username})`)
+      .order("created_at", { ascending: true })
+      .limit(100);
+    if (since) query = query.gt("created_at", since);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    sendJson(response, 200, { messages: data || [] });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "messages" && parts[2] === "mark-read") {
+    const body = await readBody(request);
+    const { username, from } = body;
+    if (username && from) {
+      await supabase
+        .from("direct_messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("sender", from)
+        .eq("recipient", username)
+        .is("read_at", null);
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  if (request.method === "POST" && parts[1] === "messages" && !parts[2]) {
+    const body = await readBody(request);
+    const from    = (body.from || "").trim();
+    const to      = (body.to || "").trim();
+    const message = (body.message || "").trim().slice(0, 500);
+    if (!from || !to || !message) { sendJson(response, 400, { error: "from, to, and message required" }); return; }
+    const { data, error } = await supabase
+      .from("direct_messages")
+      .insert({ sender: from, recipient: to, message })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    sendJson(response, 200, { message: data });
+    return;
+  }
+
   // ── Notifications ──
   if (request.method === "GET" && parts[1] === "notifications") {
     const username = url.searchParams.get("username") || "";
     const profile  = await getProfileByUsername(username);
-    if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 }); return; }
+    if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0, dmMessages: 0 }); return; }
     const friendRequests = profile.profile?.friendRequests?.length || 0;
     const groupInvites = profile.profile?.groupInvites?.length || 0;
     const unreadMessages = await getUnreadMessageCount(username);
-    sendJson(response, 200, { total: friendRequests + groupInvites + unreadMessages, friendRequests, groupInvites, messages: unreadMessages });
+    // Count unread DM messages
+    const { count: dmCount, error: dmErr } = await supabase
+      .from("direct_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient", username)
+      .is("read_at", null);
+    const dmMessages = dmErr ? 0 : (dmCount || 0);
+    sendJson(response, 200, { total: friendRequests + groupInvites + unreadMessages + dmMessages, friendRequests, groupInvites, messages: unreadMessages, dmMessages });
     return;
   }
 
