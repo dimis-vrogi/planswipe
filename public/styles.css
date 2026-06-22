@@ -108,8 +108,10 @@ h3 {
 }
 
 .btn-primary:hover {
+  background: rgba(29, 31, 36, 0.06);
+  color: var(--ink);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(48, 24, 96, 0.35);
+  box-shadow: none;
 }
 
 .btn-primary:active {
@@ -125,10 +127,11 @@ h3 {
 }
 
 .btn-outline:hover {
-  background: #3d1f7a;
-  border-color: #3d1f7a;
+  background: rgba(29, 31, 36, 0.06);
+  color: var(--ink);
+  border-color: var(--line);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(48, 24, 96, 0.35);
+  box-shadow: none;
 }
 
 .btn-ghost {
@@ -201,8 +204,9 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 }
 
 .language-button:hover {
-  background: #3d1f7a;
-  border-color: var(--purple);
+  background: rgba(29, 31, 36, 0.06);
+  color: var(--ink);
+  border-color: var(--line);
   transform: translateY(-1px);
 }
 
@@ -292,8 +296,10 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 }
 
 .login-inner button:hover {
+  background: rgba(29, 31, 36, 0.06);
+  color: var(--ink);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(48, 24, 96, 0.3);
+  box-shadow: none;
 }
 
 .login-inner button.btn-secondary {
