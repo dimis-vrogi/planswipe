@@ -1006,6 +1006,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 .choice-button.yes { background: var(--green); }
 .choice-button.favourite { background: var(--purple); color: #fff; min-height: 72px; font-size: 0.95rem; }
 .choice-button.favourite.is-favourited { background: var(--gold); color: #3a2b07; }
+.choice-button.reviews { background: #4a90d9; color: #fff; min-height: 72px; font-size: 0.95rem; }
+.choice-button.reviews:hover { background: #3a7bc8; transform: scale(1.03); }
 
 .choice-button:active {
   transform: scale(0.96);
