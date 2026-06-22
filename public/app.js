@@ -16,7 +16,7 @@ const state = {
   supabaseClient: null,
   supabaseSession: null,
   showHero: false,
-  notifications: { total: 0, friendRequests: 0, groupInvites: 0, messages: 0 },
+  notifications: { total: 0, friendRequests: 0, groupInvites: 0, messages: 0, dmMessages: 0 },
   exitedGroups: JSON.parse(localStorage.getItem("planswipe:exitedGroups") || "[]"),
   friendsData: null,
   friendsDataLoaded: false,
@@ -35,7 +35,11 @@ const state = {
   votingInProgress: false,
   placesExhausted: false,
   showAgeGroupModal: false,
-  showResetPasswordForm: false
+  showResetPasswordForm: false,
+  // Personal messaging
+  dmChatUsername: "",
+  dmChatOtherUsername: "",
+  dmMessageTimer: null
 };
 
 // ====== DOM REFERENCES ======
@@ -190,6 +194,8 @@ const copy = {
     groupPlans: "Group plans", leaveGroup: "Exit Current Group", exitGroup: "Back",
     home: "Home", likedPlaces: "Liked Places", groups: "My Groups", friends: "Friends",
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
+    messages: "Messages",
+    message: "Message",
     heroEyebrow: "Group plans made easier",
     heroTitle: "Find the plan your group can actually agree on.",
     heroDescription: "Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.",
@@ -315,7 +321,10 @@ const copy = {
     passwordResetSuccess: "Password reset successfully! You can now log in.",
     selectedBy: "selected by",
     people: "people",
-    person: "person"
+    person: "person",
+    noConversations: "No conversations yet",
+    startMessaging: "Add friends and start messaging them.",
+    typeMessage: "Type a message..."
   },
   el: {
     login: "Σύνδεση", createAccount: "Δημιουργία λογαριασμού",
@@ -324,6 +333,8 @@ const copy = {
     home: "Αρχική", likedPlaces: "Αρεστά μέρη", groups: "Οι ομάδες μου", friends: "Φίλοι",
     past: "Παλιές δραστηριότητες", personal: "Προσωπικά στοιχεία",
     settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
+    messages: "Μηνύματα",
+    message: "Μήνυμα",
     heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
     heroTitle: "Βρείτε το σχέδιο που η παρέα σας μπορεί να συμφωνήσει.",
     heroDescription: "Επιλέξτε τα βασικά μαζί, κάντε swipe σε κοντινές ιδέες και αφήστε το PlanSwipe να αναδείξει τα μέρη που θα απολαύσει η παρέα.",
@@ -465,7 +476,10 @@ const copy = {
     passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς! Μπορείτε να συνδεθείτε.",
     selectedBy: "επιλέχθηκε από",
     people: "άτομα",
-    person: "άτομο"
+    person: "άτομο",
+    noConversations: "Καμία συνομιλία ακόμα",
+    startMessaging: "Προσθέστε φίλους και στείλτε μηνύματα.",
+    typeMessage: "Γράψε μήνυμα..."
   }
 };
 
@@ -1155,6 +1169,7 @@ async function refreshNotifications() {
       btn.querySelector(".notif-count")?.remove();
       let count = 0;
       if (btn.dataset.page === "friends") count = data.friendRequests || 0;
+      if (btn.dataset.page === "messages") count = data.dmMessages || 0;
       if (btn.dataset.page === "groups") {
         const groupsTotal = (data.groupInvites || 0);
         api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`).then((gData) => {
@@ -1207,7 +1222,7 @@ function onUrlChange() {
   if (route === "/home") { state.showHero = true; state.activePage = ""; renderApp(); return; }
   if (route === "/main") { state.showHero = false; state.activePage = ""; renderApp(); return; }
 
-  const pageMatch = route.match(/^\/(groups|friends|likedplaces|past|personal|settings|subscription)$/);
+  const pageMatch = route.match(/^\/(groups|friends|messages|likedplaces|past|personal|settings|subscription)$/);
   if (pageMatch) { state.showHero = false; state.activePage = pageMatch[1]; renderApp(); return; }
 
   const profileMatch = route.match(/^\/profile\/(.+)$/);
@@ -1631,6 +1646,7 @@ const pageContent = {
   likedplaces: { title: "Liked Places", eyebrow: "History" },
   groups: { title: "My Groups", eyebrow: "Groups" },
   friends: { title: "Friends", eyebrow: "People" },
+  messages: { title: "Messages", eyebrow: "Chat" },
   past: { title: "Past Activities", eyebrow: "History" },
   personal: { title: "Personal Information", eyebrow: "Profile" },
   settings: { title: "Settings", eyebrow: "Account" },
@@ -1709,7 +1725,7 @@ async function refreshFriendsPage() {
   if (!friendList || !requestList) return;
 
   friendList.innerHTML = data.friends.length
-    ? data.friends.map((u) => userCard(u, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("viewProfile")}</button>`)).join("")
+    ? data.friends.map((u) => userCard(u, `<div class="result-buttons"><button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("viewProfile")}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(u.username)}">${t("message")}</button></div>`)).join("")
     : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const allRequests = [
@@ -1722,6 +1738,140 @@ async function refreshFriendsPage() {
 
   state.friendsLastRequestCount = data.incoming?.length || 0;
   if (state.notifications) state.notifications.friendRequests = state.friendsLastRequestCount;
+}
+
+async function renderMessagesPage() {
+  pageEyebrow.textContent = t("messages");
+  pageTitle.textContent = t("messages");
+  try {
+    const data = await api(`/api/messages/conversations?username=${encodeURIComponent(currentUsername())}`);
+    const conversations = data.conversations || [];
+    if (!conversations.length) {
+      pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noConversations")}</h3><p>${t("startMessaging")}</p></article>`;
+      return;
+    }
+    pageDemo.innerHTML = `<div class="conversation-list">${conversations.map((conv) => `
+      <article class="group-card ${conv.unread > 0 ? 'has-unread' : ''}" data-conversation="${escapeHtml(conv.with)}">
+        <h3>${escapeHtml(conv.with)}${conv.unread > 0 ? `<span class="group-unread-badge">${conv.unread > 99 ? '99+' : conv.unread}</span>` : ""}</h3>
+        <p class="group-meta">${escapeHtml(conv.lastMessage ? conv.lastMessage.slice(0, 60) : "")}</p>
+        <div class="group-actions"><button class="btn-primary" type="button" data-open-dm="${escapeHtml(conv.with)}">${t("message")}</button></div>
+      </article>`).join("")}</div>`;
+  } catch (e) {
+    console.warn("Messages load error:", e.message);
+    pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noConversations")}</h3></article>`;
+  }
+}
+
+async function openDirectMessage(otherUsername) {
+  // Remove any existing DM chat overlay
+  document.querySelector("#dmChatOverlay")?.remove();
+  
+  const overlay = document.createElement("div");
+  overlay.id = "dmChatOverlay";
+  overlay.className = "chat-overlay";
+  overlay.innerHTML = `
+    <div class="chat-panel" id="dmChatPanel">
+      <div class="chat-header">
+        <span id="dmChatTitle">${escapeHtml(t("message"))} \u2014 ${escapeHtml(otherUsername)}</span>
+        <button class="chat-close-btn" id="dmChatCloseBtn" aria-label="${t("closeChat")}">\u2715</button>
+      </div>
+      <div class="chat-messages" id="dmChatMessages"><div class="chat-loading">\u2026</div></div>
+      <div class="chat-input-row">
+        <input id="dmChatMessageInput" type="text" maxlength="500" placeholder="${escapeHtml(t("typeMessage"))}" autocomplete="off">
+        <button id="dmChatSendButton" class="btn-primary">${t("sendMessage")}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  
+  state.dmChatOtherUsername = otherUsername;
+  
+  overlay.querySelector("#dmChatCloseBtn").addEventListener("click", () => {
+    overlay.remove();
+    clearInterval(state.dmMessageTimer);
+    state.dmMessageTimer = null;
+    state.dmChatOtherUsername = "";
+  });
+  
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      clearInterval(state.dmMessageTimer);
+      state.dmMessageTimer = null;
+      state.dmChatOtherUsername = "";
+    }
+  });
+  
+  const input = overlay.querySelector("#dmChatMessageInput");
+  const sendBtn = overlay.querySelector("#dmChatSendButton");
+  
+  sendBtn.addEventListener("click", () => sendDmMessage(input));
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendDmMessage(input); });
+  
+  await loadDmMessages(true);
+  
+  clearInterval(state.dmMessageTimer);
+  state.dmMessageTimer = setInterval(async () => {
+    if (state.dmChatOtherUsername && document.querySelector("#dmChatOverlay")) {
+      await loadDmMessages(false);
+    }
+  }, 3000);
+}
+
+async function loadDmMessages(scrollToBottom) {
+  const other = state.dmChatOtherUsername;
+  if (!other) return;
+  const container = document.querySelector("#dmChatMessages");
+  if (!container) return;
+  try {
+    const params = scrollToBottom ? "" : (state.dmChatLastTimestamp ? `&since=${encodeURIComponent(state.dmChatLastTimestamp)}` : "");
+    const data = await api(`/api/messages?username=${encodeURIComponent(currentUsername())}&with=${encodeURIComponent(other)}${params}`);
+    const messages = data.messages || [];
+    
+    if (scrollToBottom) {
+      if (messages.length === 0) {
+        container.innerHTML = `<div class="chat-empty">${t("noMessagesYet")}</div>`;
+        return;
+      }
+      state.dmChatLastTimestamp = messages[messages.length - 1].created_at;
+      const me = currentUsername();
+      container.innerHTML = messages.map((msg) => {
+        const isMine = msg.sender === me;
+        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}"><span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
+      }).join("");
+      container.scrollTop = container.scrollHeight;
+      // Mark as read
+      api("/api/messages/mark-read", { method: "POST", body: { username: currentUsername(), from: other } }).catch(() => {});
+      return;
+    }
+    
+    if (messages.length === 0) return;
+    state.dmChatLastTimestamp = messages[messages.length - 1].created_at;
+    const me = currentUsername();
+    const loading = container.querySelector(".chat-loading, .chat-empty");
+    if (loading) loading.remove();
+    messages.forEach((msg) => {
+      const isMine = msg.sender === me;
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
+      bubble.innerHTML = `<span class="chat-text">${escapeHtml(msg.message)}</span>`;
+      container.appendChild(bubble);
+    });
+    container.scrollTop = container.scrollHeight;
+  } catch (e) { console.warn("DM chat load error:", e.message); }
+}
+
+async function sendDmMessage(input) {
+  const message = (input?.value || "").trim();
+  const other = state.dmChatOtherUsername;
+  if (!message || !other) return;
+  input.value = ""; input.disabled = true;
+  try {
+    await api("/api/messages", { method: "POST", body: { from: currentUsername(), to: other, message } });
+    await loadDmMessages(true);
+    // Refresh notifications to update the dm badge
+    refreshNotifications();
+  } catch (e) { showError(e.message); }
+  finally { input.disabled = false; input.focus(); }
 }
 
 async function renderGroupsPage() {
@@ -1802,7 +1952,7 @@ async function renderAccountProfile(username) {
   pageTitle.textContent = user.username;
 
   const friendAction = user.username === currentUsername() ? "" :
-    user.friendStatus === "friends" ? `<span class="request-status">${t("friends")}</span>` :
+    user.friendStatus === "friends" ? `<div class="result-buttons"><span class="request-status">${t("friends")}</span><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${t("message")}</button></div>` :
     user.friendStatus === "incoming" ? `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>` :
     user.friendStatus === "requested" ? `<span class="request-status">${t("requestSent")}</span>` :
     `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
@@ -1853,6 +2003,11 @@ function renderProfilePage() {
     renderPersonalInformation().then(() => {
       if (state.showAgeGroupModal) showAgeGroupPopup();
     }).catch((e) => showError(e.message));
+    return;
+  }
+  if (state.activePage === "messages") {
+    state.pageShellRendered = "messages";
+    renderMessagesPage().catch((e) => showError(e.message));
     return;
   }
   if (state.activePage === "friends") {
@@ -1965,7 +2120,7 @@ async function searchFriends() {
   if (!results || !query) return;
   const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
   results.innerHTML = data.users.length ? data.users.map((user) => {
-    if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button>`);
+    if (user.friendStatus === "friends") return userCard(user, `<div class="result-buttons"><button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${t("message")}</button></div>`);
     if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>`);
     if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
     return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
@@ -2178,7 +2333,7 @@ async function boot() {
   if (isLoggedIn() && state.user && state.groupCode) {
     startPolling();
     await refreshGroup();
-    if (["/groups", "/friends", "/likedplaces", "/past", "/personal", "/settings", "/subscription"].includes(window.location.pathname)) {
+    if (["/groups", "/friends", "/messages", "/likedplaces", "/past", "/personal", "/settings", "/subscription"].includes(window.location.pathname)) {
       onUrlChange();
     }
     return;
@@ -2261,7 +2416,7 @@ profileMenu.addEventListener("click", (e) => {
     state.activePage = btn.dataset.page;
     state.returnRoute = "/main";
     profileMenu.classList.add("is-hidden");
-    navigate({ groups: "/groups", friends: "/friends", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings", subscription: "/subscription" }[btn.dataset.page] || "/main");
+    navigate({ groups: "/groups", friends: "/friends", messages: "/messages", likedplaces: "/likedplaces", past: "/past", personal: "/personal", settings: "/settings", subscription: "/subscription" }[btn.dataset.page] || "/main");
     return;
   }
   if (e.target.closest("#logoutButton")) profileMenu.classList.add("is-hidden");
@@ -2373,6 +2528,18 @@ pageDemo.addEventListener("click", (e) => {
     state.returnRoute = "/friends";
     state.activePage = `profile:${viewProfileBtn.dataset.viewProfile}`;
     navigate("/profile/" + encodeURIComponent(viewProfileBtn.dataset.viewProfile));
+    return;
+  }
+  // Message friend buttons
+  const messageFriendBtn = e.target.closest("[data-message-friend]");
+  if (messageFriendBtn) {
+    openDirectMessage(messageFriendBtn.dataset.messageFriend).catch((err) => showError(err.message));
+    return;
+  }
+  // Open DM conversation
+  const openDmBtn = e.target.closest("[data-open-dm]");
+  if (openDmBtn) {
+    openDirectMessage(openDmBtn.dataset.openDm).catch((err) => showError(err.message));
     return;
   }
   const openGroupBtn = e.target.closest("[data-open-group]");
