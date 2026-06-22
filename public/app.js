@@ -238,6 +238,8 @@ const copy = {
     continueBrowsing: "Continue Browsing",
     loadingPlaces: "Loading more places\u2026",
     noMoreSuggestions: "No more places matching your selections. Would you like to change your basics?",
+    newGroup: "New Group",
+    backToVoting: "Back to Voting",
     exitGroupPermanent: "Exit Group Permanently",
     confirmExitGroup: "Are you sure you want to permanently leave this group?",
     accountManagement: "Account Management",
@@ -377,6 +379,8 @@ const copy = {
     noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
     continueBrowsing: "Θέλετε να συνεχίσετε να βλέπετε μέρη;",
     noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
+    newGroup: "Νέα Ομάδα",
+    backToVoting: "Επιστροφή στην Ψηφοφορία",
     exitGroupPermanent: "Μόνιμη έξοδος από ομάδα",
     confirmExitGroup: "Είστε σίγουροι ότι θέλετε να φύγετε μόνιμα;",
     accountManagement: "Διαχείριση Λογαριασμού",
@@ -688,11 +692,20 @@ async function loadAccount() {
 
 async function login() {
   // Email is no longer required for login
+  const email = loginEmail.value.trim();
   if (state.supabaseClient) {
-    const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email: loginEmail.value.trim(), password: loginPassword.value });
-    if (error) throw new Error(error.message);
-    state.supabaseSession = data.session;
-    await syncSupabaseProfile(loginUsername.value.trim(), data.user.email || loginEmail.value.trim(), loginPassword.value);
+    if (email) {
+      const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email, password: loginPassword.value });
+      if (error) throw new Error(error.message);
+      state.supabaseSession = data.session;
+      await syncSupabaseProfile(loginUsername.value.trim(), data.user.email || email, loginPassword.value);
+    } else {
+      // No email provided — use non-Supabase login path which only requires username + password
+      const data = await api("/api/login", { method: "POST", body: { username: loginUsername.value, email: "", password: loginPassword.value } });
+      state.supabaseSession = null;
+      setLoggedIn(data.username, "");
+      saveAccount({ username: data.username, email: "", profile: data.profile });
+    }
     loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
     state.loginOpen = false; navigate("/main"); return;
   }
@@ -769,6 +782,9 @@ function renderDecisionStep(kind) {
   }
 
   setVisible(backChoiceButton, kind === "type" || Boolean(chosen) || Boolean(state.pendingAreaOption));
+  if (backChoiceButton && !backChoiceButton.classList.contains("is-hidden")) {
+    backChoiceButton.textContent = t("backToVoting");
+  }
 
   if (!options || options.length === 0) {
     optionGrid.innerHTML = `<p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>`;
@@ -1290,7 +1306,14 @@ function renderApp() {
     profileInitial.textContent = initials(currentUsername()) || "P";
   }
 
-  setVisible(resetButton, Boolean(state.group && state.user));
+  // When no group active, show "New Group" button instead of "Exit Current Group"
+  if (state.group && state.user) {
+    setVisible(resetButton, true);
+    resetButton.textContent = t("leaveGroup");
+  } else {
+    setVisible(resetButton, true);
+    resetButton.textContent = t("newGroup");
+  }
   refreshNotifications();
 
   if (state.activePage) {
@@ -2220,7 +2243,15 @@ forgotPasswordButton.addEventListener("click", () => {
 });
 
 homeButton.addEventListener("click", () => navigate("/home"));
-resetButton.addEventListener("click", leaveGroup);
+resetButton.addEventListener("click", () => {
+  if (state.group && state.user) {
+    leaveGroup();
+  } else {
+    // "New Group" button was clicked — show create/join UI
+    state.setupMode = "";
+    navigate("/main");
+  }
+});
 logoutButton.addEventListener("click", logout);
 
 profileButton.addEventListener("click", (e) => { e.stopPropagation(); profileMenu.classList.toggle("is-hidden"); });
