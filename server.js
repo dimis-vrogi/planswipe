@@ -1141,6 +1141,34 @@ async function handleApi(request, response) {
     const unanimous = selections.length === (group.members?.length || 0) && selections.every((id) => id === body.placeId);
     if (!group.consensus) group.consensus = {};
     group.consensus.place = unanimous ? body.placeId : null;
+    // If unanimous, save the place to each member's past activities
+    if (unanimous) {
+      const place = group.places.find((p) => p.id === body.placeId);
+      if (place) {
+        for (const member of group.members || []) {
+          const profileRow = await getProfileByUsername(member.username);
+          if (profileRow) {
+            const pastActivities = profileRow.profile?.pastActivities || [];
+            const exists = pastActivities.some((a) => a.place === place.title && a.groupCode === group.code);
+            if (!exists) {
+              pastActivities.unshift({
+                area: place.areaLabel || group.search?.area || "",
+                activity: place.category || group.search?.activity || "",
+                place: place.title,
+                groupCode: group.code,
+                groupName: group.name,
+                loggedAt: Date.now()
+              });
+              await upsertProfile({
+                username: member.username,
+                email: profileRow.email || "",
+                profile: { ...profileRow.profile, pastActivities: pastActivities.slice(0, 50) }
+              });
+            }
+          }
+        }
+      }
+    }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
     return;
