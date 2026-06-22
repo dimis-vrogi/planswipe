@@ -112,21 +112,25 @@ const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
 // ====== I18N ======
 const optionTranslations = {
   el: {
-    northsuburbs: { label: "\u0392\u03cc\u03c1\u03b5\u03b9\u03b1 \u03c0\u03c1\u03bf\u03ac\u03c3\u03c4\u03b9\u03b1",  description: "\u03a7\u03b1\u03bb\u03ac\u03bd\u03b4\u03c1\u03b9, \u039c\u03b1\u03c1\u03bf\u03cd\u03c3\u03b9, \u039a\u03b7\u03c6\u03b9\u03c3\u03b9\u03ac \u03ba\u03b1\u03b9 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
-    athenscenter: { label: "\u039a\u03ad\u03bd\u03c4\u03c1\u03bf \u0391\u03b8\u03b7\u03bd\u03ce\u03bd",    description: "\u03a3\u03cd\u03bd\u03c4\u03b1\u03b3\u03bc\u03b1, \u039c\u03bf\u03bd\u03b1\u03c3\u03c4\u03b7\u03c1\u03ac\u03ba\u03b9, \u03a8\u03c5\u03c1\u03c1\u03ae \u03ba\u03b1\u03b9 \u03ba\u03b5\u03bd\u03c4\u03c1\u03b9\u03ba\u03ad\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2." },
-    southsuburbs: { label: "\u039d\u03cc\u03c4\u03b9\u03b1 \u03c0\u03c1\u03bf\u03ac\u03c3\u03c4\u03b9\u03b1",    description: "\u03a6\u03bb\u03bf\u03af\u03c3\u03b2\u03bf\u03c2, \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1, \u0386\u03bb\u03b9\u03bc\u03bf\u03c2 \u03ba\u03b1\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03b1\u03bb\u03b9\u03b1\u03ba\u03ae \u03c0\u03bb\u03b5\u03c5\u03c1\u03ac." },
-    restaurant:    { label: "\u0395\u03c3\u03c4\u03b9\u03b1\u03c4\u03cc\u03c1\u03b9\u03b1",        description: "\u0392\u03b3\u03b1\u03af\u03bd\u03bf\u03c5\u03bc\u03b5 \u03b3\u03b9\u03b1 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc, \u03c0\u03b9\u03c4\u03c3\u03b1\u03c1\u03af\u03b1 \u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c0\u03bf\u03c5 \u03be\u03b5\u03ba\u03b9\u03bd\u03bf\u03cd\u03bd \u03bc\u03b5 \u03c6\u03b1\u03b3\u03b7\u03c4\u03cc." },
-    gaming:        { label: "\u03a0\u03b1\u03b9\u03c7\u03bd\u03af\u03b4\u03b9\u03b1",         description: "\u039c\u03c0\u03cc\u03c9\u03bb\u03b9\u03bd\u03b3\u03ba, escape rooms, arcades \u03ba\u03b1\u03b9 \u03b4\u03b9\u03b1\u03c3\u03ba\u03b5\u03b4\u03b1\u03c3\u03c4\u03b9\u03ba\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2." },
-    bars:          { label: "\u039c\u03c0\u03b1\u03c1",              description: "Cocktail bars, wine bars, pubs \u03ba\u03b1\u03b9 \u03bd\u03c5\u03c7\u03c4\u03b5\u03c1\u03b9\u03bd\u03ac \u03bc\u03ad\u03c1\u03b7." },
-    movies:        { label: "\u03a4\u03b1\u03b9\u03bd\u03af\u03b5\u03c2",           description: "\u03a3\u03b9\u03bd\u03b5\u03bc\u03ac, \u03b8\u03b5\u03c1\u03b9\u03bd\u03ac \u03c3\u03b9\u03bd\u03b5\u03bc\u03ac, \u03c0\u03c1\u03bf\u03b2\u03bf\u03bb\u03ad\u03c2 \u03c4\u03b1\u03b9\u03bd\u03b9\u03ce\u03bd." },
-    addArea:        "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
-    addActivity:    "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    addAreaText:    "\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03bc\u03ad\u03c1\u03bf\u03c2.",
-    addActivityText:"\u03a0\u03c1\u03cc\u03c4\u03b5\u03b9\u03bd\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
-    addOwn:         "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5",
-    liveChoices:    "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2"
+    northsuburbs: { label: "Βόρεια προάστια",  description: "Χαλάνδρι, Μαρούσι, Κηφισιά και γειτονικές περιοχές." },
+    athenscenter: { label: "Κέντρο Αθηνών",    description: "Σύνταγμα, Μοναστηράκι, Ψυρρή και κεντρικές περιοχές." },
+    southsuburbs: { label: "Νότια προάστια",    description: "Φλοίσβος, Γλυφάδα, Άλιμος και η παραλιακή πλευρά." },
+    restaurant:    { label: "Εστιατόρια",        description: "Βγαίνουμε για φαγητό, πιτσαρία ή επιλογές που ξεκινούν με φαγητό." },
+    gaming:        { label: "Παιχνίδια",         description: "Μπόουλινγκ, escape rooms, arcades και διασκεδαστικές δραστηριότητες." },
+    bars:          { label: "Μπαρ",              description: "Cocktail bars, wine bars, pubs και νυχτερινά μέρη." },
+    movies:        { label: "Ταινίες",           description: "Σινεμά, θερινά σινεμά, προβολές ταινιών." },
+    addArea:        "Προσθήκη περιοχής",
+    addActivity:    "Προσθήκη δραστηριότητας",
+    addAreaText:    "Πρότεινε άλλη γειτονιά ή μέρος.",
+    addActivityText:"Πρότεινε άλλο είδους δραστηριότητας.",
+    addOwn:         "Πρόσθεσε δικό σου",
+    liveChoices:    "Ζωντανές επιλογές"
   }
 };
+
+optionTranslations.el.north_suburbs = optionTranslations.el.northsuburbs;
+optionTranslations.el.athens_center = optionTranslations.el.athenscenter;
+optionTranslations.el.south_suburbs = optionTranslations.el.southsuburbs;
 
 function translateOption(kind, optionId) {
   if (state.language !== "el") return null;
@@ -276,141 +280,195 @@ const copy = {
     freePlanDesc: "Basic features for casual groups", proPlanDesc: "Everything you need for serious planning",
     upgradeToPro: "Upgrade to Pro", subscribedThanks: "Thank you for subscribing! You now have access to all Pro features.",
     subscriptionError: "There was an error processing your subscription. Please try again.",
-    manageSubscription: "Manage Subscription"
+    manageSubscription: "Manage Subscription",
+    includedInYourPlan: "Included in your Plan",
+    validEmailRequired: "Enter a valid email address.",
+    enterGroupCode: "Enter an 8-digit group code.",
+    alreadyInFavourites: "Already in your favourites!",
+    fieldsRequired: "Area, activity, and place are required.",
+    fillPasswordFields: "Please fill in all password fields.",
+    noMessagesYet: "No messages yet. Say hello!",
+    tryAnotherUsername: "Try another username.",
+    confirmEmailCheck: "Check your email to confirm your account, then log in.",
+    enterEmailFirst: "Please enter your email first.",
+    recoveryEmailSent: 'If "{email}" is registered, a recovery email has been sent.',
+    passwordResetRequires: "Password reset requires Supabase Auth to be configured.",
+    accept: "Accept",
+    decline: "Decline",
+    groupInvites: "Group Invites",
+    noGroupInvites: "No group invites",
+    includedInYourPlanPro: "Included in your Plan"
   },
   el: {
-    login: "\u03a3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7", createAccount: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
-    enterPlanswipe: "\u0395\u03af\u03c3\u03bf\u03b4\u03bf\u03c2 \u03c3\u03c4\u03bf PlanSwipe",
-    groupPlans: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1", leaveGroup: "\u0388\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1", exitGroup: "\u03a0\u03af\u03c3\u03c9",
-    home: "\u0391\u03c1\u03c7\u03b9\u03ba\u03ae", likedPlaces: "\u0391\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7", groups: "\u039f\u03b9 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2 \u03bc\u03bf\u03c5", friends: "\u03a6\u03af\u03bb\u03bf\u03b9",
-    past: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2", personal: "\u03a0\u03c1\u03bf\u03c3\u03c9\u03c0\u03b9\u03ba\u03ac \u03c3\u03c4\u03bf\u03b9\u03c7\u03b5\u03af\u03b1",
-    settings: "\u03a1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2", logout: "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
-    heroEyebrow: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ac \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c0\u03b9\u03bf \u03b5\u03cd\u03ba\u03bf\u03bb\u03b1",
-    heroTitle: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c4\u03bf \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03c0\u03bf\u03c5 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1 \u03c3\u03b1\u03c2 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03b5\u03b9.",
-    heroDescription: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac \u03bc\u03b1\u03b6\u03af, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ad\u03c2 \u03b9\u03b4\u03ad\u03b5\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf PlanSwipe \u03bd\u03b1 \u03b1\u03bd\u03b1\u03b4\u03b5\u03af\u03be\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03b8\u03b1 \u03b1\u03c0\u03bf\u03bb\u03b1\u03cd\u03c3\u03b5\u03b9 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1.",
-    heroNote: "\u0393\u03b9\u03b1 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b5\u03c2 \u03c0\u03bf\u03c5 \u03c0\u03bf\u03c4\u03ad \u03b4\u03b5\u03bd \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03bf\u03c5\u03bd.",
-    whatPlanswipeIs: "\u03a4\u03b9 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c4\u03bf PlanSwipe",
-    sharedDecisionTool: "\u0388\u03bd\u03b1 \u03b5\u03c1\u03b3\u03b1\u03bb\u03b5\u03af\u03bf \u03ba\u03bf\u03b9\u03bd\u03ce\u03bd \u03b1\u03c0\u03bf\u03c6\u03ac\u03c3\u03b5\u03c9\u03bd",
-    offerText: "\u0391\u03bd\u03c4\u03af \u03b3\u03b9\u03b1 \u03b1\u03c4\u03b5\u03bb\u03b5\u03af\u03c9\u03c4\u03b5\u03c2 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ad\u03c2 \u03c3\u03c5\u03b6\u03b7\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2, \u03cc\u03bb\u03bf\u03b9 \u03b5\u03c0\u03b9\u03bb\u03ad\u03b3\u03bf\u03c5\u03bd \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03bf\u03c5\u03bd swipe \u03c3\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03ba\u03b1\u03b9 \u03b2\u03bb\u03ad\u03c0\u03bf\u03c5\u03bd \u03c0\u03bf\u03b9\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7.",
-    agreeFaster: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c0\u03b9\u03bf \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03b1",
-    agreeFasterText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af \u03c0\u03c1\u03b9\u03bd \u03b4\u03b5\u03af\u03c4\u03b5 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2.",
-    discoverOptions: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
-    discoverOptionsText: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03ae \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1 Google Places \u03cc\u03c4\u03b1\u03bd \u03c1\u03c5\u03b8\u03bc\u03b9\u03c3\u03c4\u03b5\u03af \u03c4\u03bf API key.",
-    voteAsGroup: "\u03a8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03c9\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1",
-    voteAsGroupText: "\u03a3\u03b7\u03bc\u03b5\u03b9\u03ce\u03c3\u03c4\u03b5 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03c9\u03c2 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9 \u03ba\u03b1\u03b9 \u03c3\u03c5\u03b3\u03ba\u03c1\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1.",
-    dinnerNearSea: "\u0392\u03c1\u03b1\u03b4\u03b9\u03bd\u03cc \u03b4\u03af\u03c0\u03bb\u03b1 \u03c3\u03c4\u03b7 \u03b8\u03ac\u03bb\u03b1\u03c3\u03c3\u03b1", glyfadaTaverna: "\u03a8\u03b1\u03c1\u03bf\u03c4\u03b1\u03b2\u03ad\u03c1\u03bd\u03b1 \u0393\u03bb\u03c5\u03c6\u03ac\u03b4\u03b1\u03c2",
-    seeWhatFriendsThink: "\u0394\u03b5\u03af\u03c4\u03b5 \u03c4\u03b9 \u03c0\u03b9\u03c3\u03c4\u03b5\u03cd\u03bf\u03c5\u03bd \u03bf\u03b9 \u03c6\u03af\u03bb\u03bf\u03b9 \u03c3\u03b1\u03c2.", findSimilar: "\u0392\u03c1\u03b5\u03af\u03c4\u03b5 \u03c0\u03b1\u03c1\u03cc\u03bc\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7",
-    startPlanning: "\u039e\u03b5\u03ba\u03b9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c4\u03bf\u03bd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc \u03bc\u03b5 \u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c3\u03b1\u03c2",
-    startPlanningText: "\u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03bd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03ae\u03c3\u03b5\u03c4\u03b5 \u03bc\u03b9\u03b1 \u03bd\u03ad\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ae \u03bd\u03b1 \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bc\u03b9\u03b1 \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03c3\u03b1.",
-    createGroup: "\u0394\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2",
-    createGroupText: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03ba\u03b1\u03b9 \u03bb\u03ac\u03b2\u03c4\u03b5 \u03ad\u03bd\u03b1\u03bd \u03bd\u03ad\u03bf 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc.",
-    joinGroup: "\u03a3\u03c5\u03bc\u03bc\u03b5\u03c4\u03bf\u03c7\u03ae \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1",
-    joinGroupText: "\u0395\u03b9\u03c3\u03ac\u03b3\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd 8\u03c8\u03ae\u03c6\u03b9\u03bf \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03b1\u03c0\u03cc \u03ad\u03bd\u03b1\u03bd \u03c6\u03af\u03bb\u03bf.",
-    groupName: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", groupCodeLabel: "8\u03c8\u03ae\u03c6\u03b9\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2", back: "\u03a0\u03af\u03c3\u03c9",
-    currentGroup: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1", stepArea: "\u0392\u03ae\u03bc\u03b1 1 \u03b1\u03c0\u03cc 2", stepType: "\u0392\u03ae\u03bc\u03b1 2 \u03b1\u03c0\u03cc 2",
-    areaTitle: "\u03a0\u03bf\u03cd \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03ac\u03c4\u03b5;", typeTitle: "\u03a4\u03b9 \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5;",
-    decisionHint: "\u038c\u03bb\u03bf\u03b9 \u03c0\u03c1\u03ad\u03c0\u03b5\u03b9 \u03bd\u03b1 \u03c8\u03b7\u03c6\u03af\u03c3\u03bf\u03c5\u03bd \u03c0\u03c1\u03b9\u03bd \u03c0\u03c1\u03bf\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
-    addArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2", addActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    addAreaText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03b7 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ac \u03ae \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae.",
-    addActivityText: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03af\u03bd\u03b5\u03c4\u03b5 \u03ac\u03bb\u03bb\u03bf \u03b5\u03af\u03b4\u03bf\u03c5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2.",
-    addOwn: "\u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03bf\u03c5", liveChoices: "\u0396\u03c9\u03bd\u03c4\u03b1\u03bd\u03ad\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2",
-    resultsTitle: "\u03a4\u03b9 \u03bc\u03c0\u03bf\u03c1\u03b5\u03af\u03c4\u03b5 \u03bd\u03b1 \u03ba\u03ac\u03bd\u03b5\u03c4\u03b5", aiSuggestions: "\u03a0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 AI",
-    changeBasics: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03b2\u03b1\u03c3\u03b9\u03ba\u03ce\u03bd", noStrongChoice: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b4\u03c5\u03bd\u03b1\u03c4\u03ae \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae",
-    keepSwiping: "\u03a3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03c4\u03b5 \u03c4\u03bf swipe \u03ae \u03c0\u03b5\u03c1\u03b9\u03bc\u03ad\u03bd\u03b5\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c5\u03c0\u03cc\u03bb\u03bf\u03b9\u03c0\u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1.",
-    noFriends: "\u0394\u03b5\u03bd \u03ad\u03c7\u03b5\u03c4\u03b5 \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
-    searchByUsername: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03bc\u03b5 \u03cc\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", search: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7",
-    requests: "\u0391\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", saveProfile: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    age: "\u0397\u03bb\u03b9\u03ba\u03af\u03b1", bio: "\u0392\u03b9\u03bf\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc", preferences: "\u03a0\u03c1\u03bf\u03c4\u03b9\u03bc\u03ae\u03c3\u03b5\u03b9\u03c2",
-    logPastActivity: "\u039a\u03b1\u03c4\u03b1\u03c7\u03ce\u03c1\u03b7\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    area: "\u03a0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae", activity: "\u0394\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1", place: "\u039c\u03ad\u03c1\u03bf\u03c2",
-    saveActivity: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    suggestedPlaces: "\u03a0\u03c1\u03bf\u03c4\u03b5\u03b9\u03bd\u03cc\u03bc\u03b5\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7", noLikedPlaces: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03b1\u03c1\u03b5\u03c3\u03c4\u03ac \u03bc\u03ad\u03c1\u03b7",
-    notifications: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2", friendRequestNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03b1\u03b9\u03c4\u03b7\u03bc\u03ac\u03c4\u03c9\u03bd \u03c6\u03b9\u03bb\u03af\u03b1\u03c2",
-    groupInviteNotif: "\u0395\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd", privacy: "\u0391\u03c0\u03cc\u03c1\u03c1\u03b7\u03c4\u03bf",
-    showOnlineStatus: "\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 online \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2", showProfilePublicly: "\u0394\u03b7\u03bc\u03cc\u03c3\u03b9\u03bf \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    saveSettings: "\u0391\u03c0\u03bf\u03b8\u03ae\u03ba\u03b5\u03c5\u03c3\u03b7 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c9\u03bd", settingsSaved: "\u039f\u03b9 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b1\u03bd",
-    deleteAccount: "\u0394\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
-    deleteAccountConfirm: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c8\u03b5\u03c4\u03b5 \u03c4\u03bf\u03bd \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc; \u0391\u03c5\u03c4\u03ae \u03b7 \u03b5\u03bd\u03ad\u03c1\u03b3\u03b5\u03b9\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03b9\u03b1\u03c4\u03ae.",
-    deleteAccountSuccess: "\u039f \u03bb\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03cc\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2.",
-    removeFriend: "\u0391\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7 \u03c6\u03af\u03bb\u03bf\u03c5", removeFriendConfirm: "\u039d\u03b1 \u03b1\u03c6\u03b1\u03b9\u03c1\u03b5\u03b8\u03b5\u03af \u03b1\u03c5\u03c4\u03cc\u03c2 \u03bf \u03c6\u03af\u03bb\u03bf\u03c2;",
-    activeGroups: "\u0395\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", pastGroups: "\u03a0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
-    noActiveGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", noPastGroups: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2",
-    you: "\u03b5\u03c3\u03b5\u03af\u03c2", friends: "\u03a6\u03af\u03bb\u03bf\u03b9", requestSent: "\u03a4\u03bf \u03b1\u03af\u03c4\u03b7\u03bc\u03b1 \u03c3\u03c4\u03ac\u03bb\u03b8\u03b7\u03ba\u03b5",
-    noPending: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03ba\u03ba\u03c1\u03b5\u03bc\u03ae \u03b1\u03b9\u03c4\u03ae\u03bc\u03b1\u03c4\u03b1", inboxClear: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b5\u03b9\u03b4\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03b5\u03b9\u03c2",
-    noPastActivities: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03b1\u03ba\u03cc\u03bc\u03b1 \u03c0\u03b1\u03bb\u03b9\u03ad\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
-    continueBrowsing: "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c3\u03c5\u03bd\u03b5\u03c7\u03af\u03c3\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b2\u03bb\u03ad\u03c0\u03b5\u03c4\u03b5 \u03bc\u03ad\u03c1\u03b7;",
-    noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03bc\u03b5 \u03c4\u03b9\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c3\u03b1\u03c2. \u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03bb\u03bb\u03ac\u03be\u03b5\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac;",
-    exitGroupPermanent: "\u039c\u03cc\u03bd\u03b9\u03bc\u03b7 \u03ad\u03be\u03bf\u03b4\u03bf\u03c2 \u03b1\u03c0\u03cc \u03bf\u03bc\u03ac\u03b4\u03b1",
-    confirmExitGroup: "\u0395\u03af\u03c3\u03c4\u03b5 \u03c3\u03af\u03b3\u03bf\u03c5\u03c1\u03bf\u03b9 \u03cc\u03c4\u03b9 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c6\u03cd\u03b3\u03b5\u03c4\u03b5 \u03bc\u03cc\u03bd\u03b9\u03bc\u03b1;",
-    accountManagement: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u039b\u03bf\u03b3\u03b1\u03c1\u03b9\u03b1\u03c3\u03bc\u03bf\u03cd",
-    choiceNo: "\u038c\u03c7\u03b9", choiceMaybe: "\u038a\u03c3\u03c9\u03c2", choiceYes: "\u039d\u03b1\u03b9",
-    searchFrom: "\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03b1\u03c0\u03cc", searchGooglePlaces: "Google Places",
-    searchSample: "\u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd", searchCustom: "\u03c0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03bf\u03c3\u03bc\u03ad\u03bd\u03b7 \u03b9\u03b4\u03ad\u03b1",
-    areaSelected: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03b8\u03b7\u03ba\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae! \u03a4\u03ce\u03c1\u03b1 \u03c8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1.",
-    fridayCrew: "\u03a0\u03b1\u03c1\u03ad\u03b1 \u03a0\u03b1\u03c1\u03b1\u03c3\u03ba\u03b5\u03c5\u03ae\u03c2",
-    forgotPassword: "\u039e\u03b5\u03c7\u03ac\u03c3\u03b1\u03c4\u03b5 \u03c4\u03bf\u03bd \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc;",
-    username: "\u038c\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7", email: "Email", password: "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
-    oldPassword: "\u03a0\u03b1\u03bb\u03b9\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2", newPassword: "\u039d\u03ad\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
-    verifyPassword: "\u0395\u03c0\u03b9\u03b2\u03b5\u03b2\u03b1\u03af\u03c9\u03c3\u03b7 \u03bd\u03ad\u03bf\u03c5 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd",
-    changePassword: "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03cd", passwordChanged: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b1\u03bb\u03bb\u03ac\u03c7\u03c4\u03b7\u03ba\u03b5 \u03b5\u03c0\u03b9\u03c4\u03c5\u03c7\u03ce\u03c2",
-    passwordMismatch: "\u039f\u03b9 \u03bd\u03ad\u03bf\u03b9 \u03ba\u03c9\u03b4\u03b9\u03ba\u03bf\u03af \u03b4\u03b5\u03bd \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd",
-    editProfilePicture: "\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c6\u03c9\u03c4\u03bf\u03b3\u03c1\u03b1\u03c6\u03af\u03b1\u03c2 \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-    bioPlaceholder: "\u03a0\u03b5\u03af\u03c4\u03b5 \u03c3\u03c4\u03bf\u03c5\u03c2 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c4\u03b9 \u03c3\u03c7\u03ad\u03b4\u03b9\u03b1 \u03c3\u03b1\u03c2 \u03b1\u03c1\u03ad\u03c3\u03bf\u03c5\u03bd.",
-    favouriteAreas: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2", favouriteActivities: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b5\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2",
-    favouritePlaces: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1 \u03bc\u03ad\u03c1\u03b7",
-    addAnotherArea: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae\u03c2",
-    addAnotherActivity: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03b7\u03c2 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
-    addAnotherPlace: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03ac\u03bb\u03bb\u03bf\u03c5 \u03bc\u03ad\u03c1\u03bf\u03c5\u03c2",
-    groupChat: "\u039f\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03a3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1", sendMessage: "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae",
-    messagePlaceholder: "\u0393\u03c1\u03ac\u03c8\u03b5 \u03bc\u03ae\u03bd\u03c5\u03bc\u03b1\u2026", closeChat: "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf",
-    waitingForOthers: "\u0391\u03bd\u03b1\u03bc\u03bf\u03bd\u03ae \u03b3\u03b9\u03b1 \u03c8\u03ae\u03c6\u03bf\u03c5\u03c2\u2026", voted: "\u03c8\u03ae\u03c6\u03b9\u03c3\u03b5", of: "\u03b1\u03c0\u03cc",
-    aiToggleOn: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2",
-    aiToggleOff: "\u0398\u03b1 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b7\u03b8\u03bf\u03cd\u03bd \u03b4\u03b5\u03af\u03b3\u03bc\u03b1\u03c4\u03b1", aiToggleLabel: "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 AI \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03c9\u03bd",
-    subscription: "\u03a3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae", subscribe: "\u0395\u03b3\u03b3\u03c1\u03b1\u03c6\u03ae",
-    free: "\u0394\u03c9\u03c1\u03b5\u03ac\u03bd", pro: "Pro", currentPlan: "\u03a4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03c3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae",
-    freePlanDesc: "\u0392\u03b1\u03c3\u03b9\u03ba\u03ad\u03c2 \u03b4\u03c5\u03bd\u03b1\u03c4\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2 \u03b3\u03b9\u03b1 \u03b1\u03c0\u03bb\u03ad\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b5\u03c2", proPlanDesc: "\u038c\u03bb\u03b1 \u03cc\u03c3\u03b1 \u03c7\u03c1\u03b5\u03b9\u03ac\u03b6\u03b5\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03c3\u03bf\u03b2\u03b1\u03c1\u03cc \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc",
-    upgradeToPro: "\u0391\u03bd\u03b1\u03b2\u03ac\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c3\u03b5 Pro", subscribedThanks: "\u0395\u03c5\u03c7\u03b1\u03c1\u03b9\u03c3\u03c4\u03bf\u03cd\u03bc\u03b5! \u03a4\u03ce\u03c1\u03b1 \u03ad\u03c7\u03b5\u03c4\u03b5 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7 \u03c3\u03b5 \u03cc\u03bb\u03b5\u03c2 \u03c4\u03b9\u03c2 Pro \u03b4\u03c5\u03bd\u03b1\u03c4\u03cc\u03c4\u03b7\u03c4\u03b5\u03c2.",
-    subscriptionError: "\u03a5\u03c0\u03ae\u03c1\u03be\u03b5 \u03c3\u03c6\u03ac\u03bb\u03bc\u03b1 \u03ba\u03b1\u03c4\u03ac \u03c4\u03b7\u03bd \u03b5\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1. \u03a0\u03b1\u03c1\u03b1\u03ba\u03b1\u03bb\u03ce \u03b4\u03bf\u03ba\u03b9\u03bc\u03ac\u03c3\u03c4\u03b5 \u03be\u03b1\u03bd\u03ac.",
-    manageSubscription: "\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u03a3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae\u03c2"
+    login: "Σύνδεση", createAccount: "Δημιουργία λογαριασμού",
+    enterPlanswipe: "Είσοδος στο PlanSwipe",
+    groupPlans: "Ομαδικά σχέδια", leaveGroup: "Έξοδος από ομάδα", exitGroup: "Πίσω",
+    home: "Αρχική", likedPlaces: "Αρεστά μέρη", groups: "Οι ομάδες μου", friends: "Φίλοι",
+    past: "Παλιές δραστηριότητες", personal: "Προσωπικά στοιχεία",
+    settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
+    heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
+    heroTitle: "Βρείτε το σχέδιο που η παρέα σας μπορεί να συμφωνήσει.",
+    heroDescription: "Επιλέξτε τα βασικά μαζί, κάντε swipe σε κοντινές ιδέες και αφήστε το PlanSwipe να αναδείξει τα μέρη που θα απολαύσει η παρέα.",
+    heroNote: "Για ομαδικές συνομιλίες που ποτέ δεν αποφασίζουν.",
+    whatPlanswipeIs: "Τι είναι το PlanSwipe",
+    sharedDecisionTool: "Ένα εργαλείο κοινών αποφάσεων",
+    offerText: "Αντί για ατελείωτες ομαδικές συζητήσεις, όλοι επιλέγουν τα βασικά, κάνουν swipe σε επιλογές και βλέπουν ποιες δραστηριότητες έχουν τη μεγαλύτερη υποστήριξη.",
+    agreeFaster: "Συμφωνήστε πιο γρήγορα",
+    agreeFasterText: "Έπιλέξτε περιοχή και είδος μαζί. Έτσι δεν χάνει η ομαδική συνομιλία.",
+    discoverOptions: "Ανακαλύψτε επιλογές",
+    discoverOptionsText: "Ανακαλύψτε πραγματικές προτάσεις από το Google Maps για την περιοχή και δραστηριότητα της ομάδας σας.",
+    voteAsGroup: "Ψηφίστε ως ομάδα",
+    voteAsGroupText: "Κάντε swipe και ψηφίστε Όχι, Ίσως ή Ναι. Δείτε αμέσως ποια μέρη έχουν τη μεγαλύτερη υποστήριξη.",
+    dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
+    seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
+    startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
+    startPlanningText: "Διαλέξτε αν θέλετε να δημιουργήσετε μια νέα ομάδα ή να μπείτε σε μια υπάρχουσα.",
+    createGroup: "Δημιουργία ομάδας",
+    createGroupText: "Επιλέξτε όνομα ομάδας και λάβετε έναν νέο 8ψήφιο κωδικό.",
+    joinGroup: "Συμμετοχή σε ομάδα",
+    joinGroupText: "Εισάγετε τον 8ψήφιο κωδικό από έναν φίλο.",
+    groupName: "Όνομα ομάδας", groupCodeLabel: "8ψήφιος κωδικός ομάδας", back: "Πίσω",
+    currentGroup: "Τρέχουσα ομάδα", stepArea: "Βήμα 1 από 2", stepType: "Βήμα 2 από 2",
+    areaTitle: "Πού θέλετε να πάτε;", typeTitle: "Τι είδους δραστηριότητα θέλετε;",
+    decisionHint: "Όλοι πρέπει να ψηφίσουν πριν προχωρήσει η ομάδα.",
+    addArea: "Προσθήκη περιοχής", addActivity: "Προσθήκη δραστηριότητας",
+    addAreaText: "Προτείνετε άλλη γειτονιά ή περιοχή.",
+    addActivityText: "Προτείνετε άλλο είδους δραστηριότητας.",
+    addOwn: "Πρόσθεσε δικό σου", liveChoices: "Ζωντανές επιλογές",
+    resultsTitle: "Τι μπορείτε να κάνετε", aiSuggestions: "Προτάσεις AI",
+    changeBasics: "Αλλαγή βασικών", noStrongChoice: "Δεν υπάρχει ακόμα δυνατή επιλογή",
+    keepSwiping: "Συνεχίστε το swipe ή περιμένετε την υπόλοιπη ομάδα.",
+    noFriends: "Δεν έχετε ακόμα φίλους",
+    searchByUsername: "Αναζήτηση με όνομα χρήστη", search: "Αναζήτηση",
+    requests: "Αιτήματα", saveProfile: "Αποθήκευση προφίλ",
+    age: "Ηλικία", ageGroup: "Ηλικιακή ομάδα", bio: "Βιογραφικό",
+    preferences: "Προτιμήσεις", logPastActivity: "Καταχώρηση δραστηριότητας",
+    area: "Περιοχή", activity: "Δραστηριότητα", place: "Μέρος",
+    saveActivity: "Αποθήκευση δραστηριότητας",
+    suggestedPlaces: "Προτεινόμενα μέρη", noLikedPlaces: "Δεν υπάρχουν ακόμα αρεστά μέρη",
+    notifications: "Ειδοποιήσεις", friendRequestNotif: "Ειδοποιήσεις αιτημάτων φιλίας",
+    groupInviteNotif: "Ειδοποιήσεις προσκλήσεων", privacy: "Απόρρητο",
+    showOnlineStatus: "Εμφάνιση online κατάστασης", showProfilePublicly: "Δημόσιο προφίλ",
+    saveSettings: "Αποθήκευση ρυθμίσεων", settingsSaved: "Οι ρυθμίσεις αποθηκεύτηκαν",
+    deleteAccount: "Διαγραφή Λογαριασμού",
+    deleteAccountConfirm: "Είστε σίγουροι ότι θέλετε να διαγράψετε τον λογαριασμό; Αυτή η ενέργεια είναι μη αναστρέψιμη.",
+    deleteAccountSuccess: "Ο λογαριασμός διαγράφηκε επιτυχώς.",
+    removeFriend: "Αφαίρεση φίλου", removeFriendConfirm: "Να αφαιρεθεί αυτός ο φίλος;",
+    activeGroups: "Ενεργές ομάδες", pastGroups: "Παλιές ομάδες",
+    noActiveGroups: "Δεν υπάρχουν ενεργές ομάδες", noPastGroups: "Δεν υπάρχουν παλιές ομάδες",
+    you: "εσείς", friends: "Φίλοι", requestSent: "Το αίτημα στάλθηκε",
+    noPending: "Δεν υπάρχουν εκκρεμή αιτήματα", inboxClear: "Δεν υπάρχουν ειδοποιήσεις",
+    noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
+    continueBrowsing: "Θέλετε να συνεχίσετε να βλέπετε μέρη;",
+    noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
+    exitGroupPermanent: "Μόνιμη έξοδος από ομάδα",
+    confirmExitGroup: "Είστε σίγουροι ότι θέλετε να φύγετε μόνιμα;",
+    accountManagement: "Διαχείριση Λογαριασμού",
+    choiceNo: "Όχι", choiceMaybe: "Ίσως", choiceYes: "Ναι",
+    searchFrom: "Αναζήτηση από", searchGooglePlaces: "Google Places",
+    searchSample: "δείγματα δεδομένων", searchCustom: "προσαρμοσμένη ιδέα",
+    areaSelected: "Συμφωνήθηκε περιοχή! Τώρα ψηφίστε για δραστηριότητα.",
+    fridayCrew: "Παρέα Παρασκευής",
+    forgotPassword: "Ξεχάσατε τον κωδικό;",
+    username: "Όνομα χρήστη", email: "Email", password: "Κωδικός",
+    oldPassword: "Παλιός κωδικός", newPassword: "Νέος κωδικός",
+    verifyPassword: "Επιβεβαίωση νέου κωδικού",
+    changePassword: "Αλλαγή κωδικού", passwordChanged: "Ο κωδικός άλλαξε επιτυχώς",
+    passwordMismatch: "Οι νέοι κωδικοί δεν ταιριάζουν",
+    editProfilePicture: "Επεξεργασία φωτογραφίας προφίλ",
+    bioPlaceholder: "Πείτε στους φίλους τι σχέδια σας αρέσουν.",
+    favouriteAreas: "Αγαπημένες περιοχές", favouriteActivities: "Αγαπημένες δραστηριότητες",
+    favouritePlaces: "Αγαπημένα μέρη",
+    addAnotherArea: "Προσθήκη άλλης περιοχής", addAnotherActivity: "Προσθήκη άλλης δραστηριότητας",
+    addAnotherPlace: "Προσθήκη άλλου μέρους", useFavourite: "Χρήση αγαπημένου",
+    selectSpecificArea: "Επιλέξτε συγκεκριμένη περιοχή",
+    addYourOwnPlace: "Προσθέστε δικό σας μέρος", selectThisPlace: "Επιλογή αυτού του μέρους",
+    selectedThisPlace: "Επιλέχθηκε",
+    bookNow: "Κράτηση τώρα", website: "Website", reservations: "Κρατήσεις",
+    noBookingDetails: "Δεν υπάρχει ακόμα website ή τηλέφωνο.",
+    passwordWeak: "Αδύναμος κωδικός", passwordOk: "Ο κωδικός είναι OK",
+    passwordStrong: "Δυνατός κωδικός",
+    passwordRequirements: "Χρησιμοποιήστε 8+ χαρακτήρες με κεφαλαίο, πεζό και αριθμό.",
+    ageGroupRequired: "Επιλέξτε πρώτα την ηλικιακή σας ομάδα πριν μπείτε σε ομάδα.",
+    viewProfile: "Προβολή προφίλ",
+    addToFavourites: "Προσθήκη στα Αγαπημένα",
+    favourited: "Αγαπημένο",
+    inviteToGroup: "Πρόσκληση στην ομάδα",
+    inviteFriends: "Προσκαλέστε φίλους",
+    inviteSelectFriends: "Επιλέξτε φίλους για πρόσκληση στην ομάδα.",
+    inviteSent: "Οι προσκλήσεις στάλθηκαν!",
+    noFriendsToInvite: "Προσθέστε φίλους πρώτα για να τους προσκαλέσετε.",
+    sendInvites: "Αποστολή προσκλήσεων",
+    cancel: "Ακύρωση",
+    ok: "OK",
+    selectedCount: "επιλέχθηκαν",
+    groupChat: "Ομαδική Συνομιλία", sendMessage: "Αποστολή",
+    messagePlaceholder: "Γράψε μήνυμα\u2026",
+    closeChat: "Κλείσιμο", waitingForOthers: "Αναμονή για ψήφους\u2026",
+    voted: "ψήφισε", of: "από", aiToggleOn: "Θα χρησιμοποιηθούν AI προτάσεις",
+    aiToggleOff: "Θα χρησιμοποιηθούν δείγματα", aiToggleLabel: "Λειτουργία AI προτάσεων",
+    subscription: "Συνδρομή", subscribe: "Εγγραφή",
+    free: "Δωρεάν", pro: "Pro", currentPlan: "Τρέχουσα συνδρομή",
+    freePlanDesc: "Βασικές δυνατότητες για απλές ομάδες",
+    proPlanDesc: "Όλα όσα χρειάζεστε για σοβαρό προγραμματισμό",
+    upgradeToPro: "Αναβάθμιση σε Pro",
+    subscribedThanks: "Ευχαριστούμε! Τώρα έχετε πρόσβαση σε όλες τις Pro δυνατότητες.",
+    subscriptionError: "Υπήρξε σφάλμα κατά την επεξεργασία. Παρακαλώ δοκιμάστε ξανά.",
+    manageSubscription: "Διαχείριση Συνδρομής",
+    includedInYourPlan: "Περιλαμβάνεται στο Πρόγραμμά σας",
+    includedInYourPlanPro: "Περιλαμβάνεται στο Πρόγραμμά σας",
+    validEmailRequired: "Εισάγετε μια έγκυρη διεύθυνση email.",
+    enterGroupCode: "Εισάγετε έναν 8ψήφιο κωδικό ομάδας.",
+    alreadyInFavourites: "Υπάρχει ήδη στα αγαπημένα σας!",
+    fieldsRequired: "Απαιτούνται περιοχή, δραστηριότητα και μέρος.",
+    fillPasswordFields: "Παρακαλώ συμπληρώστε όλα τα πεδία κωδικού.",
+    noMessagesYet: "Δεν υπάρχουν ακόμη μηνύματα. Πείτε ένα γεια!",
+    tryAnotherUsername: "Δοκιμάστε άλλο όνομα χρήστη.",
+    confirmEmailCheck: "Ελέγξτε το email σας για επιβεβαίωση του λογαριασμού σας και στη συνέχεια συνδεθείτε.",
+    enterEmailFirst: "Παρακαλώ εισάγετε πρώτα το email σας.",
+    recoveryEmailSent: 'Αν το "{email}" είναι καταχωρημένο, έχει σταλεί email ανάκτησης.',
+    passwordResetRequires: "Η επαναφορά κωδικού απαιτεί τη ρύθμιση του Supabase Auth.",
+    accept: "Αποδοχή",
+    decline: "Απόρριψη",
+    groupInvites: "Προσκλήσεις Ομάδας",
+    noGroupInvites: "Καμία πρόσκληση"
   }
 };
 
+// Object.assign for extra keys not in main el block
 Object.assign(copy.el, {
-  ageGroup: "\u0397\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03bf\u03bc\u03ac\u03b4\u03b1",
-  useFavourite: "\u03a7\u03c1\u03ae\u03c3\u03b7 \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf\u03c5",
-  selectSpecificArea: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c3\u03c5\u03b3\u03ba\u03b5\u03ba\u03c1\u03b9\u03bc\u03ad\u03bd\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae",
-  addYourOwnPlace: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03c4\u03b5 \u03b4\u03b9\u03ba\u03cc \u03c3\u03b1\u03c2 \u03bc\u03ad\u03c1\u03bf\u03c2",
-  selectThisPlace: "\u0395\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae \u03b1\u03c5\u03c4\u03bf\u03cd \u03c4\u03bf\u03c5 \u03bc\u03ad\u03c1\u03bf\u03c5\u03c2",
-  selectedThisPlace: "\u0395\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b5",
-  bookNow: "\u039a\u03c1\u03ac\u03c4\u03b7\u03c3\u03b7 \u03c4\u03ce\u03c1\u03b1",
+  ageGroup: "Ηλικιακή ομάδα",
+  useFavourite: "Χρήση αγαπημένου",
+  selectSpecificArea: "Επιλέξτε συγκεκριμένη περιοχή",
+  addYourOwnPlace: "Προσθέστε δικό σας μέρος",
+  selectThisPlace: "Επιλογή αυτού του μέρους",
+  selectedThisPlace: "Επιλέχθηκε",
+  bookNow: "Κράτηση τώρα",
   website: "Website",
-  reservations: "\u039a\u03c1\u03b1\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2",
-  noBookingDetails: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03b1\u03ba\u03cc\u03bc\u03b1 website \u03ae \u03c4\u03b7\u03bb\u03ad\u03c6\u03c9\u03bd\u03bf.",
-  passwordWeak: "\u0391\u03b4\u03cd\u03bd\u03b1\u03bc\u03bf\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
-  passwordOk: "\u039f \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03b5\u03af\u03bd\u03b1\u03b9 OK",
-  passwordStrong: "\u0394\u03c5\u03bd\u03b1\u03c4\u03cc\u03c2 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2",
-  passwordRequirements: "\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03c3\u03c4\u03b5 8+ \u03c7\u03b1\u03c1\u03b1\u03ba\u03c4\u03ae\u03c1\u03b5\u03c2 \u03bc\u03b5 \u03ba\u03b5\u03c6\u03b1\u03bb\u03b1\u03af\u03bf, \u03c0\u03b5\u03b6\u03cc \u03ba\u03b1\u03b9 \u03b1\u03c1\u03b9\u03b8\u03bc\u03cc.",
-  ageGroupRequired: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03c1\u03ce\u03c4\u03b1 \u03c4\u03b7\u03bd \u03b7\u03bb\u03b9\u03ba\u03b9\u03b1\u03ba\u03ae \u03c3\u03b1\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03c0\u03c1\u03b9\u03bd \u03bc\u03c0\u03b5\u03af\u03c4\u03b5 \u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1.",
-  viewProfile: "\u03a0\u03c1\u03bf\u03b2\u03bf\u03bb\u03ae \u03c0\u03c1\u03bf\u03c6\u03af\u03bb",
-  addToFavourites: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03c3\u03c4\u03b1 \u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1",
-  favourited: "\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf",
-  inviteToGroup: "\u03a0\u03c1\u03bf\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7 \u03c3\u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1",
-  inviteFriends: "\u03a0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
-  inviteSelectFriends: "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03b3\u03b9\u03b1 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7 \u03c3\u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1.",
-  inviteSent: "\u039f\u03b9 \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03b9\u03c2 \u03c3\u03c4\u03ac\u03bb\u03b7\u03ba\u03b1\u03bd!",
-  noFriendsToInvite: "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03c4\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c0\u03c1\u03ce\u03c4\u03b1 \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03c4\u03bf\u03c5\u03c2 \u03c0\u03c1\u03bf\u03c3\u03ba\u03b1\u03bb\u03ad\u03c3\u03b5\u03c4\u03b5.",
-  sendInvites: "\u0391\u03c0\u03bf\u03c3\u03c4\u03bf\u03bb\u03ae \u03c0\u03c1\u03bf\u03c3\u03ba\u03bb\u03ae\u03c3\u03b5\u03c9\u03bd",
-  cancel: "\u0391\u03ba\u03cd\u03c1\u03c9\u03c3\u03b7",
+  reservations: "Κρατήσεις",
+  noBookingDetails: "Δεν υπάρχει ακόμα website ή τηλέφωνο.",
+  passwordWeak: "Αδύναμος κωδικός",
+  passwordOk: "Ο κωδικός είναι OK",
+  passwordStrong: "Δυνατός κωδικός",
+  passwordRequirements: "Χρησιμοποιήστε 8+ χαρακτήρες με κεφαλαίο, πεζό και αριθμό.",
+  ageGroupRequired: "Επιλέξτε πρώτα την ηλικιακή σας ομάδα πριν μπείτε σε ομάδα.",
+  viewProfile: "Προβολή προφίλ",
+  addToFavourites: "Προσθήκη στα Αγαπημένα",
+  favourited: "Αγαπημένο",
+  inviteToGroup: "Πρόσκληση στην ομάδα",
+  inviteFriends: "Προσκαλέστε φίλους",
+  inviteSelectFriends: "Επιλέξτε φίλους για πρόσκληση στην ομάδα.",
+  inviteSent: "Οι προσκλήσεις στάλθηκαν!",
+  noFriendsToInvite: "Προσθέστε φίλους πρώτα για να τους προσκαλέσετε.",
+  sendInvites: "Αποστολή προσκλήσεων",
+  cancel: "Ακύρωση",
   ok: "OK",
-  selectedCount: "\u03b5\u03c0\u03b9\u03bb\u03ad\u03c7\u03b8\u03b7\u03ba\u03b1\u03bd",
-  noMoreSuggestions: "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03ac\u03bb\u03bb\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03bc\u03b5 \u03c4\u03b9\u03c2 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 \u03c3\u03b1\u03c2. \u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03bb\u03bb\u03ac\u03be\u03b5\u03c4\u03b5 \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac;",
-  agreeFasterText: "\u0388\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03bc\u03b1\u03b6\u03af. \u0387\u03c4\u03b1 \u03b4\u03b5\u03bd \u03c7\u03b1\u03bd\u03b5\u03af \u03b7 \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03ae \u03c3\u03c5\u03bd\u03bf\u03bc\u03b9\u03bb\u03af\u03b1.",
-  discoverOptionsText: "\u0391\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c8\u03c4\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ad\u03c2 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps \u03b3\u03b9\u03b1 \u03c4\u03b7\u03bd \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03c4\u03b7\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03c3\u03b1\u03c2.",
-  voteAsGroupText: "\u039a\u03ac\u03bd\u03c4\u03b5 swipe \u03ba\u03b1\u03b9 \u03c8\u03b7\u03c6\u03af\u03c3\u03c4\u03b5 \u038c\u03c7\u03b9, \u038a\u03c3\u03c9\u03c2 \u03ae \u039d\u03b1\u03b9. \u0394\u03b5\u03af\u03c4\u03b5 \u03ac\u03bc\u03b5\u03c3\u03b1 \u03c0\u03bf\u03b9\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03ad\u03c7\u03bf\u03c5\u03bd \u03c4\u03b7 \u03bc\u03b5\u03b3\u03b1\u03bb\u03cd\u03c4\u03b5\u03c1\u03b7 \u03c5\u03c0\u03bf\u03c3\u03c4\u03ae\u03c1\u03b9\u03be\u03b7."
+  selectedCount: "επιλέχθηκαν",
+  noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
+  agreeFasterText: "Έπιλέξτε περιοχή και είδος μαζί. Έτσι δεν χάνει η ομαδική συνομιλία.",
+  discoverOptionsText: "Ανακαλύψτε πραγματικές προτάσεις από το Google Maps για την περιοχή και δραστηριότητα της ομάδας σας.",
+  voteAsGroupText: "Κάντε swipe και ψηφίστε Όχι, Ίσως ή Ναι. Δείτε αμέσως ποια μέρη έχουν τη μεγαλύτερη υποστήριξη."
 });
-optionTranslations.el.north_suburbs = optionTranslations.el.northsuburbs;
-optionTranslations.el.athens_center = optionTranslations.el.athenscenter;
-optionTranslations.el.south_suburbs = optionTranslations.el.southsuburbs;
 
 // ====== LANGUAGE ======
 function applyLanguage() {
@@ -423,6 +481,7 @@ function applyLanguage() {
   loginButton.textContent       = t("login");
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
+  forgotPasswordButton.textContent = t("forgotPassword");
   renderPasswordStrength();
 
   const heroCopy = document.querySelector(".hero-copy");
@@ -598,7 +657,7 @@ async function loadAccount() {
 }
 
 async function login() {
-  if (!validEmail(loginEmail.value)) throw new Error("Enter a valid email address.");
+  if (!validEmail(loginEmail.value)) throw new Error(t("validEmailRequired"));
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email: loginEmail.value.trim(), password: loginPassword.value });
     if (error) throw new Error(error.message);
@@ -618,13 +677,13 @@ async function registerUser() {
   const username = loginUsername.value.trim();
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
-  if (!validEmail(email)) throw new Error("Enter a valid email address.");
+  if (!validEmail(email)) throw new Error(t("validEmailRequired"));
   if (!isStrongPassword(password)) throw new Error(t("passwordRequirements"));
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
     if (error) throw new Error(error.message);
     state.supabaseSession = data.session;
-    if (!data.session) { alert("Check your email to confirm your account, then log in."); return; }
+    if (!data.session) { alert(t("confirmEmailCheck")); return; }
     await syncSupabaseProfile(username, data.user.email || email, password);
     loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
     state.loginOpen = false; navigate("/main"); return;
@@ -840,7 +899,7 @@ function renderStatus() {
   const sourceLabel = (src === "google" || src === "google-ai") ? t("searchGooglePlaces") : src === "custom" ? t("searchCustom") : t("searchSample");
   const area = state.group.search?.area || "";
   const activity = state.group.search?.activity || "";
-  const context = area && activity ? `${activity} · ${area}` : `"${state.group.search?.query || ""}"`;
+  const context = area && activity ? `${activity} \u00b7 ${area}` : `"${state.group.search?.query || ""}"`;
   statusPanel.textContent = `${t("searchFrom")} ${sourceLabel}: ${context}`;
 }
 
@@ -952,36 +1011,52 @@ async function loadChatMessages(scrollToBottom) {
   const container = document.querySelector("#chatMessages");
   if (!container) return;
   try {
-    // When opening chat (scrollToBottom=true), always load ALL messages
-    const params = scrollToBottom ? "" : (state.chatLastTimestamp ? `?since=${encodeURIComponent(state.chatLastTimestamp)}` : "");
-    const data = await api(`/api/groups/${state.groupCode}/messages${params}`);
-    const messages = data.messages || [];
-
-    if (messages.length === 0 && !state.chatLastTimestamp) {
-      container.innerHTML = `<div class="chat-empty">No messages yet. Say hello!</div>`;
+    if (scrollToBottom) {
+      // Full reload — clear container to prevent duplicates
+      const data = await api(`/api/groups/${state.groupCode}/messages`);
+      const messages = data.messages || [];
+      if (messages.length === 0) {
+        container.innerHTML = `<div class="chat-empty">${t("noMessagesYet")}</div>`;
+        return;
+      }
+      state.chatLastTimestamp = messages[messages.length - 1].created_at;
+      state.chatLastReadTimestamp = state.chatLastTimestamp;
+      const me = currentUsername();
+      container.innerHTML = messages.map((msg) => {
+        const isMine = msg.username === me;
+        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}">${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}<span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
+      }).join("");
+      container.scrollTop = container.scrollHeight;
+      const badge = document.querySelector("#chatUnreadBadge");
+      if (badge) badge.classList.add("is-hidden");
+      // Mark messages as read
+      api(`/api/groups/${state.groupCode}/mark-read`, { method: "POST", body: { username: currentUsername() } }).catch(() => {});
       return;
     }
 
-    if (messages.length > 0) {
-      state.chatLastTimestamp = messages[messages.length - 1].created_at;
-      if (state.chatOpen) state.chatLastReadTimestamp = state.chatLastTimestamp;
-      const loading = container.querySelector(".chat-loading, .chat-empty");
-      if (loading) loading.remove();
+    // Incremental update — only append new messages
+    const params = state.chatLastTimestamp ? `?since=${encodeURIComponent(state.chatLastTimestamp)}` : "";
+    const data = await api(`/api/groups/${state.groupCode}/messages${params}`);
+    const messages = data.messages || [];
+    if (messages.length === 0) return;
 
-      const me = currentUsername();
-      messages.forEach((msg) => {
-        const isMine = msg.username === me;
-        const bubble = document.createElement("div");
-        bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
-        bubble.innerHTML = `${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}
-          <span class="chat-text">${escapeHtml(msg.message)}</span>`;
-        container.appendChild(bubble);
-      });
+    state.chatLastTimestamp = messages[messages.length - 1].created_at;
+    if (state.chatOpen) state.chatLastReadTimestamp = state.chatLastTimestamp;
 
-      if (scrollToBottom || true) container.scrollTop = container.scrollHeight;
-      const badge = document.querySelector("#chatUnreadBadge");
-      if (badge) badge.classList.add("is-hidden");
-    }
+    const me = currentUsername();
+    const loading = container.querySelector(".chat-loading, .chat-empty");
+    if (loading) loading.remove();
+
+    messages.forEach((msg) => {
+      const isMine = msg.username === me;
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
+      bubble.innerHTML = `${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}
+        <span class="chat-text">${escapeHtml(msg.message)}</span>`;
+      container.appendChild(bubble);
+    });
+
+    container.scrollTop = container.scrollHeight;
   } catch (e) { console.warn("Chat load error:", e.message); }
 }
 
@@ -1029,7 +1104,6 @@ async function refreshNotifications() {
       let count = 0;
       if (btn.dataset.page === "friends") count = data.friendRequests || 0;
       if (btn.dataset.page === "groups") {
-        // Fetch unread group message counts
         api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`).then((gData) => {
           const groupsWithUnread = (gData.groups || []).filter((g) => g.unreadCount > 0).length;
           const groupsBtn = [...profileMenu.querySelectorAll("button[data-page]")].find((b) => b.dataset.page === "groups");
@@ -1232,7 +1306,7 @@ async function joinGroup() {
   const username = currentUsername() || "Friend";
   if (!state.account?.profile?.ageGroup) { redirectForAgeGroup(); return; }
   const code = codeInput.value.trim();
-  if (!/^\d{8}$/.test(code)) { showError("Enter an 8-digit group code."); return; }
+  if (!/^\d{8}$/.test(code)) { showError(t("enterGroupCode")); return; }
   const data = await api(`/api/groups/${code}/join`, { method: "POST", body: { username, profile: state.account?.profile } });
   saveSession(data.user, data.group);
 }
@@ -1338,7 +1412,7 @@ function addToFavourites(place) {
       .then((data) => { saveAccount(data.user); renderCard(); })
       .catch((err) => showError(err.message));
   } else {
-    showError("Already in your favourites!");
+    showError(t("alreadyInFavourites"));
   }
 }
 
@@ -1399,9 +1473,9 @@ async function renderSubscriptionPage() {
           <li class="disabled">Priority support</li>
           <li class="disabled">Unlimited chat history</li>
         </ul>
-        ${!isPro ? `<span class="current-plan-badge">${t("currentPlan")}</span>` : `<button class="btn-ghost" type="button" disabled>${t("currentPlan")}</button>`}
+        ${isPro ? `<span class="current-plan-badge">${t("includedInYourPlan")}</span>` : `<span class="current-plan-badge">${t("currentPlan")}</span>`}
       </div>
-      <div class="subscription-card pro-card${isPro ? "" : ""}">
+      <div class="subscription-card pro-card">
         ${isPro ? `<span class="pro-badge">${t("pro")}</span>` : ""}
         <h3>${t("pro")}</h3>
         <div class="price">\u20ac5.99 <small>/month</small></div>
@@ -1491,7 +1565,7 @@ async function renderPersonalInformation() {
         <button class="btn-ghost" type="button" id="changePasswordButton">${t("changePassword")}</button>
       </label>
       <label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="3" placeholder="${t("bioPlaceholder")}">${escapeHtml(profile.bio || "")}</textarea></label>
-      <button class="btn-ghost" type="button" id="saveProfileButton">${t("saveProfile")}</button>
+      <button class="btn-primary" type="button" id="saveProfileButton" style="width:100%">${t("saveProfile")}</button>
     </section><section><h3>${t("preferences")}</h3>
       ${preferenceList(t("favouriteAreas"), "areas", preferences.areas, t("addAnotherArea"))}
       ${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}
@@ -1532,7 +1606,7 @@ async function refreshFriendsPage() {
     : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
 
   const allRequests = [
-    ...data.incoming.map((u) => userCard(u, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">Accept</button>`)),
+    ...data.incoming.map((u) => userCard(u, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">${t("accept")}</button>`)),
     ...data.outgoing.map((u) => userCard(u, `<span class="request-status">${t("requestSent")}</span>`))
   ];
   requestList.innerHTML = allRequests.length
@@ -1547,11 +1621,24 @@ async function renderGroupsPage() {
   const data = await api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`);
   const active = data.groups || [];
   const past = data.pastGroups || [];
+  
+  // Fetch group invites
+  let groupInvites = [];
+  try {
+    const accountData = await loadAccount();
+    groupInvites = accountData.profile?.groupInvites || [];
+  } catch (_) {}
 
   let html = `<h3 class="group-section-title">${t("activeGroups")}</h3>`;
   html += active.length
     ? active.map((g) => `<article class="group-card"><h3>${escapeHtml(g.name)}${g.unreadCount > 0 ? `<span class="group-unread-badge">${g.unreadCount > 99 ? "99+" : g.unreadCount}</span>` : ""}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></article>`).join("")
     : `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
+
+  // Group invites section
+  html += `<h3 class="group-section-title">${t("groupInvites")}</h3>`;
+  html += groupInvites.length
+    ? groupInvites.map((inv) => `<article class="group-card group-invite-card"><h3>${escapeHtml(inv.groupName)}</h3><p class="group-meta">${t("inviteFriends")}: ${escapeHtml(inv.fromUsername)}</p><div class="group-actions"><button class="btn-primary" type="button" data-accept-invite="${escapeHtml(inv.groupCode)}">${t("accept")}</button><button class="btn-ghost danger-button" type="button" data-decline-invite="${escapeHtml(inv.groupCode)}">${t("decline")}</button></div></article>`).join("")
+    : `<article class="demo-card"><h3>${t("noGroupInvites")}</h3></article>`;
 
   html += `<h3 class="group-section-title">${t("pastGroups")}</h3>`;
   html += past.length
@@ -1594,7 +1681,7 @@ async function savePastActivity() {
   const area = document.querySelector("#pastAreaInput")?.value.trim();
   const activity = document.querySelector("#pastActivityInput")?.value.trim();
   const place = document.querySelector("#pastPlaceInput")?.value.trim();
-  if (!area || !activity || !place) { showError("Area, activity, and place are required."); return; }
+  if (!area || !activity || !place) { showError(t("fieldsRequired")); return; }
   const profile = state.account?.profile || {};
   const pastActivities = [{ area, activity, place, loggedAt: Date.now() }, ...(profile.pastActivities || [])].slice(0, 50);
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, pastActivities } } });
@@ -1611,7 +1698,7 @@ async function renderAccountProfile(username) {
 
   const friendAction = user.username === currentUsername() ? "" :
     user.friendStatus === "friends" ? `<span class="request-status">${t("friends")}</span>` :
-    user.friendStatus === "incoming" ? `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>` :
+    user.friendStatus === "incoming" ? `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>` :
     user.friendStatus === "requested" ? `<span class="request-status">${t("requestSent")}</span>` :
     `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
 
@@ -1774,10 +1861,10 @@ async function searchFriends() {
   const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
   results.innerHTML = data.users.length ? data.users.map((user) => {
     if (user.friendStatus === "friends") return userCard(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button>`);
-    if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">Accept Request</button>`);
+    if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>`);
     if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
     return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
-  }).join("") : `<article class="demo-card"><h3>No users found</h3><p>Try another username.</p></article>`;
+  }).join("") : `<article class="demo-card"><h3>No users found</h3><p>${t("tryAnotherUsername")}</p></article>`;
 }
 
 async function exitGroupPermanently(code) {
@@ -1787,6 +1874,35 @@ async function exitGroupPermanently(code) {
   state.pageShellRendered = "";
   state.activePage = "groups";
   navigate("/groups");
+}
+
+async function acceptGroupInvite(groupCode) {
+  try {
+    const data = await api(`/api/groups/${groupCode}/join`, {
+      method: "POST",
+      body: { username: currentUsername(), profile: state.account?.profile }
+    });
+    // Remove invite from profile
+    const profile = state.account?.profile || {};
+    const groupInvites = (profile.groupInvites || []).filter((inv) => inv.groupCode !== groupCode);
+    await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, groupInvites } } });
+    saveAccount({ ...state.account, profile: { ...profile, groupInvites } });
+    state.pageShellRendered = "";
+    await renderGroupsPage();
+    // Join the group
+    codeInput.value = groupCode;
+    state.activePage = "";
+    navigate("/main");
+  } catch (e) { showError(e.message); }
+}
+
+async function declineGroupInvite(groupCode) {
+  const profile = state.account?.profile || {};
+  const groupInvites = (profile.groupInvites || []).filter((inv) => inv.groupCode !== groupCode);
+  await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, groupInvites } } });
+  saveAccount({ ...state.account, profile: { ...profile, groupInvites } });
+  state.pageShellRendered = "";
+  await renderGroupsPage();
 }
 
 function showModal(title, message, buttons = [{ label: t("ok"), primary: true, action: () => {} }]) {
@@ -1958,9 +2074,9 @@ loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
   const email = loginEmail.value.trim();
-  if (!email) { alert("Please enter your email first."); return; }
-  if (state.supabaseClient) { state.supabaseClient.auth.resetPasswordForEmail(email).catch(console.warn); alert(`If "${email}" is registered, a recovery email has been sent.`); }
-  else { alert("Password reset requires Supabase Auth to be configured."); }
+  if (!email) { alert(t("enterEmailFirst")); return; }
+  if (state.supabaseClient) { state.supabaseClient.auth.resetPasswordForEmail(email).catch(console.warn); alert(t("recoveryEmailSent").replace("{email}", email)); }
+  else { alert(t("passwordResetRequires")); }
 });
 
 homeButton.addEventListener("click", () => navigate("/home"));
@@ -2097,7 +2213,7 @@ pageDemo.addEventListener("click", (e) => {
     const old = document.querySelector("#profileOldPassword")?.value;
     const pw = document.querySelector("#profileNewPassword")?.value;
     const verify = document.querySelector("#profileVerifyPassword")?.value;
-    if (!old || !pw || !verify) { showError("Please fill in all password fields."); return; }
+    if (!old || !pw || !verify) { showError(t("fillPasswordFields")); return; }
     if (pw !== verify) { showError(t("passwordMismatch")); return; }
     if (!isStrongPassword(pw)) { showError(t("passwordRequirements")); return; }
     api("/api/change-password", { method: "POST", body: { username: currentUsername(), oldPassword: old, newPassword: pw } })
@@ -2107,6 +2223,11 @@ pageDemo.addEventListener("click", (e) => {
   }
   const upgradeBtn = e.target.closest("#upgradeToProBtn");
   if (upgradeBtn) { handleUpgradeToPro().catch((err) => showError(err.message)); return; }
+  // Handle group invite accept/decline
+  const acceptInviteBtn = e.target.closest("[data-accept-invite]");
+  if (acceptInviteBtn) { acceptGroupInvite(acceptInviteBtn.dataset.acceptInvite).catch((err) => showError(err.message)); return; }
+  const declineInviteBtn = e.target.closest("[data-decline-invite]");
+  if (declineInviteBtn) { declineGroupInvite(declineInviteBtn.dataset.declineInvite).catch((err) => showError(err.message)); return; }
 });
 
 pageDemo.addEventListener("change", (e) => { if (e.target.id === "profilePictureInput") updateProfilePicture(e.target.files?.[0]).catch((err) => showError(err.message)); });
