@@ -1383,6 +1383,29 @@ async function handleApi(request, response) {
   }
 
   // ── Suggestions (Google Maps first, then optional OpenAI refinement) ──
+  // ── Reviews ──
+  if (request.method === "POST" && parts[1] === "reviews") {
+    const body = await readBody(request);
+    const googlePlaceId = body.googlePlaceId || "";
+    if (!googlePlaceId || !googleApiKey) { sendJson(response, 200, { reviews: [] }); return; }
+    try {
+      const apiResponse = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}?fields=reviews&key=${googleApiKey}`);
+      if (!apiResponse.ok) { sendJson(response, 200, { reviews: [] }); return; }
+      const data = await apiResponse.json();
+      const reviews = (data.reviews || []).slice(0, 3).map((r) => ({
+        author: r.authorAttribution?.displayName || "Anonymous",
+        rating: r.rating || null,
+        text: r.text?.text || "",
+        relativeTime: r.relativePublishTimeDescription || ""
+      }));
+      sendJson(response, 200, { reviews });
+    } catch (e) {
+      console.warn("Reviews fetch error:", e.message);
+      sendJson(response, 200, { reviews: [] });
+    }
+    return;
+  }
+
   if (request.method === "POST" && parts[1] === "suggestions") {
     const body = await readBody(request);
     const area = body.area || "";
