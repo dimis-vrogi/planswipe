@@ -734,13 +734,17 @@ async function registerUser() {
   const username = loginUsername.value.trim();
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
-  if (email && !validEmail(email)) throw new Error(t("validEmailRequired"));
-  if (!isStrongPassword(password)) throw new Error(t("passwordRequirements"));
+  if (email && !validEmail(email)) throw new Error(t("validEmailRequired") || "Valid email required");
+  if (!isStrongPassword(password)) throw new Error(t("passwordRequirements") || "Password does not meet requirements");
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message || "Supabase sign up failed");
     state.supabaseSession = data.session;
-    if (!data.session) { alert(t("confirmEmailCheck")); return; }
+    if (!data.session) {
+      const message = (t("confirmEmailCheck") || "Check your email to confirm your account, then log in.") + (email ? "" : " " + (t("enterEmailFirst") || "Please enter your email first."));
+      showError(message);
+      return;
+    }
     await syncSupabaseProfile(username, data.user.email || email, password);
     loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
     state.loginOpen = false; navigate("/main"); return;
@@ -2259,9 +2263,10 @@ async function openInviteModal() {
 }
 
 function showError(message) {
-  if (!isLoggedIn()) { alert(message); return; }
+  const text = String(message ?? "An error occurred. Please try again.").trim() || "An error occurred. Please try again.";
+  if (!isLoggedIn()) { alert(text); return; }
   setVisible(statusPanel, true);
-  statusPanel.textContent = message;
+  statusPanel.textContent = text;
 }
 
 function openLogin() {
