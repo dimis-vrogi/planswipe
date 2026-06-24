@@ -36,6 +36,7 @@ const state = {
   placesExhausted: false,
   showAgeGroupModal: false,
   showResetPasswordForm: false,
+  forgotPasswordMode: false,
   // Personal messaging
   dmChatUsername: "",
   dmChatOtherUsername: "",
@@ -734,7 +735,8 @@ async function registerUser() {
   const username = loginUsername.value.trim();
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
-  if (email && !validEmail(email)) throw new Error(t("validEmailRequired") || "Valid email required");
+  if (!email) throw new Error("Email is required");
+  if (!validEmail(email)) throw new Error(t("validEmailRequired") || "Valid email required");
   if (!isStrongPassword(password)) throw new Error(t("passwordRequirements") || "Password does not meet requirements");
   if (state.supabaseClient) {
     const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
@@ -1254,7 +1256,7 @@ function renderApp() {
     loginForm.querySelector("h2").textContent = state.authMode === "signup" ? t("createAccount") : t("enterPlanswipe");
     setVisible(loginButton, state.authMode !== "signup");
     setVisible(registerButton, state.authMode === "signup");
-    setVisible(forgotPasswordButton, state.authMode !== "signup" && !state.showResetPasswordForm);
+    setVisible(forgotPasswordButton, state.authMode !== "signup" && !state.showResetPasswordForm && !state.forgotPasswordMode);
     renderPasswordStrength();
     hideAppPanels(); removeChatButton();
 
@@ -1301,6 +1303,55 @@ function renderApp() {
       }
     } else {
       document.querySelector("#resetPasswordForm")?.remove();
+    }
+
+    // Show forgot password email form
+    if (state.forgotPasswordMode) {
+      const existingForm = document.querySelector("#forgotPasswordForm");
+      if (!existingForm) {
+        setVisible(loginUsername, false);
+        setVisible(loginPassword, false);
+        setVisible(loginButton, false);
+        setVisible(registerButton, false);
+        const form = document.createElement("div");
+        form.id = "forgotPasswordForm";
+        form.className = "login-inner";
+        form.style.marginTop = "10px";
+        form.innerHTML = `
+          <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${escapeHtml(t("forgotPassword"))}</h3>
+          <input id="forgotPasswordEmail" type="email" placeholder="${escapeHtml(t("email"))}" autocomplete="email">
+          <button id="forgotPasswordSendBtn" type="button" class="btn-primary" style="width:100%">${escapeHtml(t("recoverPassword"))}</button>
+          <button id="forgotPasswordCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
+        `;
+        loginForm.parentNode.insertBefore(form, loginForm.nextSibling);
+
+        document.querySelector("#forgotPasswordSendBtn").addEventListener("click", async () => {
+          const email = document.querySelector("#forgotPasswordEmail")?.value.trim();
+          if (!email || !validEmail(email)) { showError(t("validEmailRequired")); return; }
+          try {
+            if (state.supabaseClient) {
+              const { error } = await state.supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + "/recover"
+              });
+              if (error) throw new Error(error.message);
+            }
+            state.forgotPasswordMode = false;
+            document.querySelector("#forgotPasswordForm")?.remove();
+            showError(t("recoveryEmailSent").replace("{email}", email));
+            renderApp();
+          } catch (e) { showError(e.message); }
+        });
+
+        document.querySelector("#forgotPasswordCancelBtn").addEventListener("click", () => {
+          state.forgotPasswordMode = false;
+          document.querySelector("#forgotPasswordForm")?.remove();
+          renderApp();
+        });
+      }
+    } else {
+      document.querySelector("#forgotPasswordForm")?.remove();
+      setVisible(loginUsername, true);
+      setVisible(loginPassword, true);
     }
     return;
   }
@@ -2417,8 +2468,8 @@ registerButton.addEventListener("click", () => registerUser().catch((e) => showE
 loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
-  // Redirect user to www.planswipe.gr/recover
-  window.location.href = "https://www.planswipe.gr/recover";
+  state.forgotPasswordMode = true;
+  renderApp();
 });
 
 homeButton.addEventListener("click", () => navigate("/home"));
