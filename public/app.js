@@ -529,7 +529,7 @@ function applyLanguage() {
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
   forgotPasswordButton.textContent = t("forgotPassword");
-  loginEmail.placeholder = `${t("email")} (${t("optional")})`;
+  loginEmail.placeholder = state.authMode === "signup" ? `${t("email")}` : `${t("email")} (${t("optional")})`;
   renderPasswordStrength();
 
   const heroCopy = document.querySelector(".hero-copy");
@@ -1226,6 +1226,10 @@ function onUrlChange() {
   if (route === "/home") { state.showHero = true; state.activePage = ""; renderApp(); return; }
   if (route === "/main") { state.showHero = false; state.activePage = ""; renderApp(); return; }
 
+  if (route === "/recover") {
+    state.showHero = false; state.activePage = "recover"; renderApp(); return;
+  }
+
   const pageMatch = route.match(/^\/(groups|friends|messages|likedplaces|past|personal|settings|subscription)$/);
   if (pageMatch) { state.showHero = false; state.activePage = pageMatch[1]; renderApp(); return; }
 
@@ -1334,6 +1338,54 @@ function renderApp() {
     resetButton.textContent = t("newGroup");
   }
   refreshNotifications();
+
+  if (state.activePage === "recover") {
+    setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
+    hideAppPanels(); removeChatButton();
+    const existingRecover = document.querySelector("#recoverPage");
+    if (!existingRecover) {
+      const recoverDiv = document.createElement("div");
+      recoverDiv.id = "recoverPage";
+      recoverDiv.className = "hero-screen";
+      recoverDiv.style.minHeight = "100vh";
+      recoverDiv.style.display = "grid";
+      recoverDiv.style.placeItems = "center";
+      recoverDiv.innerHTML = `
+        <div class="login-panel" style="animation:none;">
+          <div class="login-inner">
+            <h2>${escapeHtml(t("recoverPassword"))}</h2>
+            <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
+            <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+            <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
+            <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
+          </div>
+        </div>`;
+      document.querySelector(".app-shell").appendChild(recoverDiv);
+
+      document.querySelector("#recoverConfirmBtn").addEventListener("click", async () => {
+        const newPw = document.querySelector("#recoverNewPassword")?.value;
+        const confirmPw = document.querySelector("#recoverConfirmPassword")?.value;
+        if (!newPw || !confirmPw) { showError(t("fillPasswordFields")); return; }
+        if (newPw !== confirmPw) { showError(t("passwordMismatch")); return; }
+        if (!isStrongPassword(newPw)) { showError(t("passwordRequirements")); return; }
+        try {
+          if (state.supabaseClient) {
+            const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
+            if (error) throw new Error(error.message);
+          }
+          alert(t("passwordResetSuccess"));
+          document.querySelector("#recoverPage")?.remove();
+          navigate("/home");
+        } catch (e) { showError(e.message); }
+      });
+
+      document.querySelector("#recoverCancelBtn").addEventListener("click", () => {
+        document.querySelector("#recoverPage")?.remove();
+        navigate("/home");
+      });
+    }
+    return;
+  }
 
   if (state.activePage) {
     hideAppPanels(); setVisible(pagePanel, true);
@@ -1690,6 +1742,7 @@ async function renderPersonalInformation() {
         <input id="profileNewPassword" type="password" placeholder="${t("newPassword")}">
         <input id="profileVerifyPassword" type="password" placeholder="${t("verifyPassword")}">
         <button class="btn-ghost" type="button" id="changePasswordButton">${t("changePassword")}</button>
+        <button type="button" id="profileForgotPassword" class="hyperlink-button" style="background:none;border:none;color:var(--green);cursor:pointer;text-decoration:underline;font-size:0.85rem;padding:4px 0;text-align:left;">${escapeHtml(t("forgotPassword"))}</button>
       </label>
       <label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="3" placeholder="${t("bioPlaceholder")}">${escapeHtml(profile.bio || "")}</textarea></label>
       <button class="btn-primary" type="button" id="saveProfileButton" style="width:100%">${t("saveProfile")}</button>
@@ -2364,42 +2417,8 @@ registerButton.addEventListener("click", () => registerUser().catch((e) => showE
 loginPassword.addEventListener("input", renderPasswordStrength);
 
 forgotPasswordButton.addEventListener("click", () => {
-  const existingForm = document.querySelector("#forgotPasswordForm");
-  if (existingForm) { existingForm.remove(); return; }
-  const form = document.createElement("div");
-  form.id = "forgotPasswordForm";
-  form.className = "login-inner";
-  form.style.marginTop = "10px";
-  form.style.borderTop = "1px solid var(--line)";
-  form.style.paddingTop = "14px";
-  form.innerHTML = `
-    <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${t("recoverPassword")}</h3>
-    <input id="forgotPasswordInput" type="text" placeholder="${t("username")} / ${t("email")}" autocomplete="off">
-    <button id="recoverPasswordBtn" type="button" class="btn-primary">${t("recoverPassword")}</button>
-    <button id="cancelForgotBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${t("cancel")}</button>
-  `;
-  forgotPasswordButton.parentNode.insertBefore(form, forgotPasswordButton.nextSibling);
-  document.querySelector("#forgotPasswordInput").focus();
-  document.querySelector("#recoverPasswordBtn").addEventListener("click", async () => {
-    const input = document.querySelector("#forgotPasswordInput")?.value.trim();
-    if (!input) { alert(t("enterEmailFirst")); return; }
-    const isEmail = input.includes("@");
-    let emailToUse = input;
-    if (!isEmail) {
-      try {
-        const data = await api(`/api/account?username=${encodeURIComponent(input)}&viewer=${encodeURIComponent(input)}`);
-        emailToUse = data.user?.email || input;
-      } catch (_) { emailToUse = input; }
-    }
-    if (state.supabaseClient) {
-      state.supabaseClient.auth.resetPasswordForEmail(emailToUse).catch(console.warn);
-      alert(t("recoveryEmailSent").replace("{email}", emailToUse));
-    } else {
-      alert(t("passwordResetRequires"));
-    }
-    form.remove();
-  });
-  document.querySelector("#cancelForgotBtn").addEventListener("click", () => form.remove());
+  // Redirect user to www.planswipe.gr/recover
+  window.location.href = "https://www.planswipe.gr/recover";
 });
 
 homeButton.addEventListener("click", () => navigate("/home"));
@@ -2565,6 +2584,11 @@ pageDemo.addEventListener("click", (e) => {
   if (showPastBtn) { document.querySelector("#pastActivityForm")?.classList.toggle("is-hidden"); return; }
   const savePastBtn = e.target.closest("#savePastActivityButton");
   if (savePastBtn) { savePastActivity().catch((err) => showError(err.message)); return; }
+  const forgotPwBtn = e.target.closest("#profileForgotPassword");
+  if (forgotPwBtn) {
+    navigate("/recover");
+    return;
+  }
   const changePwBtn = e.target.closest("#changePasswordButton");
   if (changePwBtn) {
     const old = document.querySelector("#profileOldPassword")?.value;
