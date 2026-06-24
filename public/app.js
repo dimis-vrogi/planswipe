@@ -1391,8 +1391,13 @@ function renderApp() {
   refreshNotifications();
 
   if (state.activePage === "recover") {
+    // Security: only show the recovery form if user has a valid Supabase session (from recovery email link)
     setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
     hideAppPanels(); removeChatButton();
+    if (!state.supabaseSession || !state.supabaseClient) {
+      navigate("/home");
+      return;
+    }
     const existingRecover = document.querySelector("#recoverPage");
     if (!existingRecover) {
       const recoverDiv = document.createElement("div");
@@ -2397,10 +2402,10 @@ async function boot() {
         if (error) throw error;
         state.supabaseSession = data.session;
         if (data.session) {
-          // Show reset password form
-          state.showResetPasswordForm = true;
-          state.loginOpen = true;
-          renderApp();
+          // Navigate to /recover to show the password reset form
+          window.location.hash = "";
+          history.replaceState(null, "", "/recover");
+          navigate("/recover");
           return;
         }
       } catch (e) { console.warn("Recovery handler:", e.message); }
