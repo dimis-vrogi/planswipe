@@ -197,16 +197,16 @@ const copy = {
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
     messages: "Messages",
     message: "Message",
-    heroEyebrow: "Group plans made easier",
-    heroTitle: "Find the plan your group can actually agree on.",
-    heroDescription: "Pick the basics together, swipe through nearby ideas, and let PlanSwipe surface the places your friends are most likely to enjoy.",
-    heroNote: "Built for group chats that never decide.",
+    heroEyebrow: "Group plans, minus the group-chat chaos",
+    heroTitle: "The plan your whole group actually agrees on.",
+    heroDescription: "Pick an area and an activity together, swipe through real nearby places pulled straight from Google Maps, and vote No, Maybe, or Yes. PlanSwipe surfaces the spots everyone's into — so a night out gets settled in minutes, not a hundred messages.",
+    heroNote: "Made for the group chats that can never pick a place.",
     whatPlanswipeIs: "What PlanSwipe is",
-    sharedDecisionTool: "A shared decision tool for real plans",
-    offerText: "Instead of long group chats, everyone chooses the basics, swipes through options, and sees which activities have the strongest support.",
-    agreeFaster: "Agree faster", agreeFasterText: "Everyone picks an area and activity type together. No more endless back-and-forth in the group chat.",
-    discoverOptions: "Discover options", discoverOptionsText: "Get real suggestions from Google Maps tailored to your group's area and activity. Browse places you'll actually enjoy.",
-    voteAsGroup: "Vote as a group", voteAsGroupText: "Swipe through options and vote No, Maybe, or Yes. See instantly which places have the most support from your friends.",
+    sharedDecisionTool: "One shared way to decide where to go",
+    offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the winners rise to the top. No polls, no pressure, no 200-message thread that ends in \"idk, you pick\".",
+    agreeFaster: "Agree on the basics first", agreeFasterText: "Everyone chooses an area and the type of night out together. Once the group agrees, PlanSwipe takes it from there — no endless back-and-forth.",
+    discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
+    voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe No, Maybe, or Yes on each spot and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
@@ -319,7 +319,19 @@ const copy = {
     newPasswordPlaceholder: "New password",
     confirmPasswordPlaceholder: "Confirm new password",
     resetPassword: "Reset Password",
-    passwordResetSuccess: "Password reset successfully! You can now log in.",
+    passwordResetSuccess: "Password reset successfully!",
+    passwordResetSuccessBody: "Your password has been changed. You can now log in with your new password.",
+    enterUsernameOrEmail: "Enter your username or email.",
+    enterPassword: "Enter your password.",
+    usernameOrEmail: "Username or email",
+    confirmEmailFirst: "Please confirm your email first — check your inbox for the confirmation link.",
+    wrongCredentials: "Wrong username/email or password.",
+    usernameRequired: "Username is required.",
+    emailRequired: "Email is required.",
+    usernameTakenLogin: "That username is already taken. Try logging in instead.",
+    emailTakenLogin: "That email is already registered. Try logging in instead.",
+    checkEmailTitle: "Almost there!",
+    noEmailOnAccount: "No email is set on this account.",
     selectedBy: "selected by",
     people: "people",
     person: "person",
@@ -336,19 +348,19 @@ const copy = {
     settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
     messages: "Μηνύματα",
     message: "Μήνυμα",
-    heroEyebrow: "Ομαδικά σχέδια πιο εύκολα",
-    heroTitle: "Βρείτε το σχέδιο που η παρέα σας μπορεί να συμφωνήσει.",
-    heroDescription: "Επιλέξτε τα βασικά μαζί, κάντε swipe σε κοντινές ιδέες και αφήστε το PlanSwipe να αναδείξει τα μέρη που θα απολαύσει η παρέα.",
-    heroNote: "Για ομαδικές συνομιλίες που ποτέ δεν αποφασίζουν.",
+    heroEyebrow: "Ομαδικά σχέδια, χωρίς το χάος της ομαδικής συνομιλίας",
+    heroTitle: "Το σχέδιο που όλη η παρέα σας πραγματικά συμφωνεί.",
+    heroDescription: "Διαλέξτε περιοχή και δραστηριότητα μαζί, κάντε swipe σε πραγματικά κοντινά μέρη απευθείας από το Google Maps και ψηφίστε Όχι, Ίσως ή Ναι. Το PlanSwipe αναδεικνύει τα μέρη που αρέσουν σε όλους — ώστε η έξοδος να κλείνει σε λεπτά, όχι σε εκατό μηνύματα.",
+    heroNote: "Φτιαγμένο για τις παρέες που ποτέ δεν καταλήγουν πού να πάνε.",
     whatPlanswipeIs: "Τι είναι το PlanSwipe",
-    sharedDecisionTool: "Ένα εργαλείο κοινών αποφάσεων",
-    offerText: "Αντί για ατελείωτες ομαδικές συζητήσεις, όλοι επιλέγουν τα βασικά, κάνουν swipe σε επιλογές και βλέπουν ποιες δραστηριότητες έχουν τη μεγαλύτερη υποστήριξη.",
-    agreeFaster: "Συμφωνήστε πιο γρήγορα",
-    agreeFasterText: "Έπιλέξτε περιοχή και είδος μαζί. Έτσι δεν χάνει η ομαδική συνομιλία.",
-    discoverOptions: "Ανακαλύψτε επιλογές",
-    discoverOptionsText: "Ανακαλύψτε πραγματικές προτάσεις από το Google Maps για την περιοχή και δραστηριότητα της ομάδας σας.",
-    voteAsGroup: "Ψηφίστε ως ομάδα",
-    voteAsGroupText: "Κάντε swipe και ψηφίστε Όχι, Ίσως ή Ναι. Δείτε αμέσως ποια μέρη έχουν τη μεγαλύτερη υποστήριξη.",
+    sharedDecisionTool: "Ένας κοινός τρόπος να αποφασίζετε πού θα πάτε",
+    offerText: "Φτιάξτε μια ομάδα με τους φίλους σας, συμφωνήστε στα βασικά, κάντε swipe σε πραγματικές επιλογές και δείτε τους νικητές να ανεβαίνουν στην κορυφή. Χωρίς ψηφοφορίες, χωρίς πίεση, χωρίς ατελείωτη συνομιλία που καταλήγει στο «δεν ξέρω, διάλεξε εσύ».",
+    agreeFaster: "Πρώτα συμφωνήστε στα βασικά",
+    agreeFasterText: "Όλοι διαλέγουν περιοχή και είδος εξόδου μαζί. Μόλις η ομάδα συμφωνήσει, το PlanSwipe αναλαμβάνει — χωρίς ατελείωτες συζητήσεις.",
+    discoverOptions: "Ανακαλύψτε πραγματικά μέρη",
+    discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
+    voteAsGroup: "Ψηφίστε και ταιριάξτε μαζί",
+    voteAsGroupText: "Κάντε swipe Όχι, Ίσως ή Ναι σε κάθε μέρος και δείτε αμέσως ποια μέρη συμφωνεί η ομάδα σας. Όταν συμφωνούν όλοι, έχετε το σχέδιό σας.",
     dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
     seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
     startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
@@ -474,7 +486,19 @@ const copy = {
     newPasswordPlaceholder: "Νέος κωδικός",
     confirmPasswordPlaceholder: "Επιβεβαίωση νέου κωδικού",
     resetPassword: "Επαναφορά Κωδικού",
-    passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς! Μπορείτε να συνδεθείτε.",
+    passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς!",
+    passwordResetSuccessBody: "Ο κωδικός σας άλλαξε. Μπορείτε τώρα να συνδεθείτε με τον νέο σας κωδικό.",
+    enterUsernameOrEmail: "Εισαγάγετε το όνομα χρήστη ή το email σας.",
+    enterPassword: "Εισαγάγετε τον κωδικό σας.",
+    usernameOrEmail: "Όνομα χρήστη ή email",
+    confirmEmailFirst: "Επιβεβαιώστε πρώτα το email σας — ελέγξτε τα εισερχόμενά σας για τον σύνδεσμο επιβεβαίωσης.",
+    wrongCredentials: "Λάθος όνομα χρήστη/email ή κωδικός.",
+    usernameRequired: "Το όνομα χρήστη είναι υποχρεωτικό.",
+    emailRequired: "Το email είναι υποχρεωτικό.",
+    usernameTakenLogin: "Αυτό το όνομα χρήστη χρησιμοποιείται ήδη. Δοκιμάστε να συνδεθείτε.",
+    emailTakenLogin: "Αυτό το email είναι ήδη εγγεγραμμένο. Δοκιμάστε να συνδεθείτε.",
+    checkEmailTitle: "Σχεδόν έτοιμοι!",
+    noEmailOnAccount: "Δεν έχει οριστεί email σε αυτόν τον λογαριασμό.",
     selectedBy: "επιλέχθηκε από",
     people: "άτομα",
     person: "άτομο",
@@ -530,7 +554,8 @@ function applyLanguage() {
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
   forgotPasswordButton.textContent = t("forgotPassword");
-  loginEmail.placeholder = state.authMode === "signup" ? `${t("email")}` : `${t("email")} (${t("optional")})`;
+  loginEmail.placeholder = t("email");
+  loginUsername.placeholder = state.authMode === "signup" ? t("username") : (t("usernameOrEmail") || "Username or email");
   renderPasswordStrength();
 
   const heroCopy = document.querySelector(".hero-copy");
@@ -649,6 +674,9 @@ function initials(name) {
   return String(name || "").trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("");
 }
 
+const APP_ORIGIN = "https://www.planswipe.gr";
+const RECOVER_REDIRECT = `${APP_ORIGIN}/recover`;
+
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (state.supabaseSession?.access_token) headers.Authorization = `Bearer ${state.supabaseSession.access_token}`;
@@ -677,11 +705,11 @@ async function configureSupabaseAuth() {
   } catch (e) { console.warn(e.message); }
 }
 
-async function syncSupabaseProfile(username, email, password = "") {
-  const body = { username, email };
-  if (password) body.password = password;
-  const data = await api("/api/auth/profile", { method: "POST", body });
-  setLoggedIn(data.user.username, data.user.email || email);
+async function syncSupabaseProfile(username, email) {
+  // Ensures a profile row exists for the currently authenticated user.
+  // Username/email are read from the verified token server-side.
+  const data = await api("/api/auth/ensure-profile", { method: "POST", body: {} });
+  setLoggedIn(data.user.username, data.user.email || email || "");
   saveAccount(data.user);
   return data.user;
 }
@@ -706,27 +734,25 @@ async function loadAccount() {
 }
 
 async function login() {
-  // Email is no longer required for login
-  const email = loginEmail.value.trim();
-  if (state.supabaseClient) {
-    if (email) {
-      const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email, password: loginPassword.value });
-      if (error) throw new Error(error.message);
-      state.supabaseSession = data.session;
-      await syncSupabaseProfile(loginUsername.value.trim(), data.user.email || email, loginPassword.value);
-    } else {
-      // No email provided — use non-Supabase login path which only requires username + password
-      const data = await api("/api/login", { method: "POST", body: { username: loginUsername.value, email: "", password: loginPassword.value } });
-      state.supabaseSession = null;
-      setLoggedIn(data.username, "");
-      saveAccount({ username: data.username, email: "", profile: data.profile });
-    }
-    loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
-    state.loginOpen = false; navigate("/main"); return;
+  // Login accepts a username OR an email in the single identifier field.
+  const identifier = loginUsername.value.trim();
+  const password = loginPassword.value;
+  if (!identifier) throw new Error(t("enterUsernameOrEmail") || "Enter your username or email.");
+  if (!password) throw new Error(t("enterPassword") || "Enter your password.");
+  if (!state.supabaseClient) throw new Error("Authentication is temporarily unavailable. Please try again shortly.");
+
+  // Resolve the identifier to an email address.
+  const resolved = await api("/api/auth/resolve", { method: "POST", body: { identifier } });
+  const email = resolved.email;
+
+  const { data, error } = await state.supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    const msg = (error.message || "").toLowerCase();
+    if (msg.includes("confirm")) throw new Error(t("confirmEmailFirst") || "Please confirm your email first — check your inbox for the confirmation link.");
+    throw new Error(t("wrongCredentials") || "Wrong username/email or password.");
   }
-  const data = await api("/api/login", { method: "POST", body: { username: loginUsername.value, email: loginEmail.value, password: loginPassword.value } });
-  setLoggedIn(data.username, data.email || loginEmail.value.trim());
-  saveAccount({ username: data.username, email: data.email || loginEmail.value.trim(), profile: data.profile });
+  state.supabaseSession = data.session;
+  await syncSupabaseProfile(data.user?.user_metadata?.username || "", data.user?.email || email);
   loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
   state.loginOpen = false; navigate("/main");
 }
@@ -735,27 +761,46 @@ async function registerUser() {
   const username = loginUsername.value.trim();
   const email    = loginEmail.value.trim();
   const password = loginPassword.value;
-  if (!email) throw new Error("Email is required");
-  if (!validEmail(email)) throw new Error(t("validEmailRequired") || "Valid email required");
-  if (!isStrongPassword(password)) throw new Error(t("passwordRequirements") || "Password does not meet requirements");
-  if (state.supabaseClient) {
-    const { data, error } = await state.supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
-    if (error) throw new Error(error.message || "Supabase sign up failed");
-    state.supabaseSession = data.session;
-    if (!data.session) {
-      const message = (t("confirmEmailCheck") || "Check your email to confirm your account, then log in.") + (email ? "" : " " + (t("enterEmailFirst") || "Please enter your email first."));
-      showError(message);
-      return;
-    }
-    await syncSupabaseProfile(username, data.user.email || email, password);
-    loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
-    state.loginOpen = false; navigate("/main"); return;
+  if (!username) throw new Error(t("usernameRequired") || "Username is required.");
+  if (!email) throw new Error(t("emailRequired") || "Email is required.");
+  if (!validEmail(email)) throw new Error(t("validEmailRequired") || "Please enter a valid email.");
+  if (!isStrongPassword(password)) throw new Error(t("passwordRequirements") || "Password does not meet requirements.");
+  if (!state.supabaseClient) throw new Error("Sign-up is temporarily unavailable. Please try again shortly.");
+
+  // Step 1: check that neither the username nor the email is already registered.
+  try {
+    await api("/api/register/precheck", { method: "POST", body: { username, email } });
+  } catch (e) {
+    if (e.message === "username_taken") throw new Error(t("usernameTakenLogin") || "That username is already taken. Try logging in instead.");
+    if (e.message === "email_taken") throw new Error(t("emailTakenLogin") || "That email is already registered. Try logging in instead.");
+    throw e;
   }
-  const data = await api("/api/register", { method: "POST", body: { username, email, password } });
-  setLoggedIn(data.username || username, data.email || email);
-  saveAccount({ username: data.username || username, email: data.email || email, profile: data.profile });
+
+  // Step 2: create the auth user (Supabase sends the confirmation email).
+  const { data, error } = await state.supabaseClient.auth.signUp({
+    email, password,
+    options: { data: { username }, emailRedirectTo: APP_ORIGIN }
+  });
+  if (error) {
+    const msg = (error.message || "").toLowerCase();
+    if (msg.includes("registered") || msg.includes("already")) throw new Error(t("emailTakenLogin") || "That email is already registered. Try logging in instead.");
+    throw new Error(error.message || "Sign up failed.");
+  }
+
+  // Step 3: reserve the profile row (verified against the auth system).
+  try { await api("/api/register/finalize", { method: "POST", body: { username, email } }); }
+  catch (e) {
+    if (e.message === "username_taken") throw new Error(t("usernameTakenLogin") || "That username is already taken. Try logging in instead.");
+    /* otherwise continue — first login will ensure the profile exists */
+  }
+
   loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
-  state.loginOpen = false; navigate("/main");
+  state.authMode = "login";
+  showModal(
+    t("checkEmailTitle") || "Almost there!",
+    t("confirmEmailCheck") || "Check your email to confirm your account, then log in.",
+    [{ label: t("ok") || "OK", primary: true, action: () => { renderApp(); } }]
+  );
 }
 
 // ====== GROUP STATE HELPERS ======
@@ -1257,6 +1302,9 @@ function renderApp() {
     setVisible(loginButton, state.authMode !== "signup");
     setVisible(registerButton, state.authMode === "signup");
     setVisible(forgotPasswordButton, state.authMode !== "signup" && !state.showResetPasswordForm && !state.forgotPasswordMode);
+    setVisible(loginEmail, state.authMode === "signup");
+    loginUsername.placeholder = state.authMode === "signup" ? t("username") : (t("usernameOrEmail") || "Username or email");
+    loginEmail.placeholder = t("email");
     renderPasswordStrength();
     hideAppPanels(); removeChatButton();
 
@@ -1331,14 +1379,18 @@ function renderApp() {
           try {
             if (state.supabaseClient) {
               const { error } = await state.supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + "/recover"
+                redirectTo: RECOVER_REDIRECT
               });
               if (error) throw new Error(error.message);
             }
             state.forgotPasswordMode = false;
             document.querySelector("#forgotPasswordForm")?.remove();
-            showError(t("recoveryEmailSent").replace("{email}", email));
             renderApp();
+            showModal(
+              t("recoverPassword") || "Recover Password",
+              (t("recoveryEmailSent") || "If an account exists for {email}, a password reset link has been sent. Check your inbox.").replace("{email}", email),
+              [{ label: t("ok") || "OK", primary: true }]
+            );
           } catch (e) { showError(e.message); }
         });
 
@@ -1428,10 +1480,17 @@ function renderApp() {
           if (state.supabaseClient) {
             const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
             if (error) throw new Error(error.message);
+            // End the temporary recovery session so /recover can't be reused.
+            try { await state.supabaseClient.auth.signOut(); } catch (_) {}
+            state.supabaseSession = null;
           }
-          alert(t("passwordResetSuccess"));
           document.querySelector("#recoverPage")?.remove();
           navigate("/home");
+          showModal(
+            t("passwordResetSuccess") || "Password reset successfully!",
+            t("passwordResetSuccessBody") || "Your password has been changed. You can now log in with your new password.",
+            [{ label: t("login") || "Log in", primary: true, action: () => openLogin() }]
+          );
         } catch (e) { showError(e.message); }
       });
 
@@ -2642,7 +2701,19 @@ pageDemo.addEventListener("click", (e) => {
   if (savePastBtn) { savePastActivity().catch((err) => showError(err.message)); return; }
   const forgotPwBtn = e.target.closest("#profileForgotPassword");
   if (forgotPwBtn) {
-    navigate("/recover");
+    const email = state.account?.email || localStorage.getItem("planswipe:email") || "";
+    if (!email || !validEmail(email)) { showError(t("noEmailOnAccount") || "No email is set on this account."); return; }
+    if (!state.supabaseClient) { showError("Password recovery is temporarily unavailable."); return; }
+    state.supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: RECOVER_REDIRECT })
+      .then(({ error }) => {
+        if (error) throw new Error(error.message);
+        showModal(
+          t("recoverPassword") || "Recover Password",
+          (t("recoveryEmailSent") || "A password reset link has been sent to {email}. Check your inbox.").replace("{email}", email),
+          [{ label: t("ok") || "OK", primary: true }]
+        );
+      })
+      .catch((err) => showError(err.message));
     return;
   }
   const changePwBtn = e.target.closest("#changePasswordButton");
