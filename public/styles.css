@@ -2127,3 +2127,20 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+/* #3: keep modals within the viewport and let a tall body (e.g. reviews) scroll */
+.modal-panel {
+  max-height: 88vh;
+}
+.modal-body {
+  color: var(--muted);
+  line-height: 1.5;
+  max-height: 62vh;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* #2: ensure the avatar image fills the circular button */
+.profile-button {
+  background-repeat: no-repeat;
+}
