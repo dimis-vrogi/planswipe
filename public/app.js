@@ -21,6 +21,10 @@ const state = {
   friendsData: null,
   friendsDataLoaded: false,
   friendsLastRequestCount: -1,
+  lastGroupInviteCount: -1,
+  lastDmCount: -1,
+  groupSig: "",
+  lastSeenResetId: null,
   pageShellRendered: "",
   chatOpen: false,
   chatLastTimestamp: null,
@@ -332,6 +336,11 @@ const copy = {
     emailTakenLogin: "That email is already registered. Try logging in instead.",
     checkEmailTitle: "Almost there!",
     noEmailOnAccount: "No email is set on this account.",
+    noAgreementTitle: "Not everyone agrees",
+    noAgreementBody: "Your group didn't all pick the same {thing}, so the choices were reset. Please choose again together.",
+    theArea: "area",
+    theActivity: "activity",
+    friendsOnlyProfile: "Add this person as a friend to see their bio and preferences.",
     selectedBy: "selected by",
     people: "people",
     person: "person",
@@ -499,6 +508,11 @@ const copy = {
     emailTakenLogin: "Αυτό το email είναι ήδη εγγεγραμμένο. Δοκιμάστε να συνδεθείτε.",
     checkEmailTitle: "Σχεδόν έτοιμοι!",
     noEmailOnAccount: "Δεν έχει οριστεί email σε αυτόν τον λογαριασμό.",
+    noAgreementTitle: "Δεν συμφωνούν όλοι",
+    noAgreementBody: "Η ομάδα σας δεν επέλεξε όλη την ίδια {thing}, οπότε οι επιλογές μηδενίστηκαν. Επιλέξτε ξανά μαζί.",
+    theArea: "περιοχή",
+    theActivity: "δραστηριότητα",
+    friendsOnlyProfile: "Προσθέστε αυτό το άτομο ως φίλο για να δείτε το προφίλ και τις προτιμήσεις του.",
     selectedBy: "επιλέχθηκε από",
     people: "άτομα",
     person: "άτομο",
@@ -992,7 +1006,7 @@ function renderResults() {
         ${!item.website && !item.phone ? `<span class="muted-text">${t("noBookingDetails")}</span>` : ""}
       </div>` : "";
     const selCount = selectionCounts[item.id] || 0;
-    const selLabel = selCount > 0 ? `<span class="selection-badge">${selCount} ${t(selCount === 1 ? "person" : "people")} ${t("selectedBy")}</span>` : "";
+    const selLabel = selCount > 0 ? `<span class="selection-badge selection-badge-strong">${t("selectedBy")} ${selCount} ${t(selCount === 1 ? "person" : "people")}</span>` : "";
     return `
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
@@ -1027,9 +1041,11 @@ function renderStatus() {
 async function refreshChatUnreadCount() {
   if (!state.groupCode || !document.querySelector("#chatFab")) return;
   try {
-    const since = state.chatLastReadTimestamp ? `&since=${encodeURIComponent(state.chatLastReadTimestamp)}` : "";
+    const baseline = state.chatLastReadTimestamp || state.group?.myLastRead || "";
+    const since = baseline ? `&since=${encodeURIComponent(baseline)}` : "";
     const data = await api(`/api/groups/${state.groupCode}/messages?limit=50${since}`);
-    const messages = data.messages || [];
+    const me = currentUsername();
+    const messages = (data.messages || []).filter((m) => m.username !== me);
     const badge = document.querySelector("#chatUnreadBadge");
     if (!badge) return;
     const unread = state.chatOpen ? 0 : messages.length;
@@ -1143,7 +1159,7 @@ async function loadChatMessages(scrollToBottom) {
       const me = currentUsername();
       container.innerHTML = messages.map((msg) => {
         const isMine = msg.username === me;
-        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}">${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}<span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
+        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}" data-msg-id="${escapeHtml(String(msg.id))}">${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}<span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
       }).join("");
       container.scrollTop = container.scrollHeight;
       const badge = document.querySelector("#chatUnreadBadge");
@@ -1165,9 +1181,11 @@ async function loadChatMessages(scrollToBottom) {
     if (loading) loading.remove();
 
     messages.forEach((msg) => {
+      if (msg.id && container.querySelector(`[data-msg-id="${CSS.escape(String(msg.id))}"]`)) return;
       const isMine = msg.username === me;
       const bubble = document.createElement("div");
       bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
+      if (msg.id) bubble.dataset.msgId = String(msg.id);
       bubble.innerHTML = `${!isMine ? `<span class="chat-sender">${escapeHtml(msg.username)}</span>` : ""}
         <span class="chat-text">${escapeHtml(msg.message)}</span>`;
       container.appendChild(bubble);
@@ -1246,6 +1264,20 @@ async function refreshNotifications() {
         btn.appendChild(sp);
       }
     });
+
+    // #4: keep the currently-open list page live without disrupting the user.
+    if (state.activePage === "groups" && state.pageShellRendered === "groups"
+        && state.lastGroupInviteCount >= 0 && (data.groupInvites || 0) !== state.lastGroupInviteCount) {
+      renderGroupsPage().catch((e) => console.warn("Groups refresh error:", e.message));
+    }
+    state.lastGroupInviteCount = data.groupInvites || 0;
+
+    if (state.activePage === "messages" && state.pageShellRendered === "messages"
+        && state.lastDmCount >= 0 && (data.dmMessages || 0) !== state.lastDmCount
+        && !document.querySelector("#dmChatOverlay")) {
+      renderMessagesPage().catch((e) => console.warn("Messages refresh error:", e.message));
+    }
+    state.lastDmCount = data.dmMessages || 0;
   } catch (e) { console.warn("Notifications refresh error:", e.message); }
   finally { notifRefreshInProgress = false; }
 }
@@ -1293,7 +1325,63 @@ function hideAppPanels() {
   setVisible(swipeLayout, false); setVisible(resultsPanel, false);
 }
 
+function renderRecoverPage() {
+  // #1: reachable WITHOUT being logged in. The Supabase recovery session (from the
+  // email link) is the access token; no current password is required. Anyone who
+  // didn't request a reset has no recovery session and is bounced to /home.
+  setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
+  hideAppPanels(); removeChatButton();
+  if (!state.supabaseSession || !state.supabaseClient) { navigate("/home"); return; }
+  if (document.querySelector("#recoverPage")) return;
+  const recoverDiv = document.createElement("div");
+  recoverDiv.id = "recoverPage";
+  recoverDiv.className = "hero-screen";
+  recoverDiv.style.minHeight = "100vh";
+  recoverDiv.style.display = "grid";
+  recoverDiv.style.placeItems = "center";
+  recoverDiv.innerHTML = `
+    <div class="login-panel" style="animation:none;">
+      <div class="login-inner">
+        <h2>${escapeHtml(t("recoverPassword"))}</h2>
+        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
+        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+        <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
+        <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
+      </div>
+    </div>`;
+  document.querySelector(".app-shell").appendChild(recoverDiv);
+
+  document.querySelector("#recoverConfirmBtn").addEventListener("click", async () => {
+    const newPw = document.querySelector("#recoverNewPassword")?.value;
+    const confirmPw = document.querySelector("#recoverConfirmPassword")?.value;
+    if (!newPw || !confirmPw) { showError(t("fillPasswordFields")); return; }
+    if (newPw !== confirmPw) { showError(t("passwordMismatch")); return; }
+    if (!isStrongPassword(newPw)) { showError(t("passwordRequirements")); return; }
+    try {
+      if (state.supabaseClient) {
+        const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
+        if (error) throw new Error(error.message);
+        try { await state.supabaseClient.auth.signOut(); } catch (_) {}
+        state.supabaseSession = null;
+      }
+      document.querySelector("#recoverPage")?.remove();
+      navigate("/home");
+      showModal(
+        t("passwordResetSuccess") || "Password reset successfully!",
+        t("passwordResetSuccessBody") || "Your password has been changed. You can now log in with your new password.",
+        [{ label: t("login") || "Log in", primary: true, action: () => openLogin() }]
+      );
+    } catch (e) { showError(e.message); }
+  });
+
+  document.querySelector("#recoverCancelBtn").addEventListener("click", () => {
+    document.querySelector("#recoverPage")?.remove();
+    navigate("/home");
+  });
+}
+
 function renderApp() {
+  if (state.activePage === "recover") { renderRecoverPage(); return; }
   if (!isLoggedIn()) {
     setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen && !state.showResetPasswordForm);
     setVisible(topbar, false); setVisible(pagePanel, false);
@@ -1442,66 +1530,6 @@ function renderApp() {
   }
   refreshNotifications();
 
-  if (state.activePage === "recover") {
-    // Security: only show the recovery form if user has a valid Supabase session (from recovery email link)
-    setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
-    hideAppPanels(); removeChatButton();
-    if (!state.supabaseSession || !state.supabaseClient) {
-      navigate("/home");
-      return;
-    }
-    const existingRecover = document.querySelector("#recoverPage");
-    if (!existingRecover) {
-      const recoverDiv = document.createElement("div");
-      recoverDiv.id = "recoverPage";
-      recoverDiv.className = "hero-screen";
-      recoverDiv.style.minHeight = "100vh";
-      recoverDiv.style.display = "grid";
-      recoverDiv.style.placeItems = "center";
-      recoverDiv.innerHTML = `
-        <div class="login-panel" style="animation:none;">
-          <div class="login-inner">
-            <h2>${escapeHtml(t("recoverPassword"))}</h2>
-            <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
-            <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
-            <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
-            <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
-          </div>
-        </div>`;
-      document.querySelector(".app-shell").appendChild(recoverDiv);
-
-      document.querySelector("#recoverConfirmBtn").addEventListener("click", async () => {
-        const newPw = document.querySelector("#recoverNewPassword")?.value;
-        const confirmPw = document.querySelector("#recoverConfirmPassword")?.value;
-        if (!newPw || !confirmPw) { showError(t("fillPasswordFields")); return; }
-        if (newPw !== confirmPw) { showError(t("passwordMismatch")); return; }
-        if (!isStrongPassword(newPw)) { showError(t("passwordRequirements")); return; }
-        try {
-          if (state.supabaseClient) {
-            const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
-            if (error) throw new Error(error.message);
-            // End the temporary recovery session so /recover can't be reused.
-            try { await state.supabaseClient.auth.signOut(); } catch (_) {}
-            state.supabaseSession = null;
-          }
-          document.querySelector("#recoverPage")?.remove();
-          navigate("/home");
-          showModal(
-            t("passwordResetSuccess") || "Password reset successfully!",
-            t("passwordResetSuccessBody") || "Your password has been changed. You can now log in with your new password.",
-            [{ label: t("login") || "Log in", primary: true, action: () => openLogin() }]
-          );
-        } catch (e) { showError(e.message); }
-      });
-
-      document.querySelector("#recoverCancelBtn").addEventListener("click", () => {
-        document.querySelector("#recoverPage")?.remove();
-        navigate("/home");
-      });
-    }
-    return;
-  }
-
   if (state.activePage) {
     hideAppPanels(); setVisible(pagePanel, true);
     renderProfilePage();
@@ -1560,12 +1588,43 @@ async function refreshGroup() {
   if (!state.groupCode) return;
   try {
     const data = await api(`/api/groups/${state.groupCode}`);
-    state.group = data.group;
+    const newGroup = data.group;
     state.pollErrorCount = 0;
-    if (state.activePage) {
+
+    // #12: seed the group-chat read baseline from the server so it survives a refresh.
+    if (!state.chatLastReadTimestamp && newGroup?.myLastRead) {
+      state.chatLastReadTimestamp = newGroup.myLastRead;
+    }
+
+    // #6: detect the "not everyone agrees" reset and announce it once.
+    const resetId = newGroup?.reset?.id || null;
+    const resetKind = newGroup?.reset?.kind || "area";
+    const isNewReset = resetId && resetId !== state.lastSeenResetId;
+
+    // #7: don't disturb the UI while the user is mid-vote or on another page,
+    // and only re-render when something actually changed (prevents lost clicks / lag).
+    const sig = JSON.stringify(newGroup);
+    const changed = sig !== state.groupSig;
+    state.groupSig = sig;
+    state.group = newGroup;
+
+    if (isNewReset) {
+      state.lastSeenResetId = resetId;
+      state.index = 0;
+      if (!state.activePage) renderApp();
+      const what = resetKind === "type" ? t("theActivity") || "the activity" : t("theArea") || "the area";
+      showModal(
+        t("noAgreementTitle") || "Not everyone agrees",
+        (t("noAgreementBody") || "Your group didn't all pick the same {thing}, so the choices were reset. Please choose again together.").replace("{thing}", what),
+        [{ label: t("ok") || "OK", primary: true }],
+        { variant: "danger" }
+      );
       return;
     }
-    renderApp();
+
+    if (state.activePage) return;
+    if (state.votingInProgress) return;
+    if (changed) renderApp();
   } catch (error) {
     state.pollErrorCount = (state.pollErrorCount || 0) + 1;
     if (state.pollErrorCount >= 5) { showError(error.message); leaveGroup(); }
@@ -2008,7 +2067,7 @@ async function loadDmMessages(scrollToBottom) {
       const me = currentUsername();
       container.innerHTML = messages.map((msg) => {
         const isMine = msg.sender === me;
-        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}"><span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
+        return `<div class="chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}" data-msg-id="${escapeHtml(String(msg.id))}"><span class="chat-text">${escapeHtml(msg.message)}</span></div>`;
       }).join("");
       container.scrollTop = container.scrollHeight;
       // Mark as read
@@ -2022,9 +2081,11 @@ async function loadDmMessages(scrollToBottom) {
     const loading = container.querySelector(".chat-loading, .chat-empty");
     if (loading) loading.remove();
     messages.forEach((msg) => {
+      if (msg.id && container.querySelector(`[data-msg-id="${CSS.escape(String(msg.id))}"]`)) return;
       const isMine = msg.sender === me;
       const bubble = document.createElement("div");
       bubble.className = `chat-bubble ${isMine ? "chat-bubble-mine" : "chat-bubble-theirs"}`;
+      if (msg.id) bubble.dataset.msgId = String(msg.id);
       bubble.innerHTML = `<span class="chat-text">${escapeHtml(msg.message)}</span>`;
       container.appendChild(bubble);
     });
@@ -2132,7 +2193,12 @@ async function renderAccountProfile(username) {
   const removeAction = user.friendStatus === "friends" && user.username !== currentUsername()
     ? `<button class="danger-button" type="button" data-remove-friend="${escapeHtml(user.username)}">${t("removeFriend")}</button>` : "";
 
-  pageDemo.innerHTML = `${userCard(user, friendAction)}${removeAction ? `<section class="wide-panel">${removeAction}</section>` : ""}<section class="wide-panel"><h3>${t("preferences")}</h3>${preferenceList(t("favouriteAreas"), "readonly-areas", preferences.areas, "")}${preferenceList(t("favouriteActivities"), "readonly-activities", preferences.activities, "")}${preferenceList(t("favouritePlaces"), "readonly-places", preferences.places, "")}</section>`;
+  const restricted = user.restricted && user.username !== currentUsername();
+  const prefsSection = restricted
+    ? `<section class="wide-panel"><p class="muted-note">${t("friendsOnlyProfile") || "Add this person as a friend to see their bio and preferences."}</p></section>`
+    : `<section class="wide-panel"><h3>${t("preferences")}</h3>${preferenceList(t("favouriteAreas"), "readonly-areas", preferences.areas, "")}${preferenceList(t("favouriteActivities"), "readonly-activities", preferences.activities, "")}${preferenceList(t("favouritePlaces"), "readonly-places", preferences.places, "")}</section>`;
+
+  pageDemo.innerHTML = `${userCard(user, friendAction)}${removeAction ? `<section class="wide-panel">${removeAction}</section>` : ""}${prefsSection}`;
 }
 
 async function renderSettingsPage() {
@@ -2255,6 +2321,11 @@ async function updateProfilePicture(file) {
   const reader = new FileReader();
   const picture = await new Promise((resolve, reject) => { reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
   const profile = { ...(state.account?.profile || {}), picture, preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] } };
+  // #11: update the top-right avatar instantly (before the server round-trip).
+  if (typeof profileInitial !== "undefined" && profileInitial) {
+    profileInitial.style.backgroundImage = `url("${picture}")`;
+    profileInitial.textContent = "";
+  }
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile } });
   saveAccount(data.user);
   await renderPersonalInformation();
@@ -2331,10 +2402,10 @@ async function acceptGroupInvite(groupCode) {
     const groupInvites = (profile.groupInvites || []).filter((inv) => inv.groupCode !== groupCode);
     await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, groupInvites } } });
     saveAccount({ ...state.account, profile: { ...profile, groupInvites } });
-    state.pageShellRendered = "";
-    await renderGroupsPage();
-    codeInput.value = groupCode;
+    // #5: drop straight into the group instead of just pre-filling the code.
     state.activePage = "";
+    state.pageShellRendered = "";
+    saveSession(data.user, data.group);
     navigate("/main");
   } catch (e) { showError(e.message); }
 }
@@ -2348,15 +2419,17 @@ async function declineGroupInvite(groupCode) {
   await renderGroupsPage();
 }
 
-function showModal(title, message, buttons = [{ label: t("ok"), primary: true, action: () => {} }]) {
+function showModal(title, message, buttons = [{ label: t("ok"), primary: true, action: () => {} }], opts = {}) {
   document.querySelector("#appModal")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "appModal";
   overlay.className = "modal-overlay";
+  const bodyHtml = opts.html ? message : escapeHtml(message);
+  const panelClass = opts.variant === "danger" ? "modal-panel modal-danger" : "modal-panel";
   overlay.innerHTML = `
-    <div class="modal-panel" role="dialog" aria-modal="true">
+    <div class="${panelClass}" role="dialog" aria-modal="true">
       <h3>${escapeHtml(title)}</h3>
-      <p>${escapeHtml(message)}</p>
+      <p>${bodyHtml}</p>
       <div class="modal-actions">${buttons.map((btn, i) =>
         `<button class="${btn.primary ? "btn-primary" : "btn-ghost"}" type="button" data-modal-btn="${i}">${escapeHtml(btn.label)}</button>`
       ).join("")}</div>
@@ -2406,12 +2479,7 @@ async function openInviteModal() {
   overlay.querySelector("#inviteCancelBtn").addEventListener("click", () => overlay.remove());
   overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
   overlay.querySelectorAll(".invite-friend-item").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      if (e.target.tagName === "INPUT") return;
-      const cb = item.querySelector("input");
-      cb.checked = !cb.checked;
-      item.classList.toggle("is-selected", cb.checked);
-    });
+    // The row is a <label>, so clicking anywhere in it already toggles the checkbox.
     item.querySelector("input").addEventListener("change", (e) => {
       item.classList.toggle("is-selected", e.target.checked);
     });
@@ -2615,7 +2683,7 @@ if (reviewsButton) {
       const reviews = data.reviews || [];
       if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
       const reviewsHtml = reviews.map((r) => `<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p style="margin-top:4px;color:var(--muted);">${escapeHtml(r.text)}</p></div>`).join("");
-      showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }]);
+      showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }], { html: true });
     } catch (e) { showError(e.message); }
   });
 }
@@ -2768,7 +2836,7 @@ pageDemo.addEventListener("click", (e) => {
         const reviews = data.reviews || [];
         if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
         const reviewsHtml = reviews.map((r) => `<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p style="margin-top:4px;color:var(--muted);">${escapeHtml(r.text)}</p></div>`).join("");
-        showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }]);
+        showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }], { html: true });
       })
       .catch((err) => showError(err.message));
     return;
