@@ -16,6 +16,7 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const openAiApiKey = process.env.OPENAI_API_KEY || "";
 const openAiModel = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const BCRYPT_ROUNDS = 10;
+const APP_ORIGIN = process.env.APP_ORIGIN || "https://www.planswipe.gr";
 
 if (!process.env.PORT && !process.env.SUPABASE_URL) {
   console.warn("WARNING: .env file not found or empty. Environment variables may be missing.");
@@ -150,6 +151,36 @@ async function requireAuth(request, response, expectedUsername) {
     return false;
   }
   return true;
+}
+
+// Requires any valid signed-in user (no specific username match).
+async function requireAnyAuth(request, response) {
+  const user = await verifyToken(request);
+  if (user) return true;
+  sendJson(response, 401, { error: "Authentication required" });
+  return false;
+}
+
+// Resolves the username of the currently authenticated user from their token.
+async function getAuthUsername(request) {
+  const user = await verifyToken(request);
+  if (!user) return null;
+  const profile = await getProfileByEmail(user.email || "");
+  if (profile) return profile.username;
+  return user.user_metadata?.username || null;
+}
+
+// For group actions: confirms the token belongs to a member of the group.
+// If actingUserId is given, also confirms that member id maps to this user.
+async function requireGroupMember(request, response, group, actingUserId) {
+  const authUsername = await getAuthUsername(request);
+  if (!authUsername) { sendJson(response, 401, { error: "Authentication required" }); return null; }
+  const member = (group.members || []).find((m) => m.username === authUsername);
+  if (!member) { sendJson(response, 403, { error: "You are not a member of this group" }); return null; }
+  if (actingUserId && member.id !== actingUserId) {
+    sendJson(response, 403, { error: "You can only act as yourself" }); return null;
+  }
+  return authUsername;
 }
 
 // ====== PASSWORD HASHING ======
@@ -407,6 +438,73 @@ const areaBounds = {
   south_suburbs: { low: { lat: 37.82, lng: 23.68 }, high: { lat: 37.95, lng: 23.78 } }
 };
 
+// ====== AREA GEOCODING (for custom, user-typed areas) ======
+const geocodeCache = new Map(); // normalized query -> rectangle | null
+
+// Build a rectangle roughly radiusKm to each side of a point.
+function boxAround(lat, lng, radiusKm = 3) {
+  const dLat = radiusKm / 111;
+  const dLng = radiusKm / (111 * Math.max(0.2, Math.cos((lat * Math.PI) / 180)));
+  return {
+    low:  { latitude: lat - dLat, longitude: lng - dLng },
+    high: { latitude: lat + dLat, longitude: lng + dLng }
+  };
+}
+
+// Geocode a free-text area into a bounding rectangle (cached).
+async function geocodeAreaRectangle(queryText) {
+  if (!googleApiKey || !queryText) return null;
+  const key = String(queryText).toLowerCase().trim();
+  if (geocodeCache.has(key)) return geocodeCache.get(key);
+  let rectangle = null;
+  try {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", Greece")}&key=${googleApiKey}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      const result = data.results?.[0];
+      const vp = result?.geometry?.viewport;
+      const loc = result?.geometry?.location;
+      if (vp?.southwest && vp?.northeast) {
+        rectangle = {
+          low:  { latitude: vp.southwest.lat, longitude: vp.southwest.lng },
+          high: { latitude: vp.northeast.lat, longitude: vp.northeast.lng }
+        };
+      } else if (loc) {
+        rectangle = boxAround(loc.lat, loc.lng, 3);
+      }
+    } else {
+      console.warn("Geocoding failed:", resp.status);
+    }
+  } catch (e) {
+    console.warn("Geocoding error:", e.message);
+  }
+  geocodeCache.set(key, rectangle);
+  return rectangle;
+}
+
+// Resolve the strict bounding rectangle for the selected area.
+// Built-in areas use fixed bounds; custom areas are geocoded.
+async function resolveAreaRectangle(areaOption) {
+  if (!areaOption) return null;
+  const fixed = areaBounds[areaOption.id];
+  if (fixed) {
+    return {
+      low:  { latitude: fixed.low.lat,  longitude: fixed.low.lng },
+      high: { latitude: fixed.high.lat, longitude: fixed.high.lng }
+    };
+  }
+  return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "");
+}
+
+// True if a place's coordinates fall inside the rectangle.
+function placeInRectangle(place, rect) {
+  const loc = place.location;
+  if (!loc || typeof loc.latitude !== "number" || typeof loc.longitude !== "number") return false;
+  return loc.latitude  >= rect.low.latitude  && loc.latitude  <= rect.high.latitude
+      && loc.longitude >= rect.low.longitude && loc.longitude <= rect.high.longitude;
+}
+
 function findGroupOption(group, kind, optionId) {
   const fromGroup = (group?.options?.[kind] || []).find((o) => o.id === optionId);
   if (fromGroup) return fromGroup;
@@ -486,13 +584,14 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
   };
 }
 
-async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = []) {
+async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = []) {
   if (!googleApiKey) return null;
   const exclude = new Set(excludeTitles.map((t) => String(t).toLowerCase()));
   const fieldMask = [
     "places.id",
     "places.displayName",
     "places.formattedAddress",
+    "places.location",
     "places.rating",
     "places.userRatingCount",
     "places.priceLevel",
@@ -507,35 +606,15 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
     "places.internationalPhoneNumber"
   ].join(",");
 
-  // Get location bounds for stricter area filtering
-  const getLocationBounds = (areaId) => {
-    const bounds = areaBounds[areaId];
-    if (!bounds) return null;
-    return {
-      north: bounds.high.lat,
-      south: bounds.low.lat,
-      east: bounds.high.lng,
-      west: bounds.low.lng
-    };
-  };
+  // Resolve the strict rectangle for the selected area (fixed bounds or geocoded).
+  const rect = await resolveAreaRectangle(areaOption);
 
   async function runSearch(useIncludedType) {
     const body = { textQuery: query, maxResultCount: 20, languageCode: "en" };
     const includedType = activityIncludedTypes[typeId];
     if (useIncludedType && includedType) body.includedType = includedType;
-    // Add location restriction to only show places in the selected area
-    const locationBounds = getLocationBounds(typeId === "restaurant" || typeId === "bars" || typeId === "movies" || typeId === "gaming" ? areaOptions.find(o => o.queryArea === query.split(" in ")[1]?.split(",")[0]?.trim() + " suburbs" || o.queryArea === query.split(" in ")[1]?.trim())?.id : null);
-    // Determine which area option matches the query
-    const matchedArea = areaOptions.find(o => query.toLowerCase().includes(o.queryArea.toLowerCase()));
-    const matchedBounds = matchedArea ? getLocationBounds(matchedArea.id) : null;
-    if (matchedBounds) {
-      body.locationRestriction = {
-        rectangle: {
-          low: { latitude: matchedBounds.south, longitude: matchedBounds.west },
-          high: { latitude: matchedBounds.north, longitude: matchedBounds.east }
-        }
-      };
-    }
+    // Hard-restrict results to the selected area's rectangle when we have one.
+    if (rect) body.locationRestriction = { rectangle: rect };
     const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: {
@@ -551,7 +630,10 @@ async function googleTextSearch(query, areaLabel, typeLabel, typeId, maxResults 
       return null;
     }
     const data = await response.json();
-    return data.places || [];
+    let places = data.places || [];
+    // Belt-and-suspenders: drop anything whose coordinates fall outside the rectangle.
+    if (rect) places = places.filter((p) => placeInRectangle(p, rect));
+    return places;
   }
 
   try {
@@ -631,7 +713,7 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
   const query = buildPlaceSearchQuery(areaOption, typeOption);
 
   if (googleApiKey) {
-    const googlePlaces = await googleTextSearch(query, areaLabel, typeLabel, typeId, 20, excludeTitles);
+    const googlePlaces = await googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, 20, excludeTitles);
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
@@ -686,6 +768,7 @@ async function handleApi(request, response) {
   // ── Subscriptions ──
   if (request.method === "GET" && parts[1] === "subscription" && parts[2] === "status") {
     const username = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const profile = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { plan: "free" }); return; }
     const sub = profile.profile?.subscription || {};
@@ -696,9 +779,10 @@ async function handleApi(request, response) {
   if (request.method === "POST" && parts[1] === "subscription" && parts[2] === "create-checkout") {
     const body = await readBody(request);
     const username = body.username || "";
+    if (!(await requireAuth(request, response, username))) return;
     const priceId = body.priceId || "pro_monthly";
-    const successUrl = body.successUrl || "http://localhost:8080/subscription?success=1";
-    const cancelUrl = body.cancelUrl || "http://localhost:8080/subscription?canceled=1";
+    const successUrl = body.successUrl || `${APP_ORIGIN}/subscription?success=1`;
+    const cancelUrl = body.cancelUrl || `${APP_ORIGIN}/subscription?canceled=1`;
 
     if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_placeholder") {
       // Demo mode - simulate success
@@ -767,6 +851,7 @@ async function handleApi(request, response) {
     const groupCode = parts[2];
     const body = await readBody(request);
     const username = body.username || "";
+    if (!(await requireAuth(request, response, username))) return;
     if (username && groupCode) {
       const profile = await getProfileByUsername(username);
       if (profile) {
@@ -784,6 +869,8 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "account") {
     const username = url.searchParams.get("username") || "";
     const viewer   = url.searchParams.get("viewer")   || "";
+    if (viewer) { if (!(await requireAuth(request, response, viewer))) return; }
+    else { if (!(await requireAnyAuth(request, response))) return; }
     const data = await getProfileByUsername(username);
     if (!data) { sendJson(response, 404, { error: "User not found" }); return; }
     let friendStatus = "";
@@ -806,6 +893,7 @@ async function handleApi(request, response) {
 
   if (request.method === "PATCH" && parts[1] === "account") {
     const body = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     const existing = await getProfileByUsername(body.username);
     if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
     const profile = { ...(existing.profile || {}), ...(body.profile || {}) };
@@ -815,60 +903,100 @@ async function handleApi(request, response) {
     return;
   }
 
-  // ── Auth ──
-  if (request.method === "POST" && parts[1] === "login") {
+  // ── Auth (Supabase-only) ──
+  // Default profile shape for a brand-new account (no password stored here anymore).
+  const newProfileDefaults = () => ({
+    settings: {}, friends: [], friendRequests: [], pastActivities: [],
+    preferences: { areas: [], activities: [], places: [] },
+    subscription: { plan: "free", status: "active" }
+  });
+
+  // Look up an auth user by email via the admin API (paginated list + filter).
+  async function findAuthUserByEmail(email) {
+    if (!email) return null;
+    const target = email.toLowerCase();
+    try {
+      let page = 1;
+      for (; page <= 20; page++) {
+        const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) break;
+        const users = data?.users || [];
+        const found = users.find((u) => (u.email || "").toLowerCase() === target);
+        if (found) return found;
+        if (users.length < 200) break;
+      }
+    } catch (_) { /* ignore */ }
+    return null;
+  }
+
+  // Login step 1: map a "username or email" identifier to the account email.
+  if (request.method === "POST" && parts[1] === "auth" && parts[2] === "resolve") {
     const body = await readBody(request);
-    if (!isValidUsername(body.username)) { sendJson(response, 400, { error: "Invalid username format" }); return; }
-    const data = await getProfileByUsername(body.username);
-    if (!data) { sendJson(response, 404, { error: "User not found" }); return; }
-    const result = await verifyPassword(body.password, data.profile?.password);
-    if (!result.match) { sendJson(response, 401, { error: "Wrong password" }); return; }
-    if (result.newHash) {
-      const profile = { ...(data.profile || {}), password: result.newHash };
-      await upsertProfile({ username: body.username, email: data.email || "", profile });
-    }
-    sendJson(response, 200, { username: data.username, email: data.email, profile: data.profile });
+    const identifier = String(body.identifier || "").trim();
+    if (!identifier) { sendJson(response, 400, { error: "Enter your username or email." }); return; }
+    if (identifier.includes("@")) { sendJson(response, 200, { email: identifier }); return; }
+    const profile = await getProfileByUsername(identifier);
+    if (!profile || !profile.email) { sendJson(response, 404, { error: "No account found with that username." }); return; }
+    sendJson(response, 200, { email: profile.email });
     return;
   }
 
-  if (request.method === "POST" && parts[1] === "register") {
+  // Sign-up step 1: check whether the username or email is already taken.
+  if (request.method === "POST" && parts[1] === "register" && parts[2] === "precheck") {
     const body = await readBody(request);
-    if (!isValidUsername(body.username)) { sendJson(response, 400, { error: "Username must be 2-30 characters and contain only letters, numbers, underscores, hyphens, or dots." }); return; }
-    if (!isValidPassword(body.password)) { sendJson(response, 400, { error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." }); return; }
-    const existing = await getProfileByUsername(body.username);
-    if (existing) { sendJson(response, 409, { error: "Username taken" }); return; }
-    const hashed = await hashPassword(body.password);
-    const profile = {
-      password: hashed, settings: {}, friends: [], friendRequests: [],
-      pastActivities: [], preferences: { areas: [], activities: [], places: [] },
-      subscription: { plan: "free", status: "active" }
-    };
-    await upsertProfile({ username: body.username, email: body.email, profile });
-    sendJson(response, 200, { username: body.username, email: body.email, profile });
+    const username = String(body.username || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    if (!isValidUsername(username)) { sendJson(response, 400, { error: "Username must be 2-30 characters and contain only letters, numbers, underscores, hyphens, or dots." }); return; }
+    if (!email) { sendJson(response, 400, { error: "Email is required." }); return; }
+    const byUsername = await getProfileByUsername(username);
+    if (byUsername) { sendJson(response, 409, { error: "username_taken" }); return; }
+    const byEmail = await getProfileByEmail(email);
+    if (byEmail) { sendJson(response, 409, { error: "email_taken" }); return; }
+    const authUser = await findAuthUserByEmail(email);
+    if (authUser) { sendJson(response, 409, { error: "email_taken" }); return; }
+    sendJson(response, 200, { available: true });
     return;
   }
 
-  if (request.method === "POST" && parts[1] === "auth" && parts[2] === "profile") {
+  // Sign-up step 2: after supabase.auth.signUp on the client, reserve the profile row.
+  // Verified against the auth system so it can't be used to squat arbitrary names.
+  if (request.method === "POST" && parts[1] === "register" && parts[2] === "finalize") {
     const body = await readBody(request);
-    const existing = await getProfileByUsername(body.username);
-    if (existing) {
-      const profile = { ...(existing.profile || {}) };
-      if (body.password && isValidPassword(body.password)) {
-        profile.password = await hashPassword(body.password);
-      }
-      await upsertProfile({ username: body.username, email: body.email || existing.email, profile });
-    } else {
-      const profile = {
-        settings: {}, friends: [], friendRequests: [], pastActivities: [],
-        preferences: { areas: [], activities: [], places: [] },
-        subscription: { plan: "free", status: "active" }
-      };
-      if (body.password && isValidPassword(body.password)) {
-        profile.password = await hashPassword(body.password);
-      }
-      await upsertProfile({ username: body.username, email: body.email, profile });
+    const username = String(body.username || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    if (!isValidUsername(username) || !email) { sendJson(response, 400, { error: "Invalid registration data." }); return; }
+    const authUser = await findAuthUserByEmail(email);
+    if (!authUser) { sendJson(response, 400, { error: "Account not found. Please try signing up again." }); return; }
+    const metaUsername = authUser.user_metadata?.username || "";
+    if (metaUsername && metaUsername !== username) { sendJson(response, 409, { error: "username_mismatch" }); return; }
+    const existingByName = await getProfileByUsername(username);
+    if (existingByName && (existingByName.email || "").toLowerCase() !== email) {
+      sendJson(response, 409, { error: "username_taken" }); return;
     }
-    const data = await getProfileByUsername(body.username);
+    if (!existingByName) {
+      await upsertProfile({ username, email, profile: newProfileDefaults() });
+    }
+    sendJson(response, 200, { success: true });
+    return;
+  }
+
+  // Ensure a profile row exists for the currently authenticated user (post-login safety net).
+  if (request.method === "POST" && parts[1] === "auth" && parts[2] === "ensure-profile") {
+    const tokenUser = await verifyToken(request);
+    if (!tokenUser) { sendJson(response, 401, { error: "Authentication required" }); return; }
+    const email = (tokenUser.email || "").toLowerCase();
+    const username = tokenUser.user_metadata?.username || "";
+    if (!username) { sendJson(response, 400, { error: "Account is missing a username." }); return; }
+    const existingByName = await getProfileByUsername(username);
+    if (existingByName && (existingByName.email || "").toLowerCase() !== email && existingByName.email) {
+      sendJson(response, 409, { error: "Username already belongs to another account." }); return;
+    }
+    if (!existingByName) {
+      await upsertProfile({ username, email, profile: newProfileDefaults() });
+    } else if (!existingByName.email && email) {
+      await upsertProfile({ username, email, profile: existingByName.profile || newProfileDefaults() });
+    }
+    const data = await getProfileByUsername(username);
     sendJson(response, 200, { user: data });
     return;
   }
@@ -878,56 +1006,30 @@ async function handleApi(request, response) {
     if (!body.username || !body.oldPassword || !body.newPassword) {
       sendJson(response, 400, { error: "Username, old password, and new password are required." }); return;
     }
+    if (!(await requireAuth(request, response, body.username))) return;
     if (!isValidPassword(body.newPassword)) { sendJson(response, 400, { error: "New password must be at least 8 characters and include uppercase, lowercase, and a number." }); return; }
     const existing = await getProfileByUsername(body.username);
-    if (!existing) { sendJson(response, 404, { error: "User not found" }); return; }
-    if (body.username !== existing.username) {
-      sendJson(response, 403, { error: "Forbidden" }); return;
-    }
+    if (!existing || !existing.email) { sendJson(response, 404, { error: "User not found" }); return; }
 
-    const tokenUser = await verifyToken(request);
-    const hasProfilePassword = Boolean(existing.profile?.password);
+    // Verify the current password by attempting a sign-in with the anon client.
     let oldPasswordValid = false;
-
-    if (hasProfilePassword) {
-      const result = await verifyPassword(body.oldPassword, existing.profile.password);
-      oldPasswordValid = result.match;
-    } else if (tokenUser && existing.email && supabaseAnonKey) {
+    if (supabaseAnonKey) {
       try {
         const verifyClient = createClient(supabaseUrl, supabaseAnonKey);
-        const { error } = await verifyClient.auth.signInWithPassword({
-          email: existing.email,
-          password: body.oldPassword
-        });
+        const { error } = await verifyClient.auth.signInWithPassword({ email: existing.email, password: body.oldPassword });
         oldPasswordValid = !error;
-      } catch (e) {
-        console.warn("Supabase old password verification failed:", e.message);
-      }
+      } catch (e) { console.warn("Old password verification failed:", e.message); }
     }
+    if (!oldPasswordValid) { sendJson(response, 401, { error: "Current password is incorrect." }); return; }
 
-    if (!oldPasswordValid) {
-      sendJson(response, 401, { error: "Wrong password" }); return;
+    // Update the password in Supabase Auth.
+    const authUser = await findAuthUserByEmail(existing.email);
+    if (!authUser) { sendJson(response, 404, { error: "Account not found." }); return; }
+    try {
+      await supabase.auth.admin.updateUserById(authUser.id, { password: body.newPassword });
+    } catch (e) {
+      sendJson(response, 400, { error: "Could not update password. Please try again." }); return;
     }
-
-    const hashed = await hashPassword(body.newPassword);
-    const profile = { ...(existing.profile || {}), password: hashed };
-    await upsertProfile({ username: body.username, email: existing.email || "", profile });
-
-    if (existing.email) {
-      try {
-        const authUserId = tokenUser?.id;
-        if (authUserId) {
-          await supabase.auth.admin.updateUserById(authUserId, { password: body.newPassword });
-        } else {
-          const { data: authUsers } = await supabase.auth.admin.listUsers();
-          const authUser = authUsers?.users?.find((u) => u.email === existing.email);
-          if (authUser) {
-            await supabase.auth.admin.updateUserById(authUser.id, { password: body.newPassword });
-          }
-        }
-      } catch (e) { console.warn("Could not update Supabase auth password:", e.message); }
-    }
-
     sendJson(response, 200, { success: true });
     return;
   }
@@ -936,6 +1038,7 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const username = body.username;
     if (!username) { sendJson(response, 400, { error: "Username required" }); return; }
+    if (!(await requireAuth(request, response, username))) return;
     const allProfiles = await getAllProfiles();
     for (const profile of allProfiles) {
       if (profile.username === username) continue;
@@ -969,6 +1072,7 @@ async function handleApi(request, response) {
   // ── Groups ──
   if (request.method === "POST" && parts[1] === "groups" && parts[2] === "exit") {
     const body = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     const group = await loadGroup(body.groupCode);
     if (!group) { sendJson(response, 200, { success: true }); return; }
     const pastGroup = { code: group.code, name: group.name, memberCount: group.members?.length || 0, exitedAt: Date.now() };
@@ -992,6 +1096,7 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && parts[1] === "groups" && !parts[2]) {
     const body    = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     requireAgeGroup(body.profile || {});
     const code    = await generateUniqueGroupCode();
     const userId  = crypto.randomUUID();
@@ -1011,6 +1116,7 @@ async function handleApi(request, response) {
   if (request.method === "POST" && parts[1] === "groups" && parts[3] === "join") {
     const groupCode = parts[2];
     const body      = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     const group     = await loadGroup(groupCode);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const existing = group.members.find((m) => m.username === body.username);
@@ -1027,6 +1133,7 @@ async function handleApi(request, response) {
 
   if (request.method === "GET" && parts[1] === "groups" && parts[2] === "mine") {
     const username  = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const allGroups = await getAllGroups();
     const profile   = await getProfileByUsername(username);
     const userGroups = allGroups
@@ -1048,6 +1155,7 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "groups" && parts[2] && !parts[3]) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    if (!(await requireGroupMember(request, response, group))) return;
     sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
@@ -1056,6 +1164,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
+    if (!(await requireGroupMember(request, response, group, body.userId))) return;
     const kind = body.kind === "type" ? "type" : "area";
     if (body.customLabel) {
       if (!group.options[kind]) group.options[kind] = [];
@@ -1106,6 +1215,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body   = await readBody(request);
+    if (!(await requireGroupMember(request, response, group, body.userId))) return;
     const userId = body.userId;
     const step   = body.step === "type" ? "type" : "area";
     if (step === "type") {
@@ -1127,6 +1237,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
+    if (!(await requireGroupMember(request, response, group))) return;
     const areaId = group.consensus?.area;
     const typeId = group.consensus?.type;
     if (!areaId || !typeId) { sendJson(response, 400, { error: "Area and activity must be agreed first." }); return; }
@@ -1152,6 +1263,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
+    if (!(await requireGroupMember(request, response, group))) return;
     const title = String(body.title || "").trim().slice(0, 80);
     if (!title) { sendJson(response, 400, { error: "Place name required" }); return; }
     const areaOption = findGroupOption(group, "area", group.consensus?.area);
@@ -1179,6 +1291,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
+    if (!(await requireGroupMember(request, response, group, body.userId))) return;
     if (!group.places.some((p) => p.id === body.placeId)) { sendJson(response, 400, { error: "Invalid place" }); return; }
     if (!group.placeSelections) group.placeSelections = {};
     group.placeSelections[body.userId] = body.placeId;
@@ -1223,6 +1336,7 @@ async function handleApi(request, response) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     const body = await readBody(request);
+    if (!(await requireGroupMember(request, response, group, body.userId))) return;
     if (!group.places.some((p) => p.id === body.placeId)) { sendJson(response, 400, { error: "Invalid place" }); return; }
     const value = ["yes", "maybe", "no"].includes(body.vote) ? body.vote : (body.liked ? "yes" : "no");
     if (!group.votes[body.userId]) group.votes[body.userId] = {};
@@ -1239,6 +1353,8 @@ async function handleApi(request, response) {
     const fromUsername = String(body.fromUsername || "").trim();
     const usernames = Array.isArray(body.usernames) ? body.usernames.map((u) => String(u).trim()).filter(Boolean) : [];
     if (!fromUsername || !usernames.length) { sendJson(response, 400, { error: "fromUsername and usernames required" }); return; }
+    if (!(await requireAuth(request, response, fromUsername))) return;
+    if (!group.members.some((m) => m.username === fromUsername)) { sendJson(response, 403, { error: "You are not a member of this group" }); return; }
     const memberNames = new Set((group.members || []).map((m) => m.username));
     let sent = 0;
     for (const username of usernames) {
@@ -1262,6 +1378,9 @@ async function handleApi(request, response) {
   // ── Group Chat ──
   if (request.method === "GET" && parts[1] === "groups" && parts[3] === "messages") {
     const groupCode = parts[2];
+    const msgGroup = await loadGroup(groupCode);
+    if (!msgGroup) { sendJson(response, 404, { error: "Group not found" }); return; }
+    if (!(await requireGroupMember(request, response, msgGroup))) return;
     const since     = url.searchParams.get("since") || null;
     let query = supabase.from("group_messages").select("id, username, message, created_at").eq("group_code", groupCode).order("created_at", { ascending: true }).limit(100);
     if (since) query = query.gt("created_at", since);
@@ -1277,6 +1396,7 @@ async function handleApi(request, response) {
     const message   = (body.message || "").trim().slice(0, 500);
     const username  = (body.username || "").trim();
     if (!message || !username) { sendJson(response, 400, { error: "username and message required" }); return; }
+    if (!(await requireAuth(request, response, username))) return;
     const group = await loadGroup(groupCode);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
     if (!group.members.some((m) => m.username === username)) { sendJson(response, 403, { error: "Not a member of this group" }); return; }
@@ -1289,6 +1409,7 @@ async function handleApi(request, response) {
   // ── Friends ──
   if (request.method === "GET" && parts[1] === "friends") {
     const username = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const profile  = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { friends: [], incoming: [], outgoing: [] }); return; }
     const friendsList     = profile.profile?.friends        || [];
@@ -1305,6 +1426,7 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && parts[1] === "friends" && parts[2] === "request") {
     const body      = await readBody(request);
+    if (!(await requireAuth(request, response, body.fromUsername))) return;
     const toProfile = await getProfileByUsername(body.toUsername);
     if (!toProfile) { sendJson(response, 404, { error: "Recipient not found" }); return; }
     const toRequests = toProfile.profile?.friendRequests || [];
@@ -1318,6 +1440,7 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && parts[1] === "friends" && parts[2] === "accept") {
     const body            = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     const profile         = await getProfileByUsername(body.username);
     const requesterProfile = await getProfileByUsername(body.requester);
     if (!profile || !requesterProfile) { sendJson(response, 404, { error: "User not found" }); return; }
@@ -1332,6 +1455,7 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && parts[1] === "friends" && parts[2] === "remove") {
     const body          = await readBody(request);
+    if (!(await requireAuth(request, response, body.username))) return;
     const profile       = await getProfileByUsername(body.username);
     const friendProfile = await getProfileByUsername(body.friendUsername);
     if (profile) {
@@ -1350,6 +1474,7 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "users" && parts[2] === "search") {
     const q        = (url.searchParams.get("q")        || "").toLowerCase();
     const username = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const { data, error } = await supabase.from("profiles").select("*").ilike("username", `%${q}%`).limit(20);
     if (error) throw new Error(error.message);
     const viewerProfile = await getProfileByUsername(username);
@@ -1373,6 +1498,7 @@ async function handleApi(request, response) {
   // ── Liked places ──
   if (request.method === "GET" && parts[1] === "liked-places") {
     const username  = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const allGroups = await getAllGroups();
     const places    = [];
     for (const groupRow of allGroups) {
@@ -1395,6 +1521,7 @@ async function handleApi(request, response) {
   // ── Suggestions (Google Maps first, then optional OpenAI refinement) ──
   // ── Reviews ──
   if (request.method === "POST" && parts[1] === "reviews") {
+    if (!(await requireAnyAuth(request, response))) return;
     const body = await readBody(request);
     const googlePlaceId = body.googlePlaceId || "";
     if (!googlePlaceId || !googleApiKey) { sendJson(response, 200, { reviews: [] }); return; }
@@ -1417,6 +1544,7 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "POST" && parts[1] === "suggestions") {
+    if (!(await requireAnyAuth(request, response))) return;
     const body = await readBody(request);
     const area = body.area || "";
     const activity = body.activity || "";
@@ -1434,6 +1562,7 @@ async function handleApi(request, response) {
   // ── Direct Messages ──
   if (request.method === "GET" && parts[1] === "messages" && parts[2] === "conversations") {
     const username = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const profile = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { conversations: [] }); return; }
     const friendsList = profile.profile?.friends || [];
@@ -1470,6 +1599,7 @@ async function handleApi(request, response) {
     const withUser = url.searchParams.get("with") || "";
     const since    = url.searchParams.get("since") || null;
     if (!username || !withUser) { sendJson(response, 200, { messages: [] }); return; }
+    if (!(await requireAuth(request, response, username))) return;
     let query = supabase
       .from("direct_messages")
       .select("id, sender, recipient, message, created_at")
@@ -1486,6 +1616,7 @@ async function handleApi(request, response) {
   if (request.method === "POST" && parts[1] === "messages" && parts[2] === "mark-read") {
     const body = await readBody(request);
     const { username, from } = body;
+    if (!(await requireAuth(request, response, username))) return;
     if (username && from) {
       await supabase
         .from("direct_messages")
@@ -1504,6 +1635,11 @@ async function handleApi(request, response) {
     const to      = (body.to || "").trim();
     const message = (body.message || "").trim().slice(0, 500);
     if (!from || !to || !message) { sendJson(response, 400, { error: "from, to, and message required" }); return; }
+    if (!(await requireAuth(request, response, from))) return;
+    const senderProfile = await getProfileByUsername(from);
+    if (!senderProfile || !(senderProfile.profile?.friends || []).includes(to)) {
+      sendJson(response, 403, { error: "You can only message your friends." }); return;
+    }
     const { data, error } = await supabase
       .from("direct_messages")
       .insert({ sender: from, recipient: to, message })
@@ -1517,6 +1653,7 @@ async function handleApi(request, response) {
   // ── Notifications ──
   if (request.method === "GET" && parts[1] === "notifications") {
     const username = url.searchParams.get("username") || "";
+    if (!(await requireAuth(request, response, username))) return;
     const profile  = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0, dmMessages: 0 }); return; }
     const friendRequests = profile.profile?.friendRequests?.length || 0;
