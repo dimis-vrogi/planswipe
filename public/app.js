@@ -336,6 +336,8 @@ const copy = {
     emailTakenLogin: "That email is already registered. Try logging in instead.",
     checkEmailTitle: "Almost there!",
     noEmailOnAccount: "No email is set on this account.",
+    verifyingLink: "Verifying your reset link\u2026",
+    recoveryLinkInvalid: "This reset link is invalid or has expired. Please request a new password reset email.",
     noAgreementTitle: "Not everyone agrees",
     noAgreementBody: "Your group didn't all pick the same {thing}, so the choices were reset. Please choose again together.",
     theArea: "area",
@@ -508,6 +510,8 @@ const copy = {
     emailTakenLogin: "Αυτό το email είναι ήδη εγγεγραμμένο. Δοκιμάστε να συνδεθείτε.",
     checkEmailTitle: "Σχεδόν έτοιμοι!",
     noEmailOnAccount: "Δεν έχει οριστεί email σε αυτόν τον λογαριασμό.",
+    verifyingLink: "Επαλήθευση του συνδέσμου επαναφοράς\u2026",
+    recoveryLinkInvalid: "Αυτός ο σύνδεσμος επαναφοράς δεν είναι έγκυρος ή έχει λήξει. Ζητήστε νέο email επαναφοράς κωδικού.",
     noAgreementTitle: "Δεν συμφωνούν όλοι",
     noAgreementBody: "Η ομάδα σας δεν επέλεξε όλη την ίδια {thing}, οπότε οι επιλογές μηδενίστηκαν. Επιλέξτε ξανά μαζί.",
     theArea: "περιοχή",
@@ -728,16 +732,24 @@ async function syncSupabaseProfile(username, email) {
   return data.user;
 }
 
+function setTopbarAvatar(picture, name) {
+  // #2: paint the picture onto the profile-button circle itself (the span that held
+  // the initial has no size once its text is cleared, so the image never showed).
+  if (picture) {
+    profileButton.style.backgroundImage = `url("${picture}")`;
+    profileButton.style.backgroundSize = "cover";
+    profileButton.style.backgroundPosition = "center";
+    profileInitial.textContent = "";
+  } else {
+    profileButton.style.backgroundImage = "";
+    profileInitial.textContent = initials(name) || "P";
+  }
+}
+
 function saveAccount(user) {
   state.account = user;
   localStorage.setItem("planswipe:account", JSON.stringify(user));
-  if (user?.profile?.picture) {
-    profileInitial.style.backgroundImage = `url("${user.profile.picture}")`;
-    profileInitial.textContent = "";
-  } else {
-    profileInitial.style.backgroundImage = "";
-    profileInitial.textContent = initials(user?.username || currentUsername()) || "P";
-  }
+  setTopbarAvatar(user?.profile?.picture, user?.username || currentUsername());
 }
 
 async function loadAccount() {
@@ -1325,13 +1337,44 @@ function hideAppPanels() {
   setVisible(swipeLayout, false); setVisible(resultsPanel, false);
 }
 
+// Establishes a Supabase recovery session from the email link, tolerant of the
+// implicit (hash), PKCE (?code=) and token_hash (?token_hash=&type=recovery) flows,
+// and of the async delay before the client finishes parsing the URL.
+async function waitForRecoverySession(timeoutMs = 6000) {
+  if (state.supabaseSession) return true;
+  if (!state.supabaseClient) return false;
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type");
+  try {
+    if (code) {
+      const { data } = await state.supabaseClient.auth.exchangeCodeForSession(code);
+      if (data?.session) { state.supabaseSession = data.session; return true; }
+    } else if (tokenHash && type) {
+      const { data } = await state.supabaseClient.auth.verifyOtp({ type, token_hash: tokenHash });
+      if (data?.session) { state.supabaseSession = data.session; return true; }
+    }
+  } catch (e) { console.warn("Recovery exchange:", e.message); }
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const { data } = await state.supabaseClient.auth.getSession();
+      if (data.session) { state.supabaseSession = data.session; return true; }
+    } catch (_) {}
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return Boolean(state.supabaseSession);
+}
+
 function renderRecoverPage() {
   // #1: reachable WITHOUT being logged in. The Supabase recovery session (from the
-  // email link) is the access token; no current password is required. Anyone who
-  // didn't request a reset has no recovery session and is bounced to /home.
+  // email link) is the access token; no current password is required. We render the
+  // form first and wait for the session to be established before deciding anything,
+  // so a valid link no longer flashes and bounces to home.
   setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
   hideAppPanels(); removeChatButton();
-  if (!state.supabaseSession || !state.supabaseClient) { navigate("/home"); return; }
+  if (!state.supabaseClient) { navigate("/home"); return; }
   if (document.querySelector("#recoverPage")) return;
   const recoverDiv = document.createElement("div");
   recoverDiv.id = "recoverPage";
@@ -1343,13 +1386,34 @@ function renderRecoverPage() {
     <div class="login-panel" style="animation:none;">
       <div class="login-inner">
         <h2>${escapeHtml(t("recoverPassword"))}</h2>
-        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
-        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
-        <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
+        <p id="recoverStatus" class="muted-note">${escapeHtml(t("verifyingLink") || "Verifying your reset link\u2026")}</p>
+        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password" disabled>
+        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password" disabled>
+        <button id="recoverConfirmBtn" type="button" class="btn-primary" disabled>${escapeHtml(t("resetPassword"))}</button>
         <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
       </div>
     </div>`;
   document.querySelector(".app-shell").appendChild(recoverDiv);
+
+  // Enable the form only once a valid recovery session exists.
+  waitForRecoverySession().then((ok) => {
+    if (!document.querySelector("#recoverPage")) return;
+    if (!ok) {
+      showModal(
+        t("recoverPassword") || "Recover Password",
+        t("recoveryLinkInvalid") || "This reset link is invalid or has expired. Please request a new password reset email.",
+        [{ label: t("ok") || "OK", primary: true, action: () => { document.querySelector("#recoverPage")?.remove(); navigate("/home"); } }],
+        { variant: "danger" }
+      );
+      return;
+    }
+    const status = document.querySelector("#recoverStatus");
+    if (status) status.remove();
+    ["#recoverNewPassword", "#recoverConfirmPassword", "#recoverConfirmBtn"].forEach((sel) => {
+      const el = document.querySelector(sel); if (el) el.disabled = false;
+    });
+    document.querySelector("#recoverNewPassword")?.focus();
+  });
 
   document.querySelector("#recoverConfirmBtn").addEventListener("click", async () => {
     const newPw = document.querySelector("#recoverNewPassword")?.value;
@@ -1512,13 +1576,7 @@ function renderApp() {
   setVisible(loginPanel, false);
   setVisible(topbar, true);
 
-  if (state.account?.profile?.picture) {
-    profileInitial.style.backgroundImage = `url("${state.account.profile.picture}")`;
-    profileInitial.textContent = "";
-  } else {
-    profileInitial.style.backgroundImage = "";
-    profileInitial.textContent = initials(currentUsername()) || "P";
-  }
+  setTopbarAvatar(state.account?.profile?.picture, currentUsername());
 
   // When no group active, show "New Group" button instead of "Exit Current Group"
   if (state.group && state.user) {
@@ -2322,10 +2380,7 @@ async function updateProfilePicture(file) {
   const picture = await new Promise((resolve, reject) => { reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
   const profile = { ...(state.account?.profile || {}), picture, preferences: state.account?.profile?.preferences || { areas: [], activities: [], places: [] } };
   // #11: update the top-right avatar instantly (before the server round-trip).
-  if (typeof profileInitial !== "undefined" && profileInitial) {
-    profileInitial.style.backgroundImage = `url("${picture}")`;
-    profileInitial.textContent = "";
-  }
+  setTopbarAvatar(picture, currentUsername());
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile } });
   saveAccount(data.user);
   await renderPersonalInformation();
@@ -2429,7 +2484,7 @@ function showModal(title, message, buttons = [{ label: t("ok"), primary: true, a
   overlay.innerHTML = `
     <div class="${panelClass}" role="dialog" aria-modal="true">
       <h3>${escapeHtml(title)}</h3>
-      <p>${bodyHtml}</p>
+      <div class="modal-body">${bodyHtml}</div>
       <div class="modal-actions">${buttons.map((btn, i) =>
         `<button class="${btn.primary ? "btn-primary" : "btn-ghost"}" type="button" data-modal-btn="${i}">${escapeHtml(btn.label)}</button>`
       ).join("")}</div>
