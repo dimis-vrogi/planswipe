@@ -345,6 +345,7 @@ function summarizeGroup(group) {
     votes:     group.votes    || {},
     search:    group.search   || null,
     placesExhausted: Boolean(group.placesExhausted),
+    reset:     group.reset || null,
     createdAt: group.createdAt
   };
 }
@@ -887,6 +888,16 @@ async function handleApi(request, response) {
         friendStatus = "incoming";
       }
     }
+    // #10: a non-friend viewing someone else's profile can't see bio or preferences.
+    // Self-access is resolved from the verified token, not just the query param.
+    const requesterName = await getAuthUsername(request);
+    const isSelf = requesterName && requesterName === username;
+    if (!isSelf && friendStatus !== "friends") {
+      const p = data.profile || {};
+      const safeProfile = { picture: p.picture || "", ageGroup: p.ageGroup || "" };
+      sendJson(response, 200, { user: { username: data.username, profile: safeProfile, friendStatus, restricted: true } });
+      return;
+    }
     sendJson(response, 200, { user: { ...data, friendStatus } });
     return;
   }
@@ -1155,8 +1166,12 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "groups" && parts[2] && !parts[3]) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
-    if (!(await requireGroupMember(request, response, group))) return;
-    sendJson(response, 200, { group: summarizeGroup(group) });
+    const memberName = await requireGroupMember(request, response, group);
+    if (!memberName) return;
+    const summary = summarizeGroup(group);
+    const meProfile = await getProfileByUsername(memberName);
+    summary.myLastRead = meProfile?.profile?.lastReadTimestamps?.[group.code] || null;
+    sendJson(response, 200, { group: summary });
     return;
   }
 
@@ -1192,6 +1207,7 @@ async function handleApi(request, response) {
     if (unanimous) {
       const selectedId = topIds[0];
       if (!group.consensus) group.consensus = {};
+      group.reset = null;
       group.consensus[kind] = selectedId;
       if (kind === "area") group.consensus.type = null;
       if (kind === "type" && group.consensus.area) {
@@ -1205,6 +1221,20 @@ async function handleApi(request, response) {
       }
     } else {
       if (group.consensus?.[kind]) group.consensus[kind] = null;
+      // #6: everyone has picked but they don't agree — reset choices so they re-pick,
+      // and leave a marker so clients can show the "not everyone agrees" warning once.
+      const everyoneChose = Object.keys(group.choices[kind] || {}).length === totalMembers && totalMembers > 1;
+      if (everyoneChose) {
+        group.choices[kind] = {};
+        if (kind === "area") {
+          group.choices.type = {};
+          group.consensus.area = null; group.consensus.type = null;
+          group.search = null; group.places = []; group.placesExhausted = false;
+        } else {
+          group.consensus.type = null;
+        }
+        group.reset = { id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, kind };
+      }
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
@@ -1489,7 +1519,16 @@ async function handleApi(request, response) {
       } else if (viewerOutgoing.includes(p.username)) {
         friendStatus = "incoming";
       }
-      return { ...p, friendStatus };
+      // Only friends see bio/preferences; everyone else gets a minimal card.
+      if (friendStatus === "friends") {
+        return { username: p.username, profile: p.profile || {}, friendStatus };
+      }
+      return {
+        username: p.username,
+        profile: { picture: p.profile?.picture || "" },
+        friendStatus,
+        restricted: true
+      };
     });
     sendJson(response, 200, { users: results });
     return;
