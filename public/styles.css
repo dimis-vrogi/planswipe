@@ -2107,3 +2107,23 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   padding: 0 4px;
   margin-left: 8px;
 }
+
+/* #9: emphasise the "selected by X people" badge */
+.selection-badge-strong {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* #6: danger variant for the "not everyone agrees" popup */
+.modal-panel.modal-danger {
+  border: 2px solid var(--red);
+}
+.modal-panel.modal-danger h3 {
+  color: var(--red);
+}
+
+/* #10: friends-only profile note */
+.muted-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
