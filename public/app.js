@@ -1337,45 +1337,49 @@ function hideAppPanels() {
   setVisible(swipeLayout, false); setVisible(resultsPanel, false);
 }
 
-// Establishes a Supabase recovery session from the email link, tolerant of the
-// implicit (hash), PKCE (?code=) and token_hash (?token_hash=&type=recovery) flows,
-// and of the async delay before the client finishes parsing the URL.
-async function waitForRecoverySession(timeoutMs = 6000) {
+// Reads recovery parameters from either the query string or the URL hash.
+function getRecoveryParams() {
+  const url = new URL(window.location.href);
+  const hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+  return {
+    error: url.searchParams.get("error") || hash.get("error") || url.searchParams.get("error_code") || hash.get("error_code") || "",
+    tokenHash: url.searchParams.get("token_hash") || "",
+    type: url.searchParams.get("type") || "recovery"
+  };
+}
+
+// Ensures a recovery session exists at the moment the user submits.
+// The token is only consumed here (on user action), so email link scanners
+// that pre-fetch the page can't burn it first.
+async function ensureRecoverySession(params) {
   if (state.supabaseSession) return true;
   if (!state.supabaseClient) return false;
-  const url = new URL(window.location.href);
-  const code = url.searchParams.get("code");
-  const tokenHash = url.searchParams.get("token_hash");
-  const type = url.searchParams.get("type");
   try {
-    if (code) {
-      const { data } = await state.supabaseClient.auth.exchangeCodeForSession(code);
-      if (data?.session) { state.supabaseSession = data.session; return true; }
-    } else if (tokenHash && type) {
-      const { data } = await state.supabaseClient.auth.verifyOtp({ type, token_hash: tokenHash });
+    if (params.tokenHash) {
+      const { data, error } = await state.supabaseClient.auth.verifyOtp({ type: params.type, token_hash: params.tokenHash });
+      if (error) throw error;
       if (data?.session) { state.supabaseSession = data.session; return true; }
     }
-  } catch (e) { console.warn("Recovery exchange:", e.message); }
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const { data } = await state.supabaseClient.auth.getSession();
-      if (data.session) { state.supabaseSession = data.session; return true; }
-    } catch (_) {}
-    await new Promise((r) => setTimeout(r, 250));
-  }
+  } catch (e) { console.warn("verifyOtp:", e.message); return false; }
+  // Implicit/hash flow: the session may already be established by the client.
+  try {
+    const { data } = await state.supabaseClient.auth.getSession();
+    if (data.session) { state.supabaseSession = data.session; return true; }
+  } catch (_) {}
   return Boolean(state.supabaseSession);
 }
 
 function renderRecoverPage() {
-  // #1: reachable WITHOUT being logged in. The Supabase recovery session (from the
-  // email link) is the access token; no current password is required. We render the
-  // form first and wait for the session to be established before deciding anything,
-  // so a valid link no longer flashes and bounces to home.
+  // #1: reachable WITHOUT being logged in and with no current password required.
+  // The token is verified only when the user submits (scanner-proof), and Supabase's
+  // own "expired" error in the URL is detected immediately.
   setVisible(loginPanel, false); setVisible(topbar, false); setVisible(pagePanel, false);
   hideAppPanels(); removeChatButton();
   if (!state.supabaseClient) { navigate("/home"); return; }
   if (document.querySelector("#recoverPage")) return;
+
+  const params = getRecoveryParams();
+
   const recoverDiv = document.createElement("div");
   recoverDiv.id = "recoverPage";
   recoverDiv.className = "hero-screen";
@@ -1386,34 +1390,27 @@ function renderRecoverPage() {
     <div class="login-panel" style="animation:none;">
       <div class="login-inner">
         <h2>${escapeHtml(t("recoverPassword"))}</h2>
-        <p id="recoverStatus" class="muted-note">${escapeHtml(t("verifyingLink") || "Verifying your reset link\u2026")}</p>
-        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password" disabled>
-        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password" disabled>
-        <button id="recoverConfirmBtn" type="button" class="btn-primary" disabled>${escapeHtml(t("resetPassword"))}</button>
+        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
+        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+        <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
         <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
       </div>
     </div>`;
   document.querySelector(".app-shell").appendChild(recoverDiv);
 
-  // Enable the form only once a valid recovery session exists.
-  waitForRecoverySession().then((ok) => {
-    if (!document.querySelector("#recoverPage")) return;
-    if (!ok) {
-      showModal(
-        t("recoverPassword") || "Recover Password",
-        t("recoveryLinkInvalid") || "This reset link is invalid or has expired. Please request a new password reset email.",
-        [{ label: t("ok") || "OK", primary: true, action: () => { document.querySelector("#recoverPage")?.remove(); navigate("/home"); } }],
-        { variant: "danger" }
-      );
-      return;
-    }
-    const status = document.querySelector("#recoverStatus");
-    if (status) status.remove();
-    ["#recoverNewPassword", "#recoverConfirmPassword", "#recoverConfirmBtn"].forEach((sel) => {
-      const el = document.querySelector(sel); if (el) el.disabled = false;
-    });
-    document.querySelector("#recoverNewPassword")?.focus();
-  });
+  const invalidLink = () => showModal(
+    t("recoverPassword") || "Recover Password",
+    t("recoveryLinkInvalid") || "This reset link is invalid or has expired. Please request a new password reset email.",
+    [{ label: t("ok") || "OK", primary: true, action: () => { document.querySelector("#recoverPage")?.remove(); navigate("/home"); } }],
+    { variant: "danger" }
+  );
+
+  // Supabase already told us the link is bad (e.g. otp_expired) — say so up front.
+  if (params.error) { invalidLink(); return; }
+  // No token, no hash session pending, and not already in a recovery session → not allowed here.
+  if (!params.tokenHash && !state.supabaseSession && !(window.location.hash || "").includes("access_token")) {
+    invalidLink(); return;
+  }
 
   document.querySelector("#recoverConfirmBtn").addEventListener("click", async () => {
     const newPw = document.querySelector("#recoverNewPassword")?.value;
@@ -1422,12 +1419,12 @@ function renderRecoverPage() {
     if (newPw !== confirmPw) { showError(t("passwordMismatch")); return; }
     if (!isStrongPassword(newPw)) { showError(t("passwordRequirements")); return; }
     try {
-      if (state.supabaseClient) {
-        const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
-        if (error) throw new Error(error.message);
-        try { await state.supabaseClient.auth.signOut(); } catch (_) {}
-        state.supabaseSession = null;
-      }
+      const ok = await ensureRecoverySession(params);
+      if (!ok) { invalidLink(); return; }
+      const { error } = await state.supabaseClient.auth.updateUser({ password: newPw });
+      if (error) throw new Error(error.message);
+      try { await state.supabaseClient.auth.signOut(); } catch (_) {}
+      state.supabaseSession = null;
       document.querySelector("#recoverPage")?.remove();
       navigate("/home");
       showModal(
