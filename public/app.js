@@ -1308,6 +1308,12 @@ function navigate(path) {
 function onUrlChange() {
   const route = currentRoute();
 
+  // #1: the recovery link is opened while logged OUT and must not be redirected
+  // to home (which would also discard the ?token_hash=... in the URL).
+  if (route === "/recover") {
+    state.showHero = false; state.activePage = "recover"; renderApp(); return;
+  }
+
   if (!isLoggedIn()) {
     if (route !== "/home") history.replaceState({}, "", "/home");
     state.showHero = true; state.activePage = ""; state.loginOpen = false;
@@ -1316,10 +1322,6 @@ function onUrlChange() {
 
   if (route === "/home") { state.showHero = true; state.activePage = ""; renderApp(); return; }
   if (route === "/main") { state.showHero = false; state.activePage = ""; renderApp(); return; }
-
-  if (route === "/recover") {
-    state.showHero = false; state.activePage = "recover"; renderApp(); return;
-  }
 
   const pageMatch = route.match(/^\/(groups|friends|messages|likedplaces|past|personal|settings|subscription)$/);
   if (pageMatch) { state.showHero = false; state.activePage = pageMatch[1]; renderApp(); return; }
