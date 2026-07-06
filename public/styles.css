@@ -1,26 +1,56 @@
 :root {
   color-scheme: light;
-  --ink: #1d1f24;
-  --muted: #636a76;
-  --line: rgba(217, 221, 228, 0.7);
+
+  /* Neutrals */
+  --ink: #17181d;
+  --ink-soft: #3b3e46;
+  --muted: #6c7280;
+  --line: rgba(23, 24, 29, 0.09);
+  --line-strong: rgba(23, 24, 29, 0.16);
   --panel: #ffffff;
-  --page: #f3faf8;
-  --green: #167a5b;
-  --green-light: #e8f7f2;
-  --red: #c93b49;
+  --panel-2: #fbfaf7;
+  --page: #f4f3ef;
+
+  /* Brand — emerald */
+  --green: #12805e;
+  --green-strong: #0b6047;
+  --green-bright: #18a374;
+  --green-light: #e7f5ef;
+  --green-ring: rgba(18, 128, 94, 0.30);
+
+  /* Accent — warm coral (the going-out energy) */
+  --accent: #ff6a42;
+  --accent-strong: #ec5730;
+  --accent-light: #ffe9e1;
+
+  /* Support (kept for existing references) */
+  --red: #d3384a;
   --teal: #cbe9e1;
-  --gold: #ffe1a6;
-  --purple: #301860;
+  --gold: #ffd27a;
+  --purple: #2a1a5e;
   --mint: #45d7c7;
   --yellow: #f6d889;
-  --shadow-sm: 0 2px 8px rgba(25, 31, 42, 0.06);
-  --shadow-md: 0 8px 24px rgba(25, 31, 42, 0.10);
-  --shadow-lg: 0 22px 60px rgba(25, 31, 42, 0.14);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+
+  /* Elevation — soft, layered */
+  --shadow-sm: 0 1px 2px rgba(23, 24, 29, 0.05), 0 2px 8px rgba(23, 24, 29, 0.05);
+  --shadow-md: 0 6px 18px rgba(23, 24, 29, 0.08), 0 2px 6px rgba(23, 24, 29, 0.05);
+  --shadow-lg: 0 26px 60px rgba(23, 24, 29, 0.16), 0 8px 20px rgba(23, 24, 29, 0.08);
+  --shadow-brand: 0 10px 24px rgba(18, 128, 94, 0.28);
+  --shadow-accent: 0 10px 24px rgba(255, 106, 66, 0.26);
+
+  /* Radii — friendlier */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -31,10 +61,14 @@ body {
   min-height: 100vh;
   margin: 0;
   font-size: 16px;
-  background: linear-gradient(160deg, #f0faf7 0%, #e6f5f0 40%, #f7fbfa 100%);
+  background-color: var(--page);
+  background-image:
+    radial-gradient(1100px 560px at 100% -10%, rgba(18, 128, 94, 0.07), transparent 62%),
+    radial-gradient(900px 520px at -10% 108%, rgba(255, 106, 66, 0.06), transparent 60%);
   color: var(--ink);
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button, input, textarea, select {
@@ -2143,4 +2177,257 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 /* #2: ensure the avatar image fills the circular button */
 .profile-button {
   background-repeat: no-repeat;
+}
+
+/* ============================================================
+   REDESIGN LAYER — PlanSwipe v2
+   Warm-neutral canvas · emerald brand · coral "going-out" accent.
+   Re-skins existing components (same class hooks, no markup changes).
+   Signature: the swipe/decision cards + the green "selected by" chip.
+   ============================================================ */
+
+/* ---- Type: characterful display face for headings, coral eyebrows ---- */
+h1, h2, h3,
+.hero-copy h1,
+.topbar h1,
+.page-header h2,
+.results-header h2,
+.group-section-title,
+.modal-panel h3,
+.chat-header,
+.login-inner h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+h1, .hero-copy h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+h3 { font-weight: 700; }
+
+.eyebrow {
+  color: var(--accent-strong);
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+/* ---- Buttons: on-brand green pill, fixed hover, tactile states ---- */
+.btn-primary {
+  background: linear-gradient(135deg, var(--green-bright), var(--green));
+  color: #fff;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-brand);
+  font-weight: 700;
+  letter-spacing: 0.005em;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--green), var(--green-strong));
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(18, 128, 94, 0.34);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  background: linear-gradient(135deg, var(--green), var(--green-strong));
+  box-shadow: var(--shadow-brand);
+}
+
+.btn-ghost {
+  background: rgba(23, 24, 29, 0.05);
+  color: var(--ink);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+.btn-ghost:hover { background: rgba(23, 24, 29, 0.09); }
+
+.btn-outline {
+  background: #fff;
+  color: var(--green-strong);
+  border: 2px solid var(--green);
+  border-radius: var(--radius-pill);
+  box-shadow: none;
+}
+.btn-outline:hover {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-brand);
+}
+.btn-secondary,
+.continue-button {
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius-pill);
+}
+.choice-button { border-radius: var(--radius-md); font-weight: 700; transition: var(--transition); }
+.danger-button {
+  border-radius: var(--radius-pill);
+  color: var(--red);
+  background: rgba(211, 56, 74, 0.08);
+  font-weight: 700;
+}
+.danger-button:hover { background: rgba(211, 56, 74, 0.14); }
+
+/* ---- Inputs: rounded, clear border, green focus ring ---- */
+input, textarea, select,
+.field input, .field select, .personal-form input {
+  border-radius: var(--radius-md);
+}
+input:focus, textarea:focus, select:focus,
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-ring);
+}
+
+/* ---- Panels: clean white surfaces with soft depth ---- */
+.wide-panel, .preference-box, .booking-details, .status-panel,
+.decision-panel, .results-panel, .setup-panel, .group-panel,
+.subscription-card, .suggestion-panel, .personal-form {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Cards: consistent rounding + a gentle lift on hover ---- */
+.option-card, .group-card, .liked-place-card, .suggestion-card,
+.activity-card, .mode-card, .demo-card, .preview-card, .result-card,
+.add-option-card {
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.option-card:hover, .group-card:hover, .liked-place-card:hover,
+.suggestion-card:hover, .activity-card:hover, .mode-card:hover,
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
+}
+.option-card.is-selected {
+  border-color: var(--green);
+  background: var(--green-light);
+  box-shadow: 0 0 0 2px var(--green-ring), var(--shadow-md);
+}
+
+/* ---- Signature: the "selected by N people" chip ---- */
+.selection-badge-strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--green-light);
+  color: var(--green-strong);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+.option-score, .result-score {
+  color: var(--green-strong);
+  font-weight: 700;
+}
+
+/* ---- Topbar: airy, sticky, app-like ----
+   NB: no backdrop-filter — it creates a stacking context that traps the
+   profile-menu dropdown. Solid background keeps the menu able to escape. */
+.topbar {
+  position: sticky;
+  top: 12px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.topbar h1 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+/* ---- Profile button + menu ---- */
+.profile-button {
+  background: linear-gradient(135deg, var(--green-bright), var(--green));
+  box-shadow: var(--shadow-brand);
+}
+.profile-menu {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+.profile-menu button { border-radius: var(--radius-md); font-weight: 600; }
+.profile-menu button:hover { background: var(--green-light); color: var(--green-strong); }
+
+/* ---- Badges & chips ---- */
+.notification-badge, .chat-unread-badge, .group-unread-badge {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-accent);
+  font-weight: 700;
+}
+.member-chip, .avatar, .image-avatar {
+  border-radius: var(--radius-pill);
+}
+.language-button, .pill-row button {
+  border-radius: var(--radius-pill);
+}
+
+/* ---- Hero: inviting, generous ---- */
+.hero-copy h1 { line-height: 0.98; }
+.hero-preview .preview-card, .hero-preview .demo-card {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---- Modals ---- */
+.modal-panel { border-radius: var(--radius-xl); }
+.modal-panel h3 { color: var(--purple); }
+
+/* ---- Chat: friendly bubbles, brand FAB ---- */
+.chat-fab {
+  background: linear-gradient(135deg, var(--green-bright), var(--green));
+  box-shadow: var(--shadow-brand);
+}
+.chat-panel { border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); }
+.chat-bubble { border-radius: var(--radius-lg); }
+.chat-bubble-mine {
+  background: linear-gradient(135deg, var(--green-bright), var(--green));
+  color: #fff;
+}
+.chat-bubble-theirs { background: #f1f0ec; color: var(--ink); }
+
+/* ---- Empty states read as invitations, not dead ends ---- */
+.chat-empty, .muted-note, .places-exhausted-message, .request-status {
+  color: var(--muted);
+}
+
+/* ---- Quality floor: focus, motion, selection, scrollbars ---- */
+button:focus-visible, a:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible,
+.option-card:focus-visible, .choice-button:focus-visible {
+  outline: 3px solid var(--green-ring);
+  outline-offset: 2px;
+}
+::selection { background: var(--green); color: #fff; }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Mobile: tighten the shell so it feels like a native app ---- */
+@media (max-width: 640px) {
+  .app-shell { padding: 12px; gap: 12px; }
+  .topbar { top: 8px; border-radius: var(--radius-lg); }
+  h1, .hero-copy h1 { line-height: 1.02; }
 }
