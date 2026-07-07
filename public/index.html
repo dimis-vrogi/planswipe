@@ -131,6 +131,11 @@
           <p>Choose whether you are creating a new group or joining one that already exists.</p>
         </div>
 
+        <button class="places-search-entry" id="openPlacesSearchButton" type="button">
+          <span class="places-search-icon" aria-hidden="true">🔍</span>
+          <span class="places-search-text" id="placesSearchEntryText">Search places by name or browse by area</span>
+        </button>
+
         <div class="mode-buttons" id="modeButtons">
           <button class="mode-card" id="showCreateButton" type="button">
             <strong>Create Group</strong>
@@ -186,6 +191,7 @@
         </div>
         <div class="group-actions-row">
           <button class="btn-primary" id="inviteToGroupButton" type="button">Invite to Group</button>
+          <button class="btn-ghost is-hidden" id="reviewButton" type="button">Change basics</button>
         </div>
         <div class="member-row" id="memberRow" aria-label="Group members"></div>
       </section>
@@ -205,20 +211,20 @@
           </div>
         </div>
         <div class="option-grid" id="optionGrid"></div>
+        <div class="comments-box decision-comments is-hidden" id="commentsBox">
+          <div class="comments-head">
+            <label for="commentsInput" id="commentsLabel">Comments (Optional)</label>
+            <button type="button" class="comments-info" id="commentsInfoBtn" aria-label="What is this for?">i</button>
+          </div>
+          <textarea id="commentsInput" rows="2" placeholder="e.g. quiet, vegan options, outdoor seating, under €20"></textarea>
+          <button type="button" class="btn-ghost comments-apply" id="commentsApplyBtn">Save note</button>
+        </div>
       </section>
 
       <!-- Swipe layout -->
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
           <div class="search-summary" id="searchSummary">Searching...</div>
-          <div class="comments-box" id="commentsBox">
-            <div class="comments-head">
-              <label for="commentsInput" id="commentsLabel">Comments (Optional)</label>
-              <button type="button" class="comments-info" id="commentsInfoBtn" aria-label="What is this for?">i</button>
-            </div>
-            <textarea id="commentsInput" rows="2" placeholder="e.g. quiet, vegan options, outdoor seating, under €20"></textarea>
-            <button type="button" class="btn-ghost comments-apply" id="commentsApplyBtn">Update suggestions</button>
-          </div>
           <div class="activity-card" id="activityCard">
             <img class="activity-photo" id="activityPhoto" alt="" loading="lazy">
             <div class="card-copy">
@@ -232,6 +238,7 @@
                 <span id="activityTime">Time</span>
                 <span id="activityCost">Cost</span>
               </div>
+              <div class="place-contact" id="activityContact"></div>
             </div>
           </div>
         </article>
@@ -254,7 +261,6 @@
           </div>
           <div class="results-actions">
             <button class="btn-ghost" id="continueBrowseButton" type="button">Continue Browsing</button>
-            <button class="btn-ghost" id="reviewButton" type="button">Change basics</button>
           </div>
         </div>
         <div class="result-list" id="resultList"></div>
