@@ -116,8 +116,7 @@
               <button type="button" data-page="messages">Messages</button>
               <button type="button" data-page="likedplaces">Liked Places</button>
               <button type="button" data-page="past">Past Activities</button>
-              <button type="button" data-page="personal">Personal Information</button>
-              <button type="button" data-page="settings">Settings</button>
+              <button type="button" data-page="personal">Profile &amp; Settings</button>
               <button type="button" data-page="subscription">Subscription</button>
               <button type="button" id="logoutButton">Logout</button>
             </nav>
@@ -212,6 +211,14 @@
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
           <div class="search-summary" id="searchSummary">Searching...</div>
+          <div class="comments-box" id="commentsBox">
+            <div class="comments-head">
+              <label for="commentsInput" id="commentsLabel">Comments (Optional)</label>
+              <button type="button" class="comments-info" id="commentsInfoBtn" aria-label="What is this for?">i</button>
+            </div>
+            <textarea id="commentsInput" rows="2" placeholder="e.g. quiet, vegan options, outdoor seating, under €20"></textarea>
+            <button type="button" class="btn-ghost comments-apply" id="commentsApplyBtn">Update suggestions</button>
+          </div>
           <div class="activity-card" id="activityCard">
             <img class="activity-photo" id="activityPhoto" alt="" loading="lazy">
             <div class="card-copy">
