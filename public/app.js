@@ -260,6 +260,7 @@ const copy = {
     areaSelected: "Area agreed! Now vote on an activity type.",
     fridayCrew: "Friday crew",
     forgotPassword: "Recover Password", username: "Username", email: "Email", password: "Password",
+    forgotPasswordQuestion: "Forgot Password?", saveChanges: "Save Changes",
     oldPassword: "Old password", newPassword: "New password", verifyPassword: "Verify new password",
     changePassword: "Change Password", passwordChanged: "Password changed successfully",
     passwordMismatch: "New passwords do not match",
@@ -488,6 +489,7 @@ const copy = {
     areaSelected: "Συμφωνήθηκε περιοχή! Τώρα ψηφίστε για δραστηριότητα.",
     fridayCrew: "Παρέα Παρασκευής",
     forgotPassword: "Ανάκτηση Κωδικού",
+    forgotPasswordQuestion: "Ξεχάσατε τον κωδικό;", saveChanges: "Αποθήκευση αλλαγών",
     username: "Όνομα χρήστη", email: "Email", password: "Κωδικός",
     oldPassword: "Παλιός κωδικός", newPassword: "Νέος κωδικός",
     verifyPassword: "Επιβεβαίωση νέου κωδικού",
@@ -703,7 +705,7 @@ function applyLanguage() {
   loginButton.textContent       = t("login");
   registerButton.textContent    = t("createAccount");
   loginForm.querySelector("h2").textContent = t("enterPlanswipe");
-  forgotPasswordButton.textContent = t("forgotPassword");
+  forgotPasswordButton.textContent = t("forgotPasswordQuestion");
   loginEmail.placeholder = t("email");
   loginUsername.placeholder = state.authMode === "signup" ? t("username") : (t("usernameOrEmail") || "Username or email");
   renderPasswordStrength();
@@ -1050,9 +1052,9 @@ function renderDecisionStep(kind) {
     decisionHint.innerHTML = t("decisionHint");
   }
 
-  setVisible(backChoiceButton, kind === "type" || Boolean(chosen) || Boolean(state.pendingAreaOption));
+  setVisible(backChoiceButton, Boolean(state.pendingAreaOption));
   if (backChoiceButton && !backChoiceButton.classList.contains("is-hidden")) {
-    backChoiceButton.textContent = t("backToVoting");
+    backChoiceButton.textContent = t("back") || "Back";
   }
 
   if (!options || options.length === 0) {
@@ -2034,6 +2036,14 @@ async function goBackChoice() {
   state.group = data.group; renderApp();
 }
 
+// #2: "Change basics" always returns the group to the very first step (area).
+async function changeBasics() {
+  if (!state.group || !state.user) return;
+  const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step: "area" } });
+  state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
+  state.group = data.group; renderApp();
+}
+
 async function vote(value) {
   if (state.votingInProgress) return;
   const places = state.group.places || [];
@@ -2448,8 +2458,8 @@ function preferenceList(title, key, items, placeholder) {
   const readonly = key.startsWith("readonly-");
   return `<div class="preference-box">
     <h3>${escapeHtml(title)}</h3>
-    <div class="pill-row">${(items || []).map((item) => `<span class="preference-pill">${escapeHtml(item)}</span>`).join("") || `<span class="muted-text">${t("nothingSaved")}</span>`}</div>
-    ${!readonly ? `<div class="inline-add"><input type="text" data-pref-input="${escapeHtml(key)}" placeholder="${escapeHtml(placeholder)}"><button type="button" data-pref-add="${escapeHtml(key)}">Add</button></div>` : ""}
+    <div class="pill-row">${(items || []).map((item) => `<span class="preference-pill">${escapeHtml(item)}${!readonly ? `<button type="button" class="pref-remove" data-pref-remove="${escapeHtml(key)}" data-pref-value="${escapeHtml(item)}" aria-label="${escapeHtml(t("remove") || "Remove")}">\u00d7</button>` : ""}</span>`).join("") || `<span class="muted-text">${t("nothingSaved")}</span>`}</div>
+    ${!readonly ? `<div class="inline-add"><input type="text" data-pref-input="${escapeHtml(key)}" placeholder="${escapeHtml(placeholder)}"><button type="button" data-pref-add="${escapeHtml(key)}">${escapeHtml(t("add") || "Add")}</button></div>` : ""}
   </div>`;
 }
 
@@ -2466,6 +2476,7 @@ async function renderPersonalInformation() {
   pageEyebrow.textContent = t("account") || t("profileAndSettings");
   pageTitle.textContent = t("profileAndSettings");
   pageDemo.innerHTML = `
+    <div class="personal-save-bar"><button class="btn-primary" type="button" id="saveProfileButton" disabled>${t("saveChanges")}</button></div>
     <form class="personal-form"><section><h3>${t("personal")}</h3>
       <label class="profile-upload">${profileImage(account)}<span>${t("editProfilePicture")}</span><input id="profilePictureInput" type="file" accept="image/*"></label>
       <label class="field"><span>${t("username")}</span><input type="text" value="${escapeHtml(account.username)}" disabled></label>
@@ -2482,12 +2493,24 @@ async function renderPersonalInformation() {
         <button type="button" id="profileForgotPassword" class="hyperlink-button" style="background:none;border:none;color:var(--green);cursor:pointer;text-decoration:underline;font-size:0.85rem;padding:4px 0;text-align:left;">${escapeHtml(t("forgotPassword"))}</button>
       </label>
       <label class="field"><span>${t("bio")}</span><textarea id="profileBio" rows="3" placeholder="${t("bioPlaceholder")}">${escapeHtml(profile.bio || "")}</textarea></label>
-      <button class="btn-primary" type="button" id="saveProfileButton" style="width:100%">${t("saveProfile")}</button>
     </section><section><h3>${t("preferences")}</h3>
       ${preferenceList(t("favouriteAreas"), "areas", preferences.areas, t("addAnotherArea"))}
       ${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}
       ${preferenceList(t("favouritePlaces"), "places", preferences.places, t("addAnotherPlace"))}
     </section></form>${settingsSectionsHtml()}`;
+
+  // #4: Save Changes stays disabled until the profile fields actually change.
+  const saveBtn = document.querySelector("#saveProfileButton");
+  const bioEl = document.querySelector("#profileBio");
+  const ageEl = document.querySelector("#profileAgeGroup");
+  const initialBio = profile.bio || "";
+  const initialAge = profile.ageGroup || "";
+  const checkDirty = () => {
+    const dirty = (bioEl?.value || "") !== initialBio || (ageEl?.value || "") !== initialAge;
+    if (saveBtn) saveBtn.disabled = !dirty;
+  };
+  bioEl?.addEventListener("input", checkDirty);
+  ageEl?.addEventListener("change", checkDirty);
 }
 
 function settingsSectionsHtml() {
@@ -2893,6 +2916,16 @@ async function addPreference(key) {
   const profile = state.account?.profile || {};
   const preferences = { areas: [...(profile.preferences?.areas || [])], activities: [...(profile.preferences?.activities || [])], places: [...(profile.preferences?.places || [])] };
   if (!preferences[key].some((item) => item.toLowerCase() === value.toLowerCase())) { preferences[key].push(value); }
+  const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } });
+  saveAccount(data.user);
+  await renderPersonalInformation();
+}
+
+async function removePreference(key, value) {
+  if (!["areas", "activities", "places"].includes(key)) return;
+  const profile = state.account?.profile || {};
+  const preferences = { areas: [...(profile.preferences?.areas || [])], activities: [...(profile.preferences?.activities || [])], places: [...(profile.preferences?.places || [])] };
+  preferences[key] = preferences[key].filter((item) => item !== value);
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } });
   saveAccount(data.user);
   await renderPersonalInformation();
@@ -3325,7 +3358,7 @@ noButton.addEventListener("click", () => vote("no").catch((e) => showError(e.mes
 maybeButton.addEventListener("click", () => vote("maybe").catch((e) => showError(e.message)));
 yesButton.addEventListener("click", () => vote("yes").catch((e) => showError(e.message)));
 backChoiceButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
-reviewButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
+reviewButton.addEventListener("click", () => changeBasics().catch((e) => showError(e.message)));
 document.querySelector("#openPlacesSearchButton")?.addEventListener("click", openPlacesSearch);
 if (continueBrowseButton) {
   continueBrowseButton.addEventListener("click", () => continueBrowsing().catch((e) => showError(e.message)));
@@ -3488,6 +3521,8 @@ pageDemo.addEventListener("click", (e) => {
   if (deleteAccBtn) { deleteAccount().catch((err) => showError(err.message)); return; }
   const prefAddBtn = e.target.closest("[data-pref-add]");
   if (prefAddBtn) { addPreference(prefAddBtn.dataset.prefAdd).catch((err) => showError(err.message)); return; }
+  const prefRemoveBtn = e.target.closest("[data-pref-remove]");
+  if (prefRemoveBtn) { removePreference(prefRemoveBtn.dataset.prefRemove, prefRemoveBtn.dataset.prefValue).catch((err) => showError(err.message)); return; }
   const friendSearchBtn = e.target.closest("#friendSearchButton");
   if (friendSearchBtn) { searchFriends().catch((err) => showError(err.message)); return; }
   const showPastBtn = e.target.closest("#showPastActivityForm");
