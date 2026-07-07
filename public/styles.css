@@ -537,6 +537,19 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   gap: 8px;
 }
 
+.topbar-search-button {
+  gap: 6px;
+}
+
+.topbar-search-button .places-search-icon {
+  font-size: 0;
+}
+
+.topbar-search-button .places-search-icon::before {
+  content: "Search";
+  font-size: 0.9rem;
+}
+
 /* ====== PROFILE ====== */
 .profile-wrap {
   position: relative;
@@ -1668,6 +1681,11 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   margin-bottom: 14px;
 }
 
+.ai-info-button {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
 .ai-toggle-label {
   font-weight: 700;
   font-size: 0.9rem;
@@ -1677,6 +1695,12 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 .ai-toggle-desc {
   font-size: 0.82rem;
   color: var(--muted);
+}
+
+.comments-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .css-toggle {
@@ -2688,6 +2712,59 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
   .group-actions-row { flex-wrap: wrap; }
   .results-actions, .setup-actions, .detail-actions { flex-wrap: wrap; }
   .search-filter-row label { min-width: 120px; }
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+    overflow: visible;
+  }
+  .topbar-brand {
+    min-width: 0;
+    gap: 8px;
+  }
+  .topbar-logo {
+    width: 34px;
+    height: 34px;
+  }
+  .topbar h1 {
+    font-size: 1rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .topbar .eyebrow {
+    display: none;
+  }
+  .topbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px;
+    gap: 6px;
+    align-items: center;
+  }
+  .topbar-actions > .btn-ghost,
+  .topbar-search-button {
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 0.78rem;
+    white-space: normal;
+  }
+  .profile-wrap {
+    justify-self: end;
+  }
+  .profile-button {
+    width: 42px;
+    height: 42px;
+  }
+  .profile-menu {
+    position: fixed;
+    top: 112px;
+    right: 10px;
+    max-width: calc(100vw - 20px);
+  }
+  .places-search-text {
+    display: inline;
+  }
 }
 
 /* ---- #7 request-sent button ---- */
