@@ -514,6 +514,7 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
 .topbar-logo {
@@ -535,15 +536,45 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .topbar-search-button {
   min-width: 230px;
+  flex: 1 1 230px;
   justify-content: flex-start;
   gap: 6px;
   background: #fff;
   color: var(--muted);
   border-color: var(--line-strong);
+}
+
+#resetButton {
+  max-width: 132px;
+  line-height: 1.1;
+  white-space: normal;
+  text-align: center;
+}
+
+@media (max-width: 1040px) and (min-width: 641px) {
+  .topbar {
+    gap: 12px;
+  }
+  .topbar-search-button {
+    min-width: 170px;
+    flex-basis: 170px;
+  }
+  .topbar-actions {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+  .topbar-actions > .btn-ghost {
+    padding-inline: 12px;
+  }
+  #resetButton {
+    max-width: 96px;
+    padding-inline: 10px;
+  }
 }
 
 .topbar-search-button .places-search-icon {
@@ -2709,6 +2740,11 @@ textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible,
   font: inherit;
   background: #fff;
   min-width: 0;
+}
+.search-ai-note {
+  margin: 10px 0;
+  font-weight: 700;
+  color: var(--green-strong);
 }
 .search-section-title { font-weight: 800; font-family: var(--font-display); margin: 6px 0 8px; color: var(--ink); }
 .search-card-grid { display: grid; gap: 12px; }
