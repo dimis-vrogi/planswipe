@@ -2431,3 +2431,178 @@ textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible,
   .topbar { top: 8px; border-radius: var(--radius-lg); }
   h1, .hero-copy h1 { line-height: 1.02; }
 }
+
+/* ---- #4 Comments box on the swipe screen ---- */
+.comments-box {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+.comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.comments-head label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.comments-info {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--green-light);
+  color: var(--green-strong);
+  font-weight: 800;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  cursor: pointer;
+  line-height: 22px;
+  flex: 0 0 auto;
+}
+.comments-info:hover { background: var(--green); color: #fff; }
+.comments-box textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  font: inherit;
+  background: #fff;
+}
+.comments-box textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-ring);
+}
+.comments-apply {
+  justify-self: end;
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 0.85rem;
+}
+
+/* ---- #2 Favourites picker modal ---- */
+.pick-favs-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.pick-favs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pick-chip {
+  border: 1px solid var(--green);
+  background: var(--green-light);
+  color: var(--green-strong);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.pick-chip:hover { background: var(--green); color: #fff; transform: translateY(-1px); }
+.pick-input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  font: inherit;
+  background: #fff;
+}
+
+/* ---- #3 Invite link ---- */
+.invite-link-box {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.invite-link-box input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  font: inherit;
+  background: #fbfaf7;
+  color: var(--ink-soft);
+}
+.invite-link-box .btn-primary {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 18px;
+}
+.modal-sep {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 16px 0 4px;
+}
+
+/* ---- #1 Emoji picker ---- */
+.emoji-btn {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  border-radius: var(--radius-pill);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.emoji-btn:hover { background: var(--green-light); border-color: var(--green); }
+.emoji-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: min(280px, 78vw);
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  z-index: 8300;
+}
+.emoji-item {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 5px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.emoji-item:hover { background: var(--green-light); }
+
+/* ---- #2 Merged Profile & Settings ---- */
+.settings-block {
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+}
+.settings-block .danger-zone {
+  border: 1px solid rgba(211, 56, 74, 0.35);
+}
+.settings-block .danger-zone h3 { color: var(--red); }
