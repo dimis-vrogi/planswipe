@@ -587,6 +587,21 @@ function buildPlaceDescription(place, typeLabel, areaLabel, language = "en") {
   return parts.join(" — ");
 }
 
+function buildPlaceDescription(place, typeLabel, areaLabel, language = "en") {
+  const lang = placeLanguage(language);
+  const summary = place.editorialSummary?.text?.trim();
+  const address = place.formattedAddress?.trim() || "";
+  const rating = place.rating ? `${Number(place.rating).toFixed(1)} ${lang === "el" ? "αστέρια" : "stars"}` : "";
+  const reviewCount = place.userRatingCount ? `${place.userRatingCount} ${lang === "el" ? "κριτικές" : "reviews"}` : "";
+  const ratingLine = [rating, reviewCount].filter(Boolean).join(" · ");
+  const parts = [];
+  if (summary) parts.push(summary);
+  else parts.push(lang === "el" ? `${typeLabel} στην περιοχή ${areaLabel}` : `${typeLabel} in ${areaLabel}`);
+  if (address) parts.push(address);
+  if (ratingLine) parts.push(ratingLine);
+  return parts.join(" — ");
+}
+
 function fallbackPhotoForType(typeId) {
   const photos = {
     restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
@@ -1704,21 +1719,23 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const mode = body.mode === "browse" ? "browse" : "name";
     const query = String(body.query || "").trim().slice(0, 120);
+    const areaText = String(body.areaId || body.area || "").trim().slice(0, 120);
+    const categoryText = String(body.category || "").trim().slice(0, 120);
     const ageGroup = String(body.ageGroup || "").trim();
     const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
-    const builtIn = areaOptions.find((a) => a.id === body.areaId);
+    const builtIn = areaOptions.find((a) => a.id === areaText);
     const areaOption = builtIn
       ? builtIn
-      : (body.areaId ? { id: body.areaId, label: body.areaId, queryArea: `${body.areaId}, Athens, Greece` } : null);
+      : (areaText ? { id: areaText, label: areaText, queryArea: `${areaText}, Athens, Greece` } : null);
     const athensWide = { id: "athens_all", label: "Athens", queryArea: "Athens, Greece" };
     const searchArea = areaOption || athensWide;
     const ageHint = ageGroup ? ` suitable for ${ageGroup}` : "";
 
     if (mode === "browse") {
-      const typeOpt = typeOptions.find((tp) => tp.id === body.category);
-      const catLabel = typeOpt?.label || String(body.category || "").trim();
+      const typeOpt = typeOptions.find((tp) => tp.id === categoryText);
+      const catLabel = typeOpt?.label || categoryText;
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
       const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
       const results = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 15, [], language) || [];
