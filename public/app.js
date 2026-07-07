@@ -351,6 +351,31 @@ const copy = {
     commentsInfoBody: "Add anything that helps us find better matches for your group \u2014 the vibe you want, budget, dietary needs, accessibility, or things to include or avoid. For example: \u201csomewhere quiet with vegan options, outdoor seating, under \u20ac20 a head.\u201d Your suggestions are ranked with these notes in mind.",
     groupInvite: "Group invite",
     profileAndSettings: "Profile & Settings",
+    searchPlaces: "Search places",
+    byName: "By name",
+    browse: "Browse",
+    allOfAthens: "All of Athens",
+    anyCategory: "Any category",
+    anyAge: "Any age",
+    category: "Category",
+    searchByNamePlaceholder: "Place name (e.g. a bar or restaurant)",
+    enterPlaceName: "Enter a place name to search.",
+    chooseCategory: "Choose a category to browse.",
+    noPlacesFound: "No places found. Try a different name, area or category.",
+    thePlace: "The place",
+    sameNameElsewhere: "Same name in other areas",
+    similarNearby: "Similar places in this area",
+    results: "Results",
+    viewDetails: "View details",
+    website: "Website",
+    openInMaps: "Open in Maps",
+    noReviews: "No reviews available.",
+    addFriend: "Add Friend",
+    requestSent: "Request sent",
+    saveNote: "Save note",
+    noteSaved: "Note saved",
+    noteSavedBody: "Your note will be used to pick the best places for your group.",
+    searchPlacesEntry: "Search places by name or browse by area",
     inviteNotFound: "That group no longer exists.",
     inviteJoinBody: "You've been invited to join a group{host} with {n} member(s). Do you want to join?",
     inviteJoinBodyPlain: "You've been invited to join a group. Do you want to join?",
@@ -550,6 +575,30 @@ const copy = {
     commentsInfoBody: "Πρόσθεσε ό,τι βοηθά να βρούμε καλύτερες επιλογές για την ομάδα σου \u2014 τη διάθεση που θέλετε, προϋπολογισμό, διατροφικές ανάγκες, προσβασιμότητα ή πράγματα προς αποφυγή. Για παράδειγμα: \u201cκάπου ήσυχο με vegan επιλογές, τραπέζια έξω, κάτω από 20€ το άτομο.\u201d Οι προτάσεις κατατάσσονται λαμβάνοντας υπόψη αυτά τα σχόλια.",
     groupInvite: "Πρόσκληση σε ομάδα",
     profileAndSettings: "Προφίλ & Ρυθμίσεις",
+    searchPlaces: "Αναζήτηση μερών",
+    byName: "Με όνομα",
+    browse: "Περιήγηση",
+    allOfAthens: "Όλη η Αθήνα",
+    anyCategory: "Οποιαδήποτε κατηγορία",
+    anyAge: "Οποιαδήποτε ηλικία",
+    category: "Κατηγορία",
+    searchByNamePlaceholder: "Όνομα μέρους (π.χ. ένα μπαρ ή εστιατόριο)",
+    enterPlaceName: "Πληκτρολόγησε ένα όνομα μέρους για αναζήτηση.",
+    chooseCategory: "Διάλεξε μια κατηγορία για περιήγηση.",
+    noPlacesFound: "Δεν βρέθηκαν μέρη. Δοκίμασε άλλο όνομα, περιοχή ή κατηγορία.",
+    thePlace: "Το μέρος",
+    sameNameElsewhere: "Ίδιο όνομα σε άλλες περιοχές",
+    similarNearby: "Παρόμοια μέρη σε αυτή την περιοχή",
+    results: "Αποτελέσματα",
+    viewDetails: "Λεπτομέρειες",
+    website: "Ιστότοπος",
+    openInMaps: "Άνοιγμα στους Χάρτες",
+    noReviews: "Δεν υπάρχουν διαθέσιμες κριτικές.",
+    addFriend: "Προσθήκη φίλου",
+    saveNote: "Αποθήκευση σημείωσης",
+    noteSaved: "Η σημείωση αποθηκεύτηκε",
+    noteSavedBody: "Η σημείωσή σου θα χρησιμοποιηθεί για να βρούμε τα καλύτερα μέρη για την ομάδα σου.",
+    searchPlacesEntry: "Αναζήτηση μερών με όνομα ή περιήγηση ανά περιοχή",
     inviteNotFound: "Αυτή η ομάδα δεν υπάρχει πλέον.",
     inviteJoinBody: "Έχεις προσκληθεί σε μια ομάδα{host} με {n} μέλη. Θέλεις να μπεις;",
     inviteJoinBodyPlain: "Έχεις προσκληθεί σε μια ομάδα. Θέλεις να μπεις;",
@@ -662,6 +711,8 @@ function applyLanguage() {
   resetButton.textContent       = t("leaveGroup");
   closePageButton.textContent   = t("back");
   if (inviteToGroupButton) inviteToGroupButton.textContent = t("inviteToGroup");
+  const pseText = document.querySelector("#placesSearchEntryText");
+  if (pseText) pseText.textContent = t("searchPlacesEntry");
   if (continueBrowseButton) continueBrowseButton.textContent = t("continueBrowsing");
   reviewButton.textContent      = t("changeBasics");
 
@@ -976,6 +1027,21 @@ function renderDecisionStep(kind) {
       <span class="option-score">${escapeHtml(addOwn)}</span>
       <span><h3>${escapeHtml(addLabel)}</h3><p>${escapeHtml(addText)}</p></span>
     </button>`;
+
+  // #2: the optional comment lives on the activity-type step (not during voting).
+  const commentsBox = document.querySelector("#commentsBox");
+  if (commentsBox) {
+    setVisible(commentsBox, kind === "type");
+    if (kind === "type") {
+      const ci = document.querySelector("#commentsInput");
+      if (ci) {
+        if (document.activeElement !== ci) ci.value = (state.group?.comments || {})[currentUsername()] || "";
+        ci.placeholder = t("commentsPlaceholder");
+      }
+      const cl = document.querySelector("#commentsLabel"); if (cl) cl.textContent = t("commentsLabel");
+      const cb = document.querySelector("#commentsApplyBtn"); if (cb && !cb.disabled) cb.textContent = t("saveNote");
+    }
+  }
 }
 
 function renderCard() {
@@ -998,6 +1064,14 @@ function renderCard() {
   activityArea.textContent        = place.areaLabel || place.address || "";
   activityTime.textContent        = place.time;
   activityCost.textContent        = place.cost;
+  const contactEl = document.querySelector("#activityContact");
+  if (contactEl) {
+    const parts = [];
+    if (place.website) parts.push(`<a href="${escapeHtml(place.website)}" target="_blank" rel="noopener">\u{1F517} ${escapeHtml(t("website"))}</a>`);
+    if (place.phone) parts.push(`<a href="tel:${escapeHtml(place.phone)}">\u{1F4DE} ${escapeHtml(place.phone)}</a>`);
+    if (place.mapsUrl) parts.push(`<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener">\u{1F5FA}\uFE0F ${escapeHtml(t("openInMaps"))}</a>`);
+    contactEl.innerHTML = parts.join("");
+  }
   noButton.textContent      = t("choiceNo");
   maybeButton.textContent   = t("choiceMaybe");
   yesButton.textContent     = t("choiceYes");
@@ -1009,15 +1083,6 @@ function renderCard() {
     const alreadyFav = (preferences.places || []).some((p) => p.toLowerCase() === place.title?.toLowerCase());
     favButton.textContent = alreadyFav ? `\u2605 ${t("favourited")}` : `\u2606 ${t("addToFavourites")}`;
     favButton.classList.toggle("is-favourited", alreadyFav);
-  }
-  const commentsInput = document.querySelector("#commentsInput");
-  if (commentsInput) {
-    if (document.activeElement !== commentsInput) {
-      commentsInput.value = (state.group.comments || {})[currentUsername()] || "";
-    }
-    commentsInput.placeholder = t("commentsPlaceholder");
-    const cl = document.querySelector("#commentsLabel"); if (cl) cl.textContent = t("commentsLabel");
-    const ca = document.querySelector("#commentsApplyBtn"); if (ca && !ca.disabled) ca.textContent = t("updateSuggestions");
   }
 }
 
@@ -1720,6 +1785,8 @@ function renderApp() {
   const areaReady = consensus("area");
   const typeReady = consensus("type");
 
+  if (reviewButton) setVisible(reviewButton, areaReady && typeReady);
+
   if (!areaReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("area"); return; }
   if (!typeReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("type"); return; }
 
@@ -1967,6 +2034,180 @@ function addToFavourites(place) {
   } else {
     showError(t("alreadyInFavourites"));
   }
+}
+
+// ====== #3: STANDALONE PLACE SEARCH ======
+const searchPlaceMap = {};
+
+function placesAreaOptions(sel) {
+  return `<option value="">${escapeHtml(t("allOfAthens"))}</option>` +
+    (state.areas || []).map((a) => `<option value="${escapeHtml(a.id)}" ${a.id === sel ? "selected" : ""}>${escapeHtml(a.label)}</option>`).join("");
+}
+function placesCategoryOptions() {
+  return `<option value="">${escapeHtml(t("anyCategory"))}</option>` +
+    (state.types || []).map((tp) => `<option value="${escapeHtml(tp.id)}">${escapeHtml(tp.label)}</option>`).join("");
+}
+function placesAgeOptions() {
+  return `<option value="">${escapeHtml(t("anyAge"))}</option>` +
+    ageGroups.map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+}
+
+function openPlacesSearch() {
+  document.querySelector("#placesSearchOverlay")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "placesSearchOverlay";
+  overlay.className = "modal-overlay search-overlay";
+  overlay.innerHTML = `
+    <div class="search-panel">
+      <div class="search-panel-head">
+        <h3>${escapeHtml(t("searchPlaces"))}</h3>
+        <button class="chat-close-btn" id="placesSearchClose" aria-label="${escapeHtml(t("close"))}">\u2715</button>
+      </div>
+      <div class="search-mode-toggle">
+        <button type="button" class="search-mode-btn is-active" data-mode="name">${escapeHtml(t("byName"))}</button>
+        <button type="button" class="search-mode-btn" data-mode="browse">${escapeHtml(t("browse"))}</button>
+      </div>
+      <div class="search-fields" id="searchFields"></div>
+      <div class="search-results" id="searchResults"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  let mode = "name";
+  const fields = overlay.querySelector("#searchFields");
+  const renderFields = () => {
+    if (mode === "name") {
+      fields.innerHTML = `
+        <input type="text" id="searchQueryInput" class="search-query" placeholder="${escapeHtml(t("searchByNamePlaceholder"))}" autocomplete="off">
+        <div class="search-filter-row">
+          <label>${escapeHtml(t("area"))}<select id="searchArea">${placesAreaOptions()}</select></label>
+        </div>
+        <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
+    } else {
+      fields.innerHTML = `
+        <div class="search-filter-row">
+          <label>${escapeHtml(t("area"))}<select id="searchArea">${placesAreaOptions()}</select></label>
+          <label>${escapeHtml(t("category"))}<select id="searchCategory">${placesCategoryOptions()}</select></label>
+          <label>${escapeHtml(t("ageGroup"))}<select id="searchAge">${placesAgeOptions()}</select></label>
+        </div>
+        <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
+    }
+    overlay.querySelector("#runSearchBtn").addEventListener("click", () => runPlacesSearch(overlay, mode));
+    overlay.querySelector("#searchQueryInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") runPlacesSearch(overlay, mode); });
+  };
+  renderFields();
+  overlay.querySelectorAll(".search-mode-btn").forEach((b) => b.addEventListener("click", () => {
+    mode = b.dataset.mode;
+    overlay.querySelectorAll(".search-mode-btn").forEach((x) => x.classList.toggle("is-active", x === b));
+    renderFields();
+    overlay.querySelector("#searchResults").innerHTML = "";
+  }));
+  overlay.querySelector("#placesSearchClose").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  setTimeout(() => overlay.querySelector("#searchQueryInput")?.focus(), 40);
+}
+
+async function runPlacesSearch(overlay, mode) {
+  const resultsEl = overlay.querySelector("#searchResults");
+  const areaId = overlay.querySelector("#searchArea")?.value || "";
+  const query = overlay.querySelector("#searchQueryInput")?.value.trim() || "";
+  const category = overlay.querySelector("#searchCategory")?.value || "";
+  const ageGroup = overlay.querySelector("#searchAge")?.value || "";
+  if (mode === "name" && !query) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("enterPlaceName"))}</p>`; return; }
+  if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
+  resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
+  try {
+    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup } });
+    renderPlaceSearchResults(resultsEl, data);
+  } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
+}
+
+function placeSearchCard(place) {
+  searchPlaceMap[place.id] = place;
+  const favs = getPreferences().places || [];
+  const isFav = favs.some((p) => p.toLowerCase() === (place.title || "").toLowerCase());
+  const rating = place.rating ? `\u2605 ${place.rating}${place.userRatingCount ? ` (${place.userRatingCount})` : ""}` : "";
+  return `<article class="search-card" data-place-id="${escapeHtml(place.id)}">
+    <div class="search-card-photo" style="background-image:url('${escapeHtml(place.photoUrl || "")}')"></div>
+    <div class="search-card-body">
+      <h4>${escapeHtml(place.title)}</h4>
+      <p class="search-card-meta">${escapeHtml(place.areaLabel || "")}${rating ? ` \u00b7 ${escapeHtml(rating)}` : ""}</p>
+      <p class="search-card-addr">${escapeHtml(place.address || "")}</p>
+      <div class="search-card-actions">
+        <button class="btn-ghost" type="button" data-details>${escapeHtml(t("viewDetails"))}</button>
+        <button class="btn-primary search-fav-btn" type="button" data-fav ${isFav ? "disabled" : ""}>${isFav ? `\u2605 ${escapeHtml(t("favourited"))}` : `\u2606 ${escapeHtml(t("addToFavourites"))}`}</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderPlaceSearchResults(resultsEl, data) {
+  const s = data.sections || {};
+  const section = (title, list) => (list && list.length)
+    ? `<div class="search-section"><div class="search-section-title">${escapeHtml(title)}</div><div class="search-card-grid">${list.map(placeSearchCard).join("")}</div></div>`
+    : "";
+  let html = "";
+  if (data.mode === "browse") {
+    html = section(t("results"), s.results) || `<p class="muted-note">${escapeHtml(t("noPlacesFound"))}</p>`;
+  } else {
+    html = section(t("thePlace"), s.match)
+      + section(t("sameNameElsewhere"), s.elsewhere)
+      + section(t("similarNearby"), s.similar);
+    if (!html) html = `<p class="muted-note">${escapeHtml(t("noPlacesFound"))}</p>`;
+  }
+  resultsEl.innerHTML = html;
+  resultsEl.querySelectorAll(".search-card").forEach((card) => {
+    const place = searchPlaceMap[card.dataset.placeId];
+    card.querySelector("[data-details]")?.addEventListener("click", () => place && openPlaceDetails(place));
+    const favBtn = card.querySelector("[data-fav]");
+    favBtn?.addEventListener("click", () => place && addPlaceTitleToFavourites(place.title, favBtn));
+  });
+}
+
+function addPlaceTitleToFavourites(title, btnEl) {
+  const clean = (title || "").trim();
+  if (!clean) return;
+  const profile = state.account?.profile || {};
+  const places = [...(profile.preferences?.places || [])];
+  if (places.some((p) => p.toLowerCase() === clean.toLowerCase())) return;
+  places.push(clean);
+  const preferences = { ...(profile.preferences || {}), places };
+  api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } })
+    .then((data) => { saveAccount(data.user); if (btnEl) { btnEl.disabled = true; btnEl.textContent = `\u2605 ${t("favourited")}`; } })
+    .catch((err) => showError(err.message));
+}
+
+async function openPlaceDetails(place) {
+  const rating = place.rating ? `\u2605 ${place.rating}${place.userRatingCount ? ` (${place.userRatingCount})` : ""}` : "";
+  const rows = [
+    place.address ? `<p class="detail-row">\u{1F4CD} ${escapeHtml(place.address)}</p>` : "",
+    place.time ? `<p class="detail-row">\u{1F552} ${escapeHtml(place.time)}</p>` : "",
+    place.cost ? `<p class="detail-row">\u{1F4B6} ${escapeHtml(place.cost)}</p>` : "",
+    place.phone ? `<p class="detail-row">\u{1F4DE} <a href="tel:${escapeHtml(place.phone)}">${escapeHtml(place.phone)}</a></p>` : "",
+    place.website ? `<p class="detail-row">\u{1F517} <a href="${escapeHtml(place.website)}" target="_blank" rel="noopener">${escapeHtml(t("website"))}</a></p>` : "",
+    place.mapsUrl ? `<p class="detail-row">\u{1F5FA}\uFE0F <a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener">${escapeHtml(t("openInMaps"))}</a></p>` : ""
+  ].join("");
+  const favs = getPreferences().places || [];
+  const isFav = favs.some((p) => p.toLowerCase() === (place.title || "").toLowerCase());
+  const body = `
+    <div class="place-details">
+      ${place.photoUrl ? `<div class="detail-photo" style="background-image:url('${escapeHtml(place.photoUrl)}')"></div>` : ""}
+      <p class="detail-meta">${escapeHtml(place.areaLabel || "")}${rating ? ` \u00b7 ${escapeHtml(rating)}` : ""}</p>
+      ${rows}
+      <div class="detail-actions">
+        <button class="btn-ghost" type="button" id="detailReviewsBtn">${escapeHtml(t("reviews"))}</button>
+        <button class="btn-primary" type="button" id="detailFavBtn" ${isFav ? "disabled" : ""}>${isFav ? `\u2605 ${escapeHtml(t("favourited"))}` : `\u2606 ${escapeHtml(t("addToFavourites"))}`}</button>
+      </div>
+    </div>`;
+  showModal(place.title, body, [{ label: t("close"), primary: true }], { html: true });
+  document.querySelector("#detailReviewsBtn")?.addEventListener("click", async () => {
+    try {
+      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id } });
+      const reviews = data.reviews || [];
+      if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
+      const reviewsHtml = reviews.map((r) => `<div class="review-item"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p>${escapeHtml(r.text)}</p></div>`).join("");
+      showModal(t("reviews"), reviewsHtml, [{ label: t("ok"), primary: true }], { html: true });
+    } catch (e) { showError(e.message); }
+  });
+  document.querySelector("#detailFavBtn")?.addEventListener("click", (e) => addPlaceTitleToFavourites(place.title, e.currentTarget));
 }
 
 // ====== CONTINUE BROWSING ======
@@ -2410,7 +2651,7 @@ async function renderAccountProfile(username) {
     user.friendStatus === "friends" ? `<div class="result-buttons"><span class="request-status">${t("friends")}</span><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${t("message")}</button></div>` :
     user.friendStatus === "incoming" ? `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>` :
     user.friendStatus === "requested" ? `<span class="request-status">${t("requestSent")}</span>` :
-    `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`;
+    `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">${t("addFriend")}</button>`;
 
   const removeAction = user.friendStatus === "friends" && user.username !== currentUsername()
     ? `<button class="danger-button" type="button" data-remove-friend="${escapeHtml(user.username)}">${t("removeFriend")}</button>` : "";
@@ -2568,10 +2809,15 @@ async function removeFriend(username) {
   if (!confirm(t("removeFriendConfirm"))) return;
   await api("/api/friends/remove", { method: "POST", body: { username: currentUsername(), friendUsername: username } });
   state.friendsDataLoaded = false;
-  if (state.activePage === "friends" && state.pageShellRendered === "friends") {
-    await refreshFriendsPage();
-  } else {
+  state.friendsLastRequestCount = -1;
+  if (state.activePage && state.activePage.startsWith("profile:")) {
+    await renderAccountProfile(username);
+  } else if (state.activePage === "friends") {
+    state.pageShellRendered = "friends";
     await renderFriendsPage();
+  } else {
+    state.activePage = "friends";
+    navigate("/friends");
   }
 }
 
@@ -2585,7 +2831,7 @@ async function searchFriends() {
     if (user.friendStatus === "friends") return userCard(user, `<div class="result-buttons"><button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${t("message")}</button></div>`);
     if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>`);
     if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
-    return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">Add Friend</button>`);
+    return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">${t("addFriend")}</button>`);
   }).join("") : `<article class="demo-card"><h3>No users found</h3><p>${t("tryAnotherUsername")}</p></article>`;
 }
 
@@ -2648,9 +2894,10 @@ function handleJoinLink(code) {
     renderApp();
     maybeHandlePendingInvite();
   } else {
-    // Send them through login/signup first; the code is remembered.
+    // Show the hero normally so they can log in / sign up; the code is remembered
+    // and the join prompt appears automatically once they're signed in.
     history.replaceState({}, "", "/home");
-    state.showHero = true; state.activePage = ""; state.loginOpen = true;
+    state.showHero = true; state.activePage = ""; state.loginOpen = false;
     renderApp();
   }
 }
@@ -2960,6 +3207,7 @@ maybeButton.addEventListener("click", () => vote("maybe").catch((e) => showError
 yesButton.addEventListener("click", () => vote("yes").catch((e) => showError(e.message)));
 backChoiceButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
 reviewButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
+document.querySelector("#openPlacesSearchButton")?.addEventListener("click", openPlacesSearch);
 if (continueBrowseButton) {
   continueBrowseButton.addEventListener("click", () => continueBrowsing().catch((e) => showError(e.message)));
 }
@@ -2988,13 +3236,11 @@ document.querySelector("#commentsApplyBtn")?.addEventListener("click", async () 
       body: { comment, useAiSuggestions: state.useAiSuggestions }
     });
     state.group = data.group;
-    state.index = 0;
-    renderApp();
-    showModal(t("suggestionsUpdated") || "Suggestions updated",
-      t("suggestionsUpdatedBody") || "Your suggestions were refreshed with the group's notes in mind.",
+    showModal(t("noteSaved") || "Note saved",
+      t("noteSavedBody") || "Your note will be used to pick the best places for your group.",
       [{ label: t("ok"), primary: true }]);
   } catch (e) { showError(e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = t("updateSuggestions"); } }
+  finally { if (btn) { btn.disabled = false; btn.textContent = t("saveNote") || t("updateSuggestions"); } }
 });
 
 if (inviteToGroupButton) {
@@ -3065,7 +3311,15 @@ codeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") joinGroup(
 
 pageDemo.addEventListener("click", (e) => {
   const addFriendBtn = e.target.closest("[data-add-friend]");
-  if (addFriendBtn) { requestFriend(addFriendBtn.dataset.addFriend).catch((err) => showError(err.message)); return; }
+  if (addFriendBtn) {
+    const uname = addFriendBtn.dataset.addFriend;
+    addFriendBtn.disabled = true;
+    addFriendBtn.classList.remove("btn-primary");
+    addFriendBtn.classList.add("request-sent-btn");
+    addFriendBtn.textContent = t("requestSent");
+    requestFriend(uname).catch((err) => showError(err.message));
+    return;
+  }
   const acceptFriendBtn = e.target.closest("[data-accept-friend]");
   if (acceptFriendBtn) { acceptFriend(acceptFriendBtn.dataset.acceptFriend).catch((err) => showError(err.message)); return; }
   const removeFriendBtn = e.target.closest("[data-remove-friend]");
