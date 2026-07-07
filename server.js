@@ -605,7 +605,8 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
     website: place.websiteUri || "",
     phone: place.internationalPhoneNumber || place.nationalPhoneNumber || "",
     address: place.formattedAddress || "",
-    primaryType: place.primaryType || place.types?.[0] || ""
+    primaryType: place.primaryType || place.types?.[0] || "",
+    location: place.location || null
   };
 }
 
@@ -695,7 +696,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
     const likedContext = filteredLiked.length ? `Group members' liked places matching "${activity}" (places they voted Yes on): ${filteredLiked.join(", ")}.` : "";
     const trimmedComments = String(comments || "").trim().slice(0, 800);
     const commentsContext = trimmedComments
-      ? `The group added these notes/preferences/constraints — treat them as the HIGHEST priority when choosing and ordering places, and exclude places that clearly conflict with them: "${trimmedComments}".`
+      ? `The group added these notes as STRICT REQUIREMENTS: "${trimmedComments}". ONLY include a place if it clearly satisfies these requirements. Exclude every place that does not clearly match them, even if that means returning very few places or an empty list. Never include a place that conflicts with these notes.`
       : "";
     const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) The group's notes above (if any) 2) Past activities (places similar to where they've been before) 3) Liked places (places similar to ones they've liked) 4) Age group suitability. Return the most relevant ones first.";
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -1676,6 +1677,61 @@ async function handleApi(request, response) {
       places: loaded.places,
       source: loaded.source
     });
+    return;
+  }
+
+  // #3: standalone place search — by name (3-tier ordering) or browse by filters.
+  if (request.method === "POST" && parts[1] === "places" && parts[2] === "search") {
+    if (!(await requireAnyAuth(request, response))) return;
+    const body = await readBody(request);
+    const mode = body.mode === "browse" ? "browse" : "name";
+    const query = String(body.query || "").trim().slice(0, 120);
+    const ageGroup = String(body.ageGroup || "").trim();
+    if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
+
+    const builtIn = areaOptions.find((a) => a.id === body.areaId);
+    const areaOption = builtIn
+      ? builtIn
+      : (body.areaId ? { id: body.areaId, label: body.areaId, queryArea: `${body.areaId}, Athens, Greece` } : null);
+    const athensWide = { id: "athens_all", label: "Athens", queryArea: "Athens, Greece" };
+    const searchArea = areaOption || athensWide;
+    const ageHint = ageGroup ? ` suitable for ${ageGroup}` : "";
+
+    if (mode === "browse") {
+      const typeOpt = typeOptions.find((tp) => tp.id === body.category);
+      const catLabel = typeOpt?.label || String(body.category || "").trim();
+      if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
+      const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
+      const results = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 15) || [];
+      sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label });
+      return;
+    }
+
+    // name mode
+    if (!query) { sendJson(response, 200, { mode, sections: {} }); return; }
+
+    // 1) the place itself (+ same name in the selected area)
+    const match = (await googleTextSearch(query, searchArea, searchArea.label, "", "", 6) || []);
+    const matchTitles = match.map((p) => p.title);
+    const matchIds = new Set(match.map((p) => p.googlePlaceId));
+
+    // 2) same name in other areas (Athens-wide, minus the selected-area matches)
+    let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles) || []);
+    const areaRect = await resolveAreaRectangle(areaOption);
+    if (areaRect) elsewhere = elsewhere.filter((p) => !placeInRectangle(p, areaRect));
+    elsewhere = elsewhere.filter((p) => !matchIds.has(p.googlePlaceId)).slice(0, 6);
+
+    // 3) similar-type places in the selected area
+    const primaryType = (match[0]?.primaryType || "").replace(/_/g, " ").trim();
+    let similar = [];
+    if (primaryType) {
+      const seen = new Set([...match, ...elsewhere].map((p) => p.googlePlaceId));
+      const exclude = [...matchTitles, ...elsewhere.map((p) => p.title)];
+      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 8, exclude) || []);
+      similar = similar.filter((p) => !seen.has(p.googlePlaceId)).slice(0, 6);
+    }
+
+    sendJson(response, 200, { mode, sections: { match, elsewhere, similar }, areaLabel: searchArea.label });
     return;
   }
 
