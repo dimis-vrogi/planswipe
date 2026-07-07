@@ -223,6 +223,11 @@ function serveStatic(request, response) {
   fs.readFile(filePath, (error, data) => {
     if (error) {
       if (error.code === "ENOENT") {
+        if (path.extname(urlPath)) {
+          response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+          response.end("Not found");
+          return;
+        }
         const fallback = path.join(publicRoot, "index.html");
         fs.readFile(fallback, (fe, fd) => {
           if (fe) { response.writeHead(404); response.end("Not found"); return; }
@@ -360,6 +365,7 @@ function summarizeGroup(group) {
     placesExhausted: Boolean(group.placesExhausted),
     reset:     group.reset || null,
     comments:  group.comments || {},
+    commentStatus: group.commentStatus || {},
     createdAt: group.createdAt
   };
 }
@@ -562,15 +568,20 @@ function formatOpeningHours(regularOpeningHours) {
   return lines[dayIndex] || lines[0];
 }
 
-function buildPlaceDescription(place, typeLabel, areaLabel) {
+function placeLanguage(language) {
+  return language === "el" ? "el" : "en";
+}
+
+function buildPlaceDescription(place, typeLabel, areaLabel, language = "en") {
+  const lang = placeLanguage(language);
   const summary = place.editorialSummary?.text?.trim();
   const address = place.formattedAddress?.trim() || "";
-  const rating = place.rating ? `${Number(place.rating).toFixed(1)} stars` : "";
-  const reviewCount = place.userRatingCount ? `${place.userRatingCount} reviews` : "";
+  const rating = place.rating ? `${Number(place.rating).toFixed(1)} ${lang === "el" ? "αστέρια" : "stars"}` : "";
+  const reviewCount = place.userRatingCount ? `${place.userRatingCount} ${lang === "el" ? "κριτικές" : "reviews"}` : "";
   const ratingLine = [rating, reviewCount].filter(Boolean).join(" · ");
   const parts = [];
   if (summary) parts.push(summary);
-  else parts.push(`${typeLabel} in ${areaLabel}`);
+  else parts.push(lang === "el" ? `${typeLabel} στην περιοχή ${areaLabel}` : `${typeLabel} in ${areaLabel}`);
   if (address) parts.push(address);
   if (ratingLine) parts.push(ratingLine);
   return parts.join(" — ");
@@ -586,7 +597,7 @@ function fallbackPhotoForType(typeId) {
   return photos[typeId] || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
 }
 
-function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
+function mapGooglePlace(place, areaLabel, typeLabel, typeId, language = "en") {
   const photo = place.photos?.[0];
   const photoUrl = googlePhotoUrl(photo) || fallbackPhotoForType(typeId);
   return {
@@ -595,7 +606,7 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
     title: place.displayName?.text || "Unnamed place",
     category: typeLabel,
     areaLabel,
-    description: buildPlaceDescription(place, typeLabel, areaLabel),
+    description: buildPlaceDescription(place, typeLabel, areaLabel, language),
     time: formatOpeningHours(place.regularOpeningHours),
     cost: priceLabel(place.priceLevel),
     rating: place.rating || null,
@@ -610,7 +621,7 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId) {
   };
 }
 
-async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = []) {
+async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = [], language = "en") {
   if (!googleApiKey) return null;
   const exclude = new Set(excludeTitles.map((t) => String(t).toLowerCase()));
   const fieldMask = [
@@ -636,7 +647,7 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
   const rect = await resolveAreaRectangle(areaOption);
 
   async function runSearch(useIncludedType) {
-    const body = { textQuery: query, maxResultCount: 20, languageCode: "en" };
+    const body = { textQuery: query, maxResultCount: 20, languageCode: placeLanguage(language) };
     const includedType = activityIncludedTypes[typeId];
     if (useIncludedType && includedType) body.includedType = includedType;
     // Hard-restrict results to the selected area's rectangle when we have one.
@@ -671,7 +682,7 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
     return places
       .filter((place) => !exclude.has((place.displayName?.text || "").toLowerCase()))
       .slice(0, maxResults)
-      .map((place) => mapGooglePlace(place, areaLabel, typeLabel, typeId));
+      .map((place) => mapGooglePlace(place, areaLabel, typeLabel, typeId, language));
   } catch (e) {
     console.warn("Google Places search error:", e.message);
     return null;
@@ -743,7 +754,7 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
   const query = buildPlaceSearchQuery(areaOption, typeOption);
 
   if (googleApiKey) {
-    const googlePlaces = await googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, 20, excludeTitles);
+    const googlePlaces = await googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, 20, excludeTitles, options.language || "en");
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
@@ -1257,13 +1268,12 @@ async function handleApi(request, response) {
       group.consensus[kind] = selectedId;
       if (kind === "area") group.consensus.type = null;
       if (kind === "type" && group.consensus.area) {
-        const areaOption = findGroupOption(group, "area", group.consensus.area);
-        const typeOption = findGroupOption(group, "type", selectedId);
-        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group), comments: groupComments(group) });
-        group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
-        group.places = loaded.places;
-        group.placesExhausted = Boolean(loaded.exhausted);
+        group.commentStatus = {};
+        group.search = null;
+        group.places = [];
+        group.placesExhausted = false;
         group.placeSelections = {};
+        group.votes = {};
       }
     } else {
       if (group.consensus?.[kind]) group.consensus[kind] = null;
@@ -1276,8 +1286,11 @@ async function handleApi(request, response) {
           group.choices.type = {};
           group.consensus.area = null; group.consensus.type = null;
           group.search = null; group.places = []; group.placesExhausted = false;
+          group.commentStatus = {};
         } else {
           group.consensus.type = null;
+          group.commentStatus = {};
+          group.search = null; group.places = []; group.placesExhausted = false;
         }
         group.reset = { id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, kind };
       }
@@ -1297,12 +1310,15 @@ async function handleApi(request, response) {
     if (step === "type") {
       delete group.choices.type[userId];
       group.consensus.type = null;
+      group.commentStatus = {};
+      group.search = null; group.places = []; group.placesExhausted = false;
     } else {
       delete group.choices.area[userId];
       delete group.choices.type[userId];
       if (group.votes) delete group.votes[userId];
       group.consensus.area = null; group.consensus.type = null;
       group.search = null; group.places = []; group.placesExhausted = false;
+      group.commentStatus = {};
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
@@ -1320,7 +1336,7 @@ async function handleApi(request, response) {
     const areaOption = findGroupOption(group, "area", areaId);
     const typeOption = findGroupOption(group, "type", typeId);
     const excludeTitles = (group.places || []).map((p) => p.title);
-    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group), comments: groupComments(group) });
+    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group), comments: groupComments(group), language: body.language || "en" });
     if (!loaded.places.length) {
       group.placesExhausted = true;
       await saveGroup(group);
@@ -1346,25 +1362,27 @@ async function handleApi(request, response) {
     if (!group.comments) group.comments = {};
     if (comment) group.comments[authUsername] = comment;
     else delete group.comments[authUsername];
+    if (!group.commentStatus) group.commentStatus = {};
+    group.commentStatus[authUsername] = true;
 
-    // Re-rank the current area/activity with the updated notes, if places are already loaded.
+    // Load places only after every group member has either submitted a note or skipped.
     const areaId = group.consensus?.area;
     const typeId = group.consensus?.type;
-    if (areaId && typeId) {
+    const membersDone = (group.members || []).every((m) => group.commentStatus?.[m.username]);
+    if (areaId && typeId && membersDone) {
       const areaOption = findGroupOption(group, "area", areaId);
       const typeOption = findGroupOption(group, "type", typeId);
       const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], {
         useAi: body.useAiSuggestions !== false,
         ageGroups: groupAgeGroups(group),
-        comments: groupComments(group)
+        comments: groupComments(group),
+        language: body.language || "en"
       });
-      if (loaded.places.length) {
-        group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
-        group.places = loaded.places;
-        group.placesExhausted = Boolean(loaded.exhausted);
-        group.placeSelections = {};
-        group.votes = {};
-      }
+      group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
+      group.places = loaded.places;
+      group.placesExhausted = Boolean(loaded.exhausted);
+      group.placeSelections = {};
+      group.votes = {};
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
@@ -1647,7 +1665,7 @@ async function handleApi(request, response) {
     const googlePlaceId = body.googlePlaceId || "";
     if (!googlePlaceId || !googleApiKey) { sendJson(response, 200, { reviews: [] }); return; }
     try {
-      const apiResponse = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}?fields=reviews&key=${googleApiKey}`);
+      const apiResponse = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(googlePlaceId)}?fields=reviews&languageCode=${encodeURIComponent(placeLanguage(body.language || "en"))}&key=${googleApiKey}`);
       if (!apiResponse.ok) { sendJson(response, 200, { reviews: [] }); return; }
       const data = await apiResponse.json();
       const reviews = (data.reviews || []).slice(0, 3).map((r) => ({
@@ -1671,7 +1689,7 @@ async function handleApi(request, response) {
     const activity = body.activity || "";
     if (!area || !activity) { sendJson(response, 200, { suggestions: [], places: [] }); return; }
 
-    const loaded = await loadPlacesForGroup(area, activity, 5, body.excludeTitles || []);
+    const loaded = await loadPlacesForGroup(area, activity, 5, body.excludeTitles || [], { language: body.language || "en" });
     sendJson(response, 200, {
       suggestions: loaded.places.map((p) => ({ place: p.title, reason: p.description })),
       places: loaded.places,
@@ -1687,6 +1705,7 @@ async function handleApi(request, response) {
     const mode = body.mode === "browse" ? "browse" : "name";
     const query = String(body.query || "").trim().slice(0, 120);
     const ageGroup = String(body.ageGroup || "").trim();
+    const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
     const builtIn = areaOptions.find((a) => a.id === body.areaId);
@@ -1702,7 +1721,7 @@ async function handleApi(request, response) {
       const catLabel = typeOpt?.label || String(body.category || "").trim();
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
       const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
-      const results = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 15) || [];
+      const results = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 15, [], language) || [];
       sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label });
       return;
     }
@@ -1711,12 +1730,12 @@ async function handleApi(request, response) {
     if (!query) { sendJson(response, 200, { mode, sections: {} }); return; }
 
     // 1) the place itself (+ same name in the selected area)
-    const match = (await googleTextSearch(query, searchArea, searchArea.label, "", "", 6) || []);
+    const match = (await googleTextSearch(query, searchArea, searchArea.label, "", "", 6, [], language) || []);
     const matchTitles = match.map((p) => p.title);
     const matchIds = new Set(match.map((p) => p.googlePlaceId));
 
     // 2) same name in other areas (Athens-wide, minus the selected-area matches)
-    let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles) || []);
+    let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles, language) || []);
     const areaRect = await resolveAreaRectangle(areaOption);
     if (areaRect) elsewhere = elsewhere.filter((p) => !placeInRectangle(p, areaRect));
     elsewhere = elsewhere.filter((p) => !matchIds.has(p.googlePlaceId)).slice(0, 6);
@@ -1727,7 +1746,7 @@ async function handleApi(request, response) {
     if (primaryType) {
       const seen = new Set([...match, ...elsewhere].map((p) => p.googlePlaceId));
       const exclude = [...matchTitles, ...elsewhere.map((p) => p.title)];
-      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 8, exclude) || []);
+      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 8, exclude, language) || []);
       similar = similar.filter((p) => !seen.has(p.googlePlaceId)).slice(0, 6);
     }
 
