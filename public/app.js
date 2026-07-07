@@ -368,6 +368,9 @@ const copy = {
     anyAge: "Any age",
     category: "Category",
     searchByNamePlaceholder: "Place name (e.g. a bar or restaurant)",
+    areaFreeTextPlaceholder: "Type an area, neighborhood, or leave blank",
+    categoryFreeTextPlaceholder: "Type anything, e.g. sushi, cocktails, cinema",
+    ageFreeTextPlaceholder: "Type an age group or vibe, e.g. 18-24",
     enterPlaceName: "Enter a place name to search.",
     chooseCategory: "Choose a category to browse.",
     noPlacesFound: "No places found. Try a different name, area or category.",
@@ -681,7 +684,10 @@ Object.assign(copy.el, {
   reviews: "Κριτικές",
   noReviews: "Δεν υπάρχουν διαθέσιμες κριτικές.",
   searchPlacesEntry: "Αναζήτηση",
-  searchPlaces: "Αναζήτηση μερών"
+  searchPlaces: "Αναζήτηση μερών",
+  areaFreeTextPlaceholder: "Γράψτε περιοχή ή γειτονιά ή αφήστε κενό",
+  categoryFreeTextPlaceholder: "Γράψτε ό,τι θέλετε, π.χ. sushi, cocktails, σινεμά",
+  ageFreeTextPlaceholder: "Γράψτε ηλικία ή ύφος, π.χ. 18-24"
 });
 
 // ====== LANGUAGE ======
@@ -821,6 +827,32 @@ function localizePlaceDescription(value) {
       .replace(/\bstars\b/g, "αστέρια")
       .replace(/\breviews\b/g, "κριτικές")
       .replace(/\bHours not listed\b/g, "Δεν αναφέρονται ώρες");
+  } else {
+    text = text
+      .replace(/\bαστέρια\b/g, "stars")
+      .replace(/\bκριτικές\b/g, "reviews")
+      .replace(/\bΔεν αναφέρονται ώρες\b/g, "Hours not listed");
+  }
+  return text;
+}
+
+function localizePlaceDescription(value) {
+  let text = String(value || "");
+  text = text.replace(/β€”|Ξ²β‚¬β€/g, "\u2014").replace(/Β·|Ξ’Β·/g, "\u00b7");
+  if (state.language === "el") {
+    text = text
+      .replace(/\bHours not listed\b/gi, "Δεν αναφέρονται ώρες")
+      .replace(/\bstars\b/gi, "αστέρια")
+      .replace(/\breviews\b/gi, "κριτικές")
+      .replace(/\bRestaurant in\b/gi, "Εστιατόριο στην περιοχή")
+      .replace(/\bRestaurants in\b/gi, "Εστιατόρια στην περιοχή")
+      .replace(/\bBar in\b/gi, "Μπαρ στην περιοχή")
+      .replace(/\bBars in\b/gi, "Μπαρ στην περιοχή")
+      .replace(/\bMovies in\b/gi, "Σινεμά στην περιοχή")
+      .replace(/\bGaming in\b/gi, "Παιχνίδια στην περιοχή")
+      .replace(/\bActivity in\b/gi, "Δραστηριότητα στην περιοχή")
+      .replace(/\bin Athens\b/gi, "στην Αθήνα")
+      .replace(/\bin the Athens area\b/gi, "στην περιοχή της Αθήνας");
   } else {
     text = text
       .replace(/\bαστέρια\b/g, "stars")
@@ -2160,20 +2192,22 @@ function openPlacesSearch() {
       fields.innerHTML = `
         <input type="text" id="searchQueryInput" class="search-query" placeholder="${escapeHtml(t("searchByNamePlaceholder"))}" autocomplete="off">
         <div class="search-filter-row">
-          <label>${escapeHtml(t("area"))}<select id="searchArea">${placesAreaOptions()}</select></label>
+          <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     } else {
       fields.innerHTML = `
         <div class="search-filter-row">
-          <label>${escapeHtml(t("area"))}<select id="searchArea">${placesAreaOptions()}</select></label>
-          <label>${escapeHtml(t("category"))}<select id="searchCategory">${placesCategoryOptions()}</select></label>
-          <label>${escapeHtml(t("ageGroup"))}<select id="searchAge">${placesAgeOptions()}</select></label>
+          <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
+          <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
+          <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     }
     overlay.querySelector("#runSearchBtn").addEventListener("click", () => runPlacesSearch(overlay, mode));
-    overlay.querySelector("#searchQueryInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") runPlacesSearch(overlay, mode); });
+    overlay.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") runPlacesSearch(overlay, mode); });
+    });
   };
   renderFields();
   overlay.querySelectorAll(".search-mode-btn").forEach((b) => b.addEventListener("click", () => {
