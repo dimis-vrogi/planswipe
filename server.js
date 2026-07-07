@@ -1813,11 +1813,14 @@ async function handleApi(request, response) {
     if (primaryType) {
       const seen = new Set([...match, ...elsewhere].map((p) => p.googlePlaceId));
       const exclude = [...matchTitles, ...elsewhere.map((p) => p.title)];
-      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 8, exclude, language) || []);
-      similar = similar.filter((p) => !seen.has(p.googlePlaceId)).slice(0, 6);
+      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 10, exclude, language) || []);
+      similar = similar.filter((p) => !seen.has(p.googlePlaceId));
+      // #1: let the AI filter the by-name search's discovery results too.
+      similar = await refineSearchPlacesWithOpenAI(similar, searchArea.label, primaryType, "", 6);
+      similar = similar.slice(0, 6);
     }
 
-    sendJson(response, 200, { mode, sections: { match, elsewhere, similar }, areaLabel: searchArea.label });
+    sendJson(response, 200, { mode, sections: { match, elsewhere, similar }, areaLabel: searchArea.label, aiFiltered: Boolean(openAiApiKey) });
     return;
   }
 
