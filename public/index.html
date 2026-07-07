@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#12805e">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles.css">
   </head>
 
   <body>
@@ -103,6 +103,10 @@
 
         <div class="topbar-actions">
           <button class="btn-ghost" id="homeButton" type="button">Home</button>
+          <button class="btn-ghost topbar-search-button" id="openPlacesSearchButton" type="button">
+            <span class="places-search-icon" aria-hidden="true">Search</span>
+            <span class="places-search-text" id="placesSearchEntryText">Search places</span>
+          </button>
           <button class="btn-ghost" id="appLanguageButton" type="button">EL</button>
           <button class="btn-ghost" id="resetButton" type="button">Exit Group</button>
           <div class="profile-wrap">
@@ -131,9 +135,9 @@
           <p>Choose whether you are creating a new group or joining one that already exists.</p>
         </div>
 
-        <button class="places-search-entry" id="openPlacesSearchButton" type="button">
+        <button class="places-search-entry is-hidden" id="setupPlacesSearchButton" type="button">
           <span class="places-search-icon" aria-hidden="true">🔍</span>
-          <span class="places-search-text" id="placesSearchEntryText">Search places by name or browse by area</span>
+          <span class="places-search-text" id="setupPlacesSearchText">Search places by name or browse by area</span>
         </button>
 
         <div class="mode-buttons" id="modeButtons">
@@ -217,7 +221,10 @@
             <button type="button" class="comments-info" id="commentsInfoBtn" aria-label="What is this for?">i</button>
           </div>
           <textarea id="commentsInput" rows="2" placeholder="e.g. quiet, vegan options, outdoor seating, under €20"></textarea>
-          <button type="button" class="btn-ghost comments-apply" id="commentsApplyBtn">Save note</button>
+          <div class="comments-actions">
+            <button type="button" class="btn-primary comments-apply" id="commentsApplyBtn">Submit comment</button>
+            <button type="button" class="btn-ghost comments-apply" id="commentsSkipBtn">Skip</button>
+          </div>
         </div>
       </section>
 
@@ -268,6 +275,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
+    <script src="/app.js"></script>
   </body>
 </html>
