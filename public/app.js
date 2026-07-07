@@ -336,6 +336,31 @@ const copy = {
     emailTakenLogin: "That email is already registered. Try logging in instead.",
     checkEmailTitle: "Almost there!",
     noEmailOnAccount: "No email is set on this account.",
+    fromYourFavourites: "From your favourites",
+    orTypeNew: "Or type a new one",
+    add: "Add",
+    addAnArea: "Add an area",
+    addAnActivity: "Add an activity",
+    commentsLabel: "Comments (Optional)",
+    commentsPlaceholder: "e.g. quiet, vegan options, outdoor seating, under \u20ac20",
+    updateSuggestions: "Update suggestions",
+    updating: "Updating\u2026",
+    suggestionsUpdated: "Suggestions updated",
+    suggestionsUpdatedBody: "Your suggestions were refreshed with the group's notes in mind.",
+    commentsInfoTitle: "What's this for?",
+    commentsInfoBody: "Add anything that helps us find better matches for your group \u2014 the vibe you want, budget, dietary needs, accessibility, or things to include or avoid. For example: \u201csomewhere quiet with vegan options, outdoor seating, under \u20ac20 a head.\u201d Your suggestions are ranked with these notes in mind.",
+    groupInvite: "Group invite",
+    profileAndSettings: "Profile & Settings",
+    inviteNotFound: "That group no longer exists.",
+    inviteJoinBody: "You've been invited to join a group{host} with {n} member(s). Do you want to join?",
+    inviteJoinBodyPlain: "You've been invited to join a group. Do you want to join?",
+    decline: "Decline",
+    joinGroup: "Join group",
+    shareInviteLink: "Share an invite link",
+    copyLink: "Copy",
+    copied: "Copied!",
+    close: "Close",
+    inviteLinkHelp: "Anyone you send this link to will be asked to join the group when they open it.",
     verifyingLink: "Verifying your reset link\u2026",
     recoveryLinkInvalid: "This reset link is invalid or has expired. Please request a new password reset email.",
     noAgreementTitle: "Not everyone agrees",
@@ -510,6 +535,31 @@ const copy = {
     emailTakenLogin: "Αυτό το email είναι ήδη εγγεγραμμένο. Δοκιμάστε να συνδεθείτε.",
     checkEmailTitle: "Σχεδόν έτοιμοι!",
     noEmailOnAccount: "Δεν έχει οριστεί email σε αυτόν τον λογαριασμό.",
+    fromYourFavourites: "Από τα αγαπημένα σου",
+    orTypeNew: "Ή γράψε ένα νέο",
+    add: "Προσθήκη",
+    addAnArea: "Προσθήκη περιοχής",
+    addAnActivity: "Προσθήκη δραστηριότητας",
+    commentsLabel: "Σχόλια (Προαιρετικά)",
+    commentsPlaceholder: "π.χ. ήσυχο, vegan επιλογές, τραπέζια έξω, κάτω από 20€",
+    updateSuggestions: "Ενημέρωση προτάσεων",
+    updating: "Ενημέρωση\u2026",
+    suggestionsUpdated: "Οι προτάσεις ενημερώθηκαν",
+    suggestionsUpdatedBody: "Οι προτάσεις σας ανανεώθηκαν λαμβάνοντας υπόψη τα σχόλια της ομάδας.",
+    commentsInfoTitle: "Σε τι χρησιμεύει;",
+    commentsInfoBody: "Πρόσθεσε ό,τι βοηθά να βρούμε καλύτερες επιλογές για την ομάδα σου \u2014 τη διάθεση που θέλετε, προϋπολογισμό, διατροφικές ανάγκες, προσβασιμότητα ή πράγματα προς αποφυγή. Για παράδειγμα: \u201cκάπου ήσυχο με vegan επιλογές, τραπέζια έξω, κάτω από 20€ το άτομο.\u201d Οι προτάσεις κατατάσσονται λαμβάνοντας υπόψη αυτά τα σχόλια.",
+    groupInvite: "Πρόσκληση σε ομάδα",
+    profileAndSettings: "Προφίλ & Ρυθμίσεις",
+    inviteNotFound: "Αυτή η ομάδα δεν υπάρχει πλέον.",
+    inviteJoinBody: "Έχεις προσκληθεί σε μια ομάδα{host} με {n} μέλη. Θέλεις να μπεις;",
+    inviteJoinBodyPlain: "Έχεις προσκληθεί σε μια ομάδα. Θέλεις να μπεις;",
+    decline: "Απόρριψη",
+    joinGroup: "Είσοδος στην ομάδα",
+    shareInviteLink: "Κοινοποίησε σύνδεσμο πρόσκλησης",
+    copyLink: "Αντιγραφή",
+    copied: "Αντιγράφηκε!",
+    close: "Κλείσιμο",
+    inviteLinkHelp: "Όποιος λάβει αυτόν τον σύνδεσμο θα ερωτηθεί αν θέλει να μπει στην ομάδα όταν τον ανοίξει.",
     verifyingLink: "Επαλήθευση του συνδέσμου επαναφοράς\u2026",
     recoveryLinkInvalid: "Αυτός ο σύνδεσμος επαναφοράς δεν είναι έγκυρος ή έχει λήξει. Ζητήστε νέο email επαναφοράς κωδικού.",
     noAgreementTitle: "Δεν συμφωνούν όλοι",
@@ -643,7 +693,7 @@ function applyLanguage() {
 
   profileMenu.querySelectorAll("button[data-page]").forEach((btn) => {
     const k = btn.dataset.page;
-    btn.textContent = t(k === "likedplaces" ? "likedPlaces" : k);
+    btn.textContent = k === "personal" ? t("profileAndSettings") : t(k === "likedplaces" ? "likedPlaces" : k);
   });
   logoutButton.textContent = t("logout");
 
@@ -781,6 +831,7 @@ async function login() {
   await syncSupabaseProfile(data.user?.user_metadata?.username || "", data.user?.email || email);
   loginUsername.value = ""; loginEmail.value = ""; loginPassword.value = "";
   state.loginOpen = false; navigate("/main");
+  maybeHandlePendingInvite();
 }
 
 async function registerUser() {
@@ -959,6 +1010,15 @@ function renderCard() {
     favButton.textContent = alreadyFav ? `\u2605 ${t("favourited")}` : `\u2606 ${t("addToFavourites")}`;
     favButton.classList.toggle("is-favourited", alreadyFav);
   }
+  const commentsInput = document.querySelector("#commentsInput");
+  if (commentsInput) {
+    if (document.activeElement !== commentsInput) {
+      commentsInput.value = (state.group.comments || {})[currentUsername()] || "";
+    }
+    commentsInput.placeholder = t("commentsPlaceholder");
+    const cl = document.querySelector("#commentsLabel"); if (cl) cl.textContent = t("commentsLabel");
+    const ca = document.querySelector("#commentsApplyBtn"); if (ca && !ca.disabled) ca.textContent = t("updateSuggestions");
+  }
 }
 
 function renderResults() {
@@ -1123,6 +1183,7 @@ function openChatPanel() {
       </div>
       <div class="chat-messages" id="chatMessages"><div class="chat-loading">\u2026</div></div>
       <div class="chat-input-row">
+        <button type="button" class="emoji-btn" id="chatEmojiBtn" aria-label="Emoji">\u{1F642}</button>
         <input id="chatMessageInput" type="text" maxlength="500" placeholder="${escapeHtml(t("messagePlaceholder"))}" autocomplete="off">
         <button id="chatSendButton" class="btn-primary">${t("sendMessage")}</button>
       </div>
@@ -1140,6 +1201,7 @@ function openChatPanel() {
 
   sendBtn.addEventListener("click", () => sendChatMessage(input));
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChatMessage(input); });
+  setupEmojiPicker(overlay, overlay.querySelector("#chatEmojiBtn"), input);
 
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
@@ -1205,6 +1267,42 @@ async function loadChatMessages(scrollToBottom) {
 
     container.scrollTop = container.scrollHeight;
   } catch (e) { console.warn("Chat load error:", e.message); }
+}
+
+// ===== #1: emoji picker for chat inputs =====
+const CHAT_EMOJIS = ["😀","😁","😂","🤣","😊","😍","😘","😎","🤩","🥳","😅","😉","🙂","😌","😴","😋","😜","🤪","🤗","🤔","🙄","😏","😢","😭","😤","😡","🥺","😱","🤯","😳","🥰","😇","🤠","👀","🙈","👍","👎","👏","🙌","🙏","💪","🤝","👌","✌️","🔥","✨","⭐","🎉","🎊","❤️","🧡","💛","💚","💙","💜","🖤","💯","🍕","🍔","🍟","🌮","🍣","🍜","🍺","🍻","🍷","🍸","🍹","☕","🎂","🍰","🎵","🎸","🎮","⚽","🏀","🏖️","🌴","🌇","📍","🚗","🕺","💃"];
+
+function insertAtCursor(input, text) {
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  const room = (input.maxLength && input.maxLength > 0) ? input.maxLength - (input.value.length - (end - start)) : Infinity;
+  if (text.length > room) return;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
+  const pos = start + text.length;
+  try { input.setSelectionRange(pos, pos); } catch (_) {}
+}
+
+function setupEmojiPicker(overlay, button, input) {
+  if (!button || !input) return;
+  let pop = null;
+  const close = () => { pop?.remove(); pop = null; };
+  button.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (pop) { close(); return; }
+    pop = document.createElement("div");
+    pop.className = "emoji-pop";
+    pop.innerHTML = CHAT_EMOJIS.map((em) => `<button type="button" class="emoji-item">${em}</button>`).join("");
+    button.parentElement.style.position = "relative";
+    button.parentElement.appendChild(pop);
+    pop.querySelectorAll(".emoji-item").forEach((b) => b.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      insertAtCursor(input, b.textContent);
+      input.focus();
+    }));
+  });
+  overlay.addEventListener("click", (e) => {
+    if (pop && !e.target.closest(".emoji-pop") && !e.target.closest(".emoji-btn")) close();
+  });
 }
 
 async function sendChatMessage(input) {
@@ -1312,6 +1410,13 @@ function onUrlChange() {
   // to home (which would also discard the ?token_hash=... in the URL).
   if (route === "/recover") {
     state.showHero = false; state.activePage = "recover"; renderApp(); return;
+  }
+
+  // #3: invite links (/join/<code>) work logged in or out.
+  const joinMatch = route.match(/^\/join\/([^/]+)$/);
+  if (joinMatch) {
+    handleJoinLink(decodeURIComponent(joinMatch[1]));
+    return;
   }
 
   if (!isLoggedIn()) {
@@ -1772,24 +1877,63 @@ async function selectPlace(placeId) {
   renderResults();
 }
 
-async function addOwnPlace() {
+// #2: a small picker that lets you add a value by typing OR by tapping one of
+// your saved favourites in that category (areas / activities / places).
+function pickWithFavourites({ title, favourites, placeholder, onPick }) {
+  document.querySelector("#pickModal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "pickModal";
+  overlay.className = "modal-overlay";
+  const favs = (favourites || []).filter(Boolean);
+  const favBlock = favs.length
+    ? `<div class="pick-favs-label">${escapeHtml(t("fromYourFavourites") || "From your favourites")}</div>
+       <div class="pick-favs">${favs.map((f) => `<button type="button" class="pick-chip" data-fav="${escapeHtml(f)}">${escapeHtml(f)}</button>`).join("")}</div>`
+    : "";
+  overlay.innerHTML = `
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <h3>${escapeHtml(title)}</h3>
+      ${favBlock}
+      <input type="text" id="pickInput" class="pick-input" placeholder="${escapeHtml(placeholder || t("orTypeNew") || "Or type a new one")}" autocomplete="off">
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" id="pickCancel">${escapeHtml(t("cancel"))}</button>
+        <button class="btn-primary" type="button" id="pickAdd">${escapeHtml(t("add") || "Add")}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  const choose = (val) => { const v = String(val || "").trim(); if (!v) return; close(); onPick(v); };
+  overlay.querySelectorAll(".pick-chip").forEach((c) => c.addEventListener("click", () => choose(c.dataset.fav)));
+  overlay.querySelector("#pickAdd").addEventListener("click", () => choose(overlay.querySelector("#pickInput").value));
+  overlay.querySelector("#pickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") choose(e.target.value); });
+  overlay.querySelector("#pickCancel").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  setTimeout(() => overlay.querySelector("#pickInput")?.focus(), 30);
+}
+
+function addOwnPlace() {
   const favourites = getPreferences().places || [];
-  const favText = favourites.length ? `\n\n${t("useFavourite")}: ${favourites.join(", ")}` : "";
-  const title = prompt(`${t("addYourOwnPlace")}${favText}`);
-  if (!title?.trim()) return;
-  const favourite = favourites.find((item) => item.toLowerCase() === title.trim().toLowerCase());
-  const data = await api(`/api/groups/${state.group.code}/custom-place`, {
-    method: "POST",
-    body: {
-      title: title.trim(),
-      description: favourite ? `${t("useFavourite")}: ${favourite}` : "",
-      area: state.group.search?.area || "",
-      category: state.group.search?.activity || ""
+  pickWithFavourites({
+    title: t("addYourOwnPlace"),
+    favourites,
+    placeholder: t("addAnotherPlace"),
+    onPick: async (title) => {
+      const favourite = favourites.find((item) => item.toLowerCase() === title.toLowerCase());
+      try {
+        const data = await api(`/api/groups/${state.group.code}/custom-place`, {
+          method: "POST",
+          body: {
+            title,
+            description: favourite ? `${t("useFavourite")}: ${favourite}` : "",
+            area: state.group.search?.area || "",
+            category: state.group.search?.activity || ""
+          }
+        });
+        state.group = data.group;
+        state.index = Math.max(0, (state.group.places || []).length - 1);
+        renderApp();
+      } catch (e) { showError(e.message); }
     }
   });
-  state.group = data.group;
-  state.index = Math.max(0, (state.group.places || []).length - 1);
-  renderApp();
 }
 
 function leaveGroup() {
@@ -1959,6 +2103,8 @@ async function renderPersonalInformation() {
   const account = await loadAccount();
   const profile = account.profile || {};
   const preferences = profile.preferences || {};
+  pageEyebrow.textContent = t("account") || t("profileAndSettings");
+  pageTitle.textContent = t("profileAndSettings");
   pageDemo.innerHTML = `
     <form class="personal-form"><section><h3>${t("personal")}</h3>
       <label class="profile-upload">${profileImage(account)}<span>${t("editProfilePicture")}</span><input id="profilePictureInput" type="file" accept="image/*"></label>
@@ -1981,7 +2127,24 @@ async function renderPersonalInformation() {
       ${preferenceList(t("favouriteAreas"), "areas", preferences.areas, t("addAnotherArea"))}
       ${preferenceList(t("favouriteActivities"), "activities", preferences.activities, t("addAnotherActivity"))}
       ${preferenceList(t("favouritePlaces"), "places", preferences.places, t("addAnotherPlace"))}
-    </section></form>`;
+    </section></form>${settingsSectionsHtml()}`;
+}
+
+function settingsSectionsHtml() {
+  const settings = state.account?.profile?.settings || {};
+  return `
+    <div class="settings-block">
+      <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
+        <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
+        <div class="settings-toggle"><label for="notifGroupInvite">${t("groupInviteNotif")}</label><input type="checkbox" id="notifGroupInvite" ${settings.groupInviteNotif !== false ? "checked" : ""}></div>
+      </section>
+      <section class="wide-panel personal-form"><h3>${t("privacy")}</h3>
+        <div class="settings-toggle"><label for="privacyOnline">${t("showOnlineStatus")}</label><input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}></div>
+        <div class="settings-toggle"><label for="privacyPublic">${t("showProfilePublicly")}</label><input type="checkbox" id="privacyPublic" ${settings.showProfilePublicly !== false ? "checked" : ""}></div>
+      </section>
+      <button class="btn-primary" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
+      <section class="wide-panel personal-form danger-zone"><h3>${t("accountManagement")}</h3><button class="danger-button" type="button" id="deleteAccountButton">${t("deleteAccount")}</button></section>
+    </div>`;
 }
 
 function userCard(user, action = "") {
@@ -2065,6 +2228,7 @@ async function openDirectMessage(otherUsername) {
       </div>
       <div class="chat-messages" id="dmChatMessages"><div class="chat-loading">\u2026</div></div>
       <div class="chat-input-row">
+        <button type="button" class="emoji-btn" id="dmEmojiBtn" aria-label="Emoji">\u{1F642}</button>
         <input id="dmChatMessageInput" type="text" maxlength="500" placeholder="${escapeHtml(t("typeMessage"))}" autocomplete="off">
         <button id="dmChatSendButton" class="btn-primary">${t("sendMessage")}</button>
       </div>
@@ -2094,6 +2258,7 @@ async function openDirectMessage(otherUsername) {
   
   sendBtn.addEventListener("click", () => sendDmMessage(input));
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendDmMessage(input); });
+  setupEmojiPicker(overlay, overlay.querySelector("#dmEmojiBtn"), input);
   
   await loadDmMessages(true);
   
@@ -2334,8 +2499,8 @@ function renderProfilePage() {
     return;
   }
   if (state.activePage === "settings") {
-    state.pageShellRendered = "settings";
-    renderSettingsPage().catch((e) => showError(e.message));
+    state.pageShellRendered = "personal";
+    renderPersonalInformation().catch((e) => showError(e.message));
     return;
   }
   if (state.activePage === "subscription") {
@@ -2464,6 +2629,64 @@ async function acceptGroupInvite(groupCode) {
   } catch (e) { showError(e.message); }
 }
 
+// ===== #3: invite links =====
+function pendingInviteCode() {
+  return state.pendingInviteCode || localStorage.getItem("planswipe:pendingInvite") || "";
+}
+function setPendingInvite(code) {
+  state.pendingInviteCode = code || "";
+  if (code) localStorage.setItem("planswipe:pendingInvite", code);
+  else localStorage.removeItem("planswipe:pendingInvite");
+}
+
+// Called when someone opens https://www.planswipe.gr/join/<code>.
+function handleJoinLink(code) {
+  setPendingInvite(code);
+  if (isLoggedIn()) {
+    history.replaceState({}, "", "/main");
+    state.showHero = false; state.activePage = "";
+    renderApp();
+    maybeHandlePendingInvite();
+  } else {
+    // Send them through login/signup first; the code is remembered.
+    history.replaceState({}, "", "/home");
+    state.showHero = true; state.activePage = ""; state.loginOpen = true;
+    renderApp();
+  }
+}
+
+// Shows the accept/decline prompt if there's a pending invite and the user is in.
+function maybeHandlePendingInvite() {
+  const code = pendingInviteCode();
+  if (!code || !isLoggedIn() || state.invitePromptInFlight) return;
+  showJoinInvitePopup(code);
+}
+
+async function showJoinInvitePopup(code) {
+  state.invitePromptInFlight = true;
+  let info = null;
+  try { info = await api(`/api/groups/${encodeURIComponent(code)}/preview`); } catch (_) {}
+  const done = () => { state.invitePromptInFlight = false; setPendingInvite(""); };
+  if (info && info.exists === false) {
+    done();
+    showModal(t("groupInvite") || "Group invite", t("inviteNotFound") || "That group no longer exists.", [{ label: t("ok"), primary: true }]);
+    return;
+  }
+  const count = info?.memberCount || 0;
+  const host = info?.host ? ` (${info.host})` : "";
+  const body = count
+    ? (t("inviteJoinBody") || "You've been invited to join a group{host} with {n} member(s). Do you want to join?").replace("{host}", host).replace("{n}", count)
+    : (t("inviteJoinBodyPlain") || "You've been invited to join a group. Do you want to join?");
+  showModal(
+    t("groupInvite") || "Group invite",
+    body,
+    [
+      { label: t("decline") || "Decline", primary: false, action: () => done() },
+      { label: t("joinGroup") || "Join group", primary: true, action: () => { done(); acceptGroupInvite(code); } }
+    ]
+  );
+}
+
 async function declineGroupInvite(groupCode) {
   const profile = state.account?.profile || {};
   const groupInvites = (profile.groupInvites || []).filter((inv) => inv.groupCode !== groupCode);
@@ -2506,50 +2729,76 @@ function showAgeGroupPopup() {
 
 async function openInviteModal() {
   if (!state.group) return;
-  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
+  const link = `${APP_ORIGIN}/join/${state.group.code}`;
+  const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`).catch(() => ({ friends: [] }));
   const memberNames = new Set((state.group.members || []).map((m) => m.username));
   const friends = (data.friends || []).filter((f) => !memberNames.has(f.username));
-  if (!friends.length) {
-    showModal(t("inviteToGroup"), t("noFriendsToInvite"), [{ label: t("ok"), primary: true }]);
-    return;
-  }
+
   document.querySelector("#appModal")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "appModal";
   overlay.className = "modal-overlay";
+  const friendsBlock = friends.length
+    ? `<hr class="modal-sep">
+       <p>${escapeHtml(t("inviteSelectFriends"))}</p>
+       <div class="invite-friend-list" id="inviteFriendList">
+         ${friends.map((f) => `<label class="invite-friend-item"><input type="checkbox" value="${escapeHtml(f.username)}"> ${escapeHtml(f.username)}</label>`).join("")}
+       </div>
+       <div class="modal-actions">
+         <button class="btn-ghost" type="button" id="inviteCancelBtn">${escapeHtml(t("cancel"))}</button>
+         <button class="btn-primary" type="button" id="inviteSendBtn">${escapeHtml(t("sendInvites"))}</button>
+       </div>`
+    : `<p class="muted-note">${escapeHtml(t("noFriendsToInvite"))}</p>
+       <div class="modal-actions">
+         <button class="btn-ghost" type="button" id="inviteCancelBtn">${escapeHtml(t("close") || t("cancel"))}</button>
+       </div>`;
   overlay.innerHTML = `
     <div class="modal-panel" role="dialog" aria-modal="true">
       <h3>${escapeHtml(t("inviteFriends"))}</h3>
-      <p>${escapeHtml(t("inviteSelectFriends"))}</p>
-      <div class="invite-friend-list" id="inviteFriendList">
-        ${friends.map((f) => `<label class="invite-friend-item"><input type="checkbox" value="${escapeHtml(f.username)}"> ${escapeHtml(f.username)}</label>`).join("")}
+      <div class="pick-favs-label">${escapeHtml(t("shareInviteLink") || "Share an invite link")}</div>
+      <div class="invite-link-box">
+        <input type="text" id="inviteLinkInput" readonly value="${escapeHtml(link)}">
+        <button class="btn-primary" type="button" id="copyInviteLink">${escapeHtml(t("copyLink") || "Copy")}</button>
       </div>
-      <div class="modal-actions">
-        <button class="btn-ghost" type="button" id="inviteCancelBtn">${escapeHtml(t("cancel"))}</button>
-        <button class="btn-primary" type="button" id="inviteSendBtn">${escapeHtml(t("sendInvites"))}</button>
-      </div>
+      <p class="muted-note">${escapeHtml(t("inviteLinkHelp") || "Anyone you send this link to will be asked to join the group when they open it.")}</p>
+      ${friendsBlock}
     </div>`;
   document.body.appendChild(overlay);
-  overlay.querySelector("#inviteCancelBtn").addEventListener("click", () => overlay.remove());
   overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-  overlay.querySelectorAll(".invite-friend-item").forEach((item) => {
-    // The row is a <label>, so clicking anywhere in it already toggles the checkbox.
-    item.querySelector("input").addEventListener("change", (e) => {
-      item.classList.toggle("is-selected", e.target.checked);
-    });
+  overlay.querySelector("#inviteCancelBtn")?.addEventListener("click", () => overlay.remove());
+
+  overlay.querySelector("#copyInviteLink").addEventListener("click", async () => {
+    const btn = overlay.querySelector("#copyInviteLink");
+    try { await navigator.clipboard.writeText(link); }
+    catch (_) {
+      const inp = overlay.querySelector("#inviteLinkInput");
+      inp.focus(); inp.select();
+      try { document.execCommand("copy"); } catch (e2) {}
+    }
+    const orig = btn.textContent;
+    btn.textContent = t("copied") || "Copied!";
+    setTimeout(() => { btn.textContent = orig; }, 1500);
   });
-  overlay.querySelector("#inviteSendBtn").addEventListener("click", async () => {
-    const selected = [...overlay.querySelectorAll("#inviteFriendList input:checked")].map((el) => el.value);
-    if (!selected.length) return;
-    try {
-      await api(`/api/groups/${state.group.code}/invite`, {
-        method: "POST",
-        body: { fromUsername: currentUsername(), usernames: selected }
+
+  if (friends.length) {
+    overlay.querySelectorAll(".invite-friend-item").forEach((item) => {
+      item.querySelector("input").addEventListener("change", (e) => {
+        item.classList.toggle("is-selected", e.target.checked);
       });
-      overlay.remove();
-      showModal(t("inviteToGroup"), t("inviteSent"), [{ label: t("ok"), primary: true }]);
-    } catch (e) { showError(e.message); }
-  });
+    });
+    overlay.querySelector("#inviteSendBtn").addEventListener("click", async () => {
+      const selected = [...overlay.querySelectorAll("#inviteFriendList input:checked")].map((el) => el.value);
+      if (!selected.length) return;
+      try {
+        await api(`/api/groups/${state.group.code}/invite`, {
+          method: "POST",
+          body: { fromUsername: currentUsername(), usernames: selected }
+        });
+        overlay.remove();
+        showModal(t("inviteToGroup"), t("inviteSent"), [{ label: t("ok"), primary: true }]);
+      } catch (e) { showError(e.message); }
+    });
+  }
 }
 
 function showError(message) {
@@ -2625,17 +2874,23 @@ async function boot() {
   if (isLoggedIn()) await loadAccount().catch(() => null);
   window.addEventListener("popstate", onUrlChange);
 
+  // #3: an invite link takes priority over normal boot routing.
+  const joinM = window.location.pathname.match(/^\/join\/([^/]+)$/);
+  if (joinM) { handleJoinLink(decodeURIComponent(joinM[1])); return; }
+
   if (isLoggedIn() && state.user && state.groupCode) {
     startPolling();
     await refreshGroup();
     if (["/groups", "/friends", "/messages", "/likedplaces", "/past", "/personal", "/settings", "/subscription"].includes(window.location.pathname)) {
       onUrlChange();
     }
+    maybeHandlePendingInvite();
     return;
   }
   const path = window.location.pathname;
   if (path === "/" || path === "" || path === "/home") { navigate(isLoggedIn() ? "/main" : "/home"); }
   else { onUrlChange(); }
+  maybeHandlePendingInvite();
 }
 
 // ====== EVENT LISTENERS ======
@@ -2713,9 +2968,34 @@ resultList.addEventListener("click", (e) => {
   if (selectBtn) { selectPlace(selectBtn.dataset.selectPlace).catch((err) => showError(err.message)); return; }
   const bookBtn = e.target.closest("[data-book-place]");
   if (bookBtn) { state.selectedBookPlaceId = state.selectedBookPlaceId === bookBtn.dataset.bookPlace ? "" : bookBtn.dataset.bookPlace; renderResults(); return; }
-  if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace().catch((err) => showError(err.message)); }
+  if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace(); }
 });
 [languageButton, appLanguageButton].forEach((btn) => btn.addEventListener("click", toggleLanguage));
+
+// #4: Comments box — info popup + apply (re-rank with the note)
+document.querySelector("#commentsInfoBtn")?.addEventListener("click", () => {
+  showModal(t("commentsInfoTitle"), t("commentsInfoBody"), [{ label: t("ok"), primary: true }]);
+});
+document.querySelector("#commentsApplyBtn")?.addEventListener("click", async () => {
+  if (!state.group?.code) return;
+  const input = document.querySelector("#commentsInput");
+  const btn = document.querySelector("#commentsApplyBtn");
+  const comment = input ? input.value.trim() : "";
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t("updating") || "Updating\u2026"; }
+    const data = await api(`/api/groups/${state.group.code}/comment`, {
+      method: "POST",
+      body: { comment, useAiSuggestions: state.useAiSuggestions }
+    });
+    state.group = data.group;
+    state.index = 0;
+    renderApp();
+    showModal(t("suggestionsUpdated") || "Suggestions updated",
+      t("suggestionsUpdatedBody") || "Your suggestions were refreshed with the group's notes in mind.",
+      [{ label: t("ok"), primary: true }]);
+  } catch (e) { showError(e.message); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = t("updateSuggestions"); } }
+});
 
 if (inviteToGroupButton) {
   inviteToGroupButton.addEventListener("click", () => openInviteModal().catch((e) => showError(e.message)));
@@ -2757,9 +3037,15 @@ optionGrid.addEventListener("click", (e) => {
     chooseOption(kind, "", btn.dataset.favourite).catch((err) => showError(err.message)); return;
   }
   if (btn.dataset.custom === "true") {
-    const label = prompt(kind === "area" ? "Add an area" : "Add an activity");
-    if (!label?.trim()) { btn.classList.remove("is-selected"); return; }
-    chooseOption(kind, "", label.trim()).catch((err) => showError(err.message)); return;
+    btn.classList.remove("is-selected");
+    const favs = kind === "area" ? (getPreferences().areas || []) : (getPreferences().activities || []);
+    pickWithFavourites({
+      title: kind === "area" ? (t("addAnArea") || "Add an area") : (t("addAnActivity") || "Add an activity"),
+      favourites: favs,
+      placeholder: kind === "area" ? t("addAnotherArea") : t("addAnotherActivity"),
+      onPick: (label) => chooseOption(kind, "", label).catch((err) => showError(err.message))
+    });
+    return;
   }
   if (btn.dataset.customLabel) {
     chooseOption(kind, "", btn.dataset.customLabel).catch((err) => showError(err.message)); return;
