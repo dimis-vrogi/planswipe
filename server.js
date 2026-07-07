@@ -761,6 +761,55 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
   }
 }
 
+async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGroup = "", maxCount = 12) {
+  if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
+  const cleanArea = String(area || "").trim() || "Athens";
+  const cleanActivity = String(activity || "").trim();
+  const cleanAge = String(ageGroup || "").trim();
+  try {
+    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
+      body: JSON.stringify({
+        model: openAiModel,
+        messages: [
+          {
+            role: "system",
+            content: "You strictly filter Google Places candidates. Return ONLY a JSON array of objects with \"place\" and \"reason\". Use exact place titles from the candidate list. Never invent places."
+          },
+          {
+            role: "user",
+            content: `Strictly select places using this priority order: 1) Area must clearly fit "${cleanArea}". 2) Activity/category must clearly fit "${cleanActivity}". 3) Age group or vibe should fit "${cleanAge || "not specified"}". Exclude any candidate that does not clearly satisfy the area and activity. If none clearly fit, return an empty array. Rank the remaining places by area fit first, activity fit second, age/vibe fit third. Pick up to ${maxCount}. Candidates: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, category: p.category, area: p.areaLabel, address: p.address || p.description, rating: p.rating, types: p.primaryType })))}`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 700
+      })
+    });
+    if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
+    const aiData = await aiResponse.json();
+    const content = aiData.choices?.[0]?.message?.content || "";
+    const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+    if (!Array.isArray(parsed)) return googlePlaces.slice(0, maxCount);
+    const byTitle = new Map(googlePlaces.map((p) => [p.title.toLowerCase(), p]));
+    return parsed
+      .map((item) => {
+        const match = byTitle.get(String(item.place || "").toLowerCase());
+        if (!match) return null;
+        const reason = String(item.reason || "").trim();
+        return {
+          ...match,
+          description: reason ? `${reason} — ${match.address || match.description}` : match.description
+        };
+      })
+      .filter(Boolean)
+      .slice(0, maxCount);
+  } catch (e) {
+    console.warn("OpenAI search refinement error:", e.message);
+    return googlePlaces.slice(0, maxCount);
+  }
+}
+
 async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles = [], options = {}) {
   const { areaOption, typeOption } = normalizePlaceOptions(areaInput, typeInput);
   const areaLabel = areaOption.label || areaOption.id || "Athens";
@@ -1738,8 +1787,9 @@ async function handleApi(request, response) {
       const catLabel = typeOpt?.label || categoryText;
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
       const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
-      const results = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 15, [], language) || [];
-      sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label });
+      const candidates = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 20, [], language) || [];
+      const results = await refineSearchPlacesWithOpenAI(candidates, searchArea.label, catLabel, ageGroup, 12);
+      sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label, aiFiltered: Boolean(openAiApiKey) });
       return;
     }
 
