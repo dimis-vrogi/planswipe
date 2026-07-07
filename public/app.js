@@ -196,7 +196,7 @@ function findOption(kind, id) {
 const copy = {
   en: {
     login: "Login", createAccount: "Create Account", enterPlanswipe: "Enter PlanSwipe",
-    groupPlans: "Group plans", leaveGroup: "Exit Current Group", exitGroup: "Back",
+    groupPlans: "Group plans", leaveGroup: "Exit Group", exitGroup: "Back",
     home: "Home", likedPlaces: "Liked Places", groups: "My Groups", friends: "Friends",
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
     messages: "Messages",
@@ -371,6 +371,7 @@ const copy = {
     areaFreeTextPlaceholder: "Type an area, neighborhood, or leave blank",
     categoryFreeTextPlaceholder: "Type anything, e.g. sushi, cocktails, cinema",
     ageFreeTextPlaceholder: "Type an age group or vibe, e.g. 18-24",
+    aiFilteredResults: "AI-filtered by area, activity, then age group.",
     enterPlaceName: "Enter a place name to search.",
     chooseCategory: "Choose a category to browse.",
     noPlacesFound: "No places found. Try a different name, area or category.",
@@ -687,7 +688,8 @@ Object.assign(copy.el, {
   searchPlaces: "Αναζήτηση μερών",
   areaFreeTextPlaceholder: "Γράψτε περιοχή ή γειτονιά ή αφήστε κενό",
   categoryFreeTextPlaceholder: "Γράψτε ό,τι θέλετε, π.χ. sushi, cocktails, σινεμά",
-  ageFreeTextPlaceholder: "Γράψτε ηλικία ή ύφος, π.χ. 18-24"
+  ageFreeTextPlaceholder: "Γράψτε ηλικία ή ύφος, π.χ. 18-24",
+  aiFilteredResults: "Φιλτράρισμα με AI: πρώτα περιοχή, μετά δραστηριότητα, μετά ηλικία."
 });
 
 // ====== LANGUAGE ======
@@ -2263,6 +2265,7 @@ function renderPlaceSearchResults(resultsEl, data) {
   let html = "";
   if (data.mode === "browse") {
     html = section(t("results"), s.results) || `<p class="muted-note">${escapeHtml(t("noPlacesFound"))}</p>`;
+    if (data.aiFiltered) html = `<p class="muted-note search-ai-note">${escapeHtml(t("aiFilteredResults"))}</p>${html}`;
   } else {
     html = section(t("thePlace"), s.match)
       + section(t("sameNameElsewhere"), s.elsewhere)
