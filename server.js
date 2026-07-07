@@ -17,6 +17,19 @@ const openAiApiKey = process.env.OPENAI_API_KEY || "";
 const openAiModel = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const BCRYPT_ROUNDS = 10;
 const APP_ORIGIN = process.env.APP_ORIGIN || "https://www.planswipe.gr";
+// #1: subscriptions stay OFF until you flip this to "true" (and configure Stripe).
+// While OFF, every feature is free for everyone and no charge flow runs.
+const SUBSCRIPTIONS_ENABLED = process.env.SUBSCRIPTIONS_ENABLED === "true";
+const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || "";
+const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY) && process.env.STRIPE_SECRET_KEY !== "sk_test_placeholder" && Boolean(STRIPE_PRICE_ID);
+
+// Whether an account currently has Pro. When subscriptions are disabled, everyone
+// is effectively "full access" — gate premium features with `isPro(profile)` later.
+function isPro(profileRow) {
+  if (!SUBSCRIPTIONS_ENABLED) return true;
+  const sub = profileRow?.profile?.subscription || {};
+  return sub.plan === "pro" && sub.status === "active";
+}
 
 if (!process.env.PORT && !process.env.SUPABASE_URL) {
   console.warn("WARNING: .env file not found or empty. Environment variables may be missing.");
@@ -346,6 +359,7 @@ function summarizeGroup(group) {
     search:    group.search   || null,
     placesExhausted: Boolean(group.placesExhausted),
     reset:     group.reset || null,
+    comments:  group.comments || {},
     createdAt: group.createdAt
   };
 }
@@ -375,6 +389,16 @@ function removeUserFromGroup(group, username) {
 
 function groupAgeGroups(group) {
   return [...new Set((group.members || []).map((m) => m.profile?.ageGroup).filter(Boolean))];
+}
+
+// #4: combine every member's optional note into one string for the AI ranker.
+function groupComments(group) {
+  const comments = group.comments || {};
+  return Object.values(comments)
+    .map((c) => String(c || "").trim())
+    .filter(Boolean)
+    .join(" | ")
+    .slice(0, 800);
 }
 
 function requireAgeGroup(profile) {
@@ -653,7 +677,7 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
   }
 }
 
-async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5, ageGroups = [], pastActivities = [], likedPlaces = []) {
+async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5, ageGroups = [], pastActivities = [], likedPlaces = [], comments = "") {
   if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
   try {
     const ageContext = ageGroups.length ? `Age groups in the group: ${ageGroups.join(", ")}.` : "Age groups are unknown.";
@@ -669,7 +693,11 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
     });
     const pastContext = filteredPast.length ? `Group members' past activities matching "${activity}" (places they've been to): ${filteredPast.join(", ")}.` : "";
     const likedContext = filteredLiked.length ? `Group members' liked places matching "${activity}" (places they voted Yes on): ${filteredLiked.join(", ")}.` : "";
-    const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) Past activities (places similar to where they've been before) 2) Liked places (places similar to ones they've liked) 3) Age group suitability. Return the most relevant ones first.";
+    const trimmedComments = String(comments || "").trim().slice(0, 800);
+    const commentsContext = trimmedComments
+      ? `The group added these notes/preferences/constraints — treat them as the HIGHEST priority when choosing and ordering places, and exclude places that clearly conflict with them: "${trimmedComments}".`
+      : "";
+    const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) The group's notes above (if any) 2) Past activities (places similar to where they've been before) 3) Liked places (places similar to ones they've liked) 4) Age group suitability. Return the most relevant ones first.";
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
@@ -677,7 +705,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
         model: openAiModel,
         messages: [
           { role: "system", content: "You select places from a provided list only. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
-          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${pastContext} ${likedContext} ${rankingInstructions} Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
+          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${commentsContext} ${pastContext} ${likedContext} ${rankingInstructions} Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
         temperature: 0.4, max_tokens: 500
       })
@@ -718,7 +746,7 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
-        : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || []);
+        : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || [], options.pastActivities || [], options.likedPlaces || [], options.comments || "");
       return { places: refined, source: options.useAi === false ? "google" : "google-ai", query, exhausted: false };
     }
     return { places: [], source: "google", query, exhausted: true };
@@ -773,7 +801,7 @@ async function handleApi(request, response) {
     const profile = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { plan: "free" }); return; }
     const sub = profile.profile?.subscription || {};
-    sendJson(response, 200, { plan: sub.plan || "free", status: sub.status || "active", expiry: sub.expiry || null });
+    sendJson(response, 200, { plan: sub.plan || "free", status: sub.status || "active", expiry: sub.expiry || null, subscriptionsEnabled: SUBSCRIPTIONS_ENABLED });
     return;
   }
 
@@ -781,18 +809,18 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     const username = body.username || "";
     if (!(await requireAuth(request, response, username))) return;
-    const priceId = body.priceId || "pro_monthly";
+    const priceId = STRIPE_PRICE_ID || body.priceId;
     const successUrl = body.successUrl || `${APP_ORIGIN}/subscription?success=1`;
     const cancelUrl = body.cancelUrl || `${APP_ORIGIN}/subscription?canceled=1`;
 
-    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_placeholder") {
-      // Demo mode - simulate success
-      const profile = await getProfileByUsername(username);
-      if (profile) {
-        const updatedProfile = { ...(profile.profile || {}), subscription: { plan: "pro", status: "active", expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date().toISOString() } };
-        await upsertProfile({ username, email: profile.email || "", profile: updatedProfile });
-      }
-      sendJson(response, 200, { url: successUrl, demo: true });
+    // Subscriptions are off for now — everything is free, so there's nothing to buy.
+    if (!SUBSCRIPTIONS_ENABLED) {
+      sendJson(response, 200, { enabled: false, message: "All features are currently free — there's nothing to upgrade yet." });
+      return;
+    }
+    // Enabled but not fully configured on the server side.
+    if (!stripeConfigured) {
+      sendJson(response, 503, { error: "Payments are not configured yet. Please try again later." });
       return;
     }
 
@@ -1163,6 +1191,23 @@ async function handleApi(request, response) {
     return;
   }
 
+  // #3: lightweight preview for invite links — visible to any logged-in user
+  // (the invitee isn't a member yet), returns only non-sensitive basics.
+  if (request.method === "GET" && parts[1] === "groups" && parts[3] === "preview") {
+    if (!(await requireAnyAuth(request, response))) return;
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 200, { exists: false }); return; }
+    const members = (group.members || []).map((m) => m.username).filter(Boolean);
+    sendJson(response, 200, {
+      exists: true,
+      code: group.code,
+      memberCount: members.length,
+      members: members.slice(0, 12),
+      host: members[0] || ""
+    });
+    return;
+  }
+
   if (request.method === "GET" && parts[1] === "groups" && parts[2] && !parts[3]) {
     const group = await loadGroup(parts[2]);
     if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
@@ -1213,7 +1258,7 @@ async function handleApi(request, response) {
       if (kind === "type" && group.consensus.area) {
         const areaOption = findGroupOption(group, "area", group.consensus.area);
         const typeOption = findGroupOption(group, "type", selectedId);
-        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
+        const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group), comments: groupComments(group) });
         group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
         group.places = loaded.places;
         group.placesExhausted = Boolean(loaded.exhausted);
@@ -1274,7 +1319,7 @@ async function handleApi(request, response) {
     const areaOption = findGroupOption(group, "area", areaId);
     const typeOption = findGroupOption(group, "type", typeId);
     const excludeTitles = (group.places || []).map((p) => p.title);
-    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group) });
+    const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, excludeTitles, { useAi: body.useAiSuggestions !== false, ageGroups: groupAgeGroups(group), comments: groupComments(group) });
     if (!loaded.places.length) {
       group.placesExhausted = true;
       await saveGroup(group);
@@ -1286,6 +1331,42 @@ async function handleApi(request, response) {
     group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group), places: loaded.places, exhausted: false });
+    return;
+  }
+
+  // #4: save a member's optional note and re-rank suggestions taking all notes into account.
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "comment") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    const body = await readBody(request);
+    const comment = String(body.comment || "").trim().slice(0, 800);
+    if (!group.comments) group.comments = {};
+    if (comment) group.comments[authUsername] = comment;
+    else delete group.comments[authUsername];
+
+    // Re-rank the current area/activity with the updated notes, if places are already loaded.
+    const areaId = group.consensus?.area;
+    const typeId = group.consensus?.type;
+    if (areaId && typeId) {
+      const areaOption = findGroupOption(group, "area", areaId);
+      const typeOption = findGroupOption(group, "type", typeId);
+      const loaded = await loadPlacesForGroup(areaOption, typeOption, 5, [], {
+        useAi: body.useAiSuggestions !== false,
+        ageGroups: groupAgeGroups(group),
+        comments: groupComments(group)
+      });
+      if (loaded.places.length) {
+        group.search = { source: loaded.source, query: loaded.query, area: areaOption.label, activity: typeOption.label };
+        group.places = loaded.places;
+        group.placesExhausted = Boolean(loaded.exhausted);
+        group.placeSelections = {};
+        group.votes = {};
+      }
+    }
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
     return;
   }
 
