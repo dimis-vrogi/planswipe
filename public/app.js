@@ -349,6 +349,15 @@ const copy = {
     suggestionsUpdatedBody: "Your suggestions were refreshed with the group's notes in mind.",
     commentsInfoTitle: "What's this for?",
     commentsInfoBody: "Add anything that helps us find better matches for your group \u2014 the vibe you want, budget, dietary needs, accessibility, or things to include or avoid. For example: \u201csomewhere quiet with vegan options, outdoor seating, under \u20ac20 a head.\u201d Your suggestions are ranked with these notes in mind.",
+    aiInfoTitle: "How AI filters places",
+    aiInfoBody: "AI uses the chosen area, activity type, group age groups, past activities, liked places, and any submitted comments. Comments are treated as strict requirements, so places that clearly conflict with them are excluded.",
+    stepComments: "Step 3 of 3",
+    commentsStepTitle: "Any notes before we find places?",
+    commentsStepHint: "Add requirements like budget, noise level, dietary needs, seating, or things to avoid. You can also skip.",
+    backToActivity: "Back to activity",
+    submitComment: "Submit comment",
+    skip: "Skip",
+    commentSubmitted: "Comment submitted",
     groupInvite: "Group invite",
     profileAndSettings: "Profile & Settings",
     searchPlaces: "Search places",
@@ -375,7 +384,7 @@ const copy = {
     saveNote: "Save note",
     noteSaved: "Note saved",
     noteSavedBody: "Your note will be used to pick the best places for your group.",
-    searchPlacesEntry: "Search places by name or browse by area",
+    searchPlacesEntry: "Search",
     inviteNotFound: "That group no longer exists.",
     inviteJoinBody: "You've been invited to join a group{host} with {n} member(s). Do you want to join?",
     inviteJoinBodyPlain: "You've been invited to join a group. Do you want to join?",
@@ -659,6 +668,22 @@ Object.assign(copy.el, {
   voteAsGroupText: "Κάντε swipe και ψηφίστε Όχι, Ίσως ή Ναι. Δείτε αμέσως ποια μέρη έχουν τη μεγαλύτερη υποστήριξη."
 });
 
+Object.assign(copy.el, {
+  aiInfoTitle: "Πώς φιλτράρει το AI",
+  aiInfoBody: "Το AI χρησιμοποιεί την περιοχή, τη δραστηριότητα, τις ηλικιακές ομάδες, προηγούμενες δραστηριότητες, αγαπημένα μέρη και τα σχόλια της ομάδας. Τα σχόλια θεωρούνται αυστηρές απαιτήσεις, οπότε αποκλείονται μέρη που συγκρούονται με αυτά.",
+  stepComments: "Βήμα 3 από 3",
+  commentsStepTitle: "Υπάρχουν σημειώσεις πριν βρούμε μέρη;",
+  commentsStepHint: "Προσθέστε απαιτήσεις όπως budget, θόρυβο, διατροφικές ανάγκες, καθίσματα ή πράγματα προς αποφυγή. Μπορείτε και να το παραλείψετε.",
+  backToActivity: "Πίσω στη δραστηριότητα",
+  submitComment: "Υποβολή σχολίου",
+  skip: "Παράλειψη",
+  commentSubmitted: "Το σχόλιο υποβλήθηκε",
+  reviews: "Κριτικές",
+  noReviews: "Δεν υπάρχουν διαθέσιμες κριτικές.",
+  searchPlacesEntry: "Αναζήτηση",
+  searchPlaces: "Αναζήτηση μερών"
+});
+
 // ====== LANGUAGE ======
 function applyLanguage() {
   document.documentElement.lang = state.language;
@@ -786,6 +811,23 @@ function escapeHtml(value) {
   s = s.replace(/\u0022/g, quot);
   s = s.replace(/'/g, apos);
   return s;
+}
+
+function localizePlaceDescription(value) {
+  let text = String(value || "");
+  text = text.replace(/β€”/g, "\u2014").replace(/Β·/g, "\u00b7");
+  if (state.language === "el") {
+    text = text
+      .replace(/\bstars\b/g, "αστέρια")
+      .replace(/\breviews\b/g, "κριτικές")
+      .replace(/\bHours not listed\b/g, "Δεν αναφέρονται ώρες");
+  } else {
+    text = text
+      .replace(/\bαστέρια\b/g, "stars")
+      .replace(/\bκριτικές\b/g, "reviews")
+      .replace(/\bΔεν αναφέρονται ώρες\b/g, "Hours not listed");
+  }
+  return text;
 }
 
 function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim()); }
@@ -1020,6 +1062,7 @@ function renderDecisionStep(kind) {
     </label>
     <div><div class="ai-toggle-label">${escapeHtml(t("aiSuggestions"))}</div>
     <div class="ai-toggle-desc">${escapeHtml(state.useAiSuggestions ? t("aiToggleOn") : t("aiToggleOff"))}</div></div>
+    <button class="comments-info ai-info-button" id="aiInfoBtn" type="button" aria-label="${escapeHtml(t("aiInfoTitle"))}">i</button>
   </div>` : "";
 
   optionGrid.innerHTML = `${aiToggle}${optionCards}${favourites}
@@ -1028,19 +1071,55 @@ function renderDecisionStep(kind) {
       <span><h3>${escapeHtml(addLabel)}</h3><p>${escapeHtml(addText)}</p></span>
     </button>`;
 
-  // #2: the optional comment lives on the activity-type step (not during voting).
+  // Comments are a separate step after activity consensus.
   const commentsBox = document.querySelector("#commentsBox");
-  if (commentsBox) {
-    setVisible(commentsBox, kind === "type");
-    if (kind === "type") {
-      const ci = document.querySelector("#commentsInput");
-      if (ci) {
-        if (document.activeElement !== ci) ci.value = (state.group?.comments || {})[currentUsername()] || "";
-        ci.placeholder = t("commentsPlaceholder");
-      }
-      const cl = document.querySelector("#commentsLabel"); if (cl) cl.textContent = t("commentsLabel");
-      const cb = document.querySelector("#commentsApplyBtn"); if (cb && !cb.disabled) cb.textContent = t("saveNote");
-    }
+  if (commentsBox) setVisible(commentsBox, false);
+}
+
+function commentsDoneCount() {
+  const status = state.group?.commentStatus || {};
+  return (state.group?.members || []).filter((m) => status[m.username]).length;
+}
+
+function allCommentsDone() {
+  const members = state.group?.members || [];
+  return Boolean(members.length) && commentsDoneCount() >= members.length;
+}
+
+function renderCommentStep() {
+  setVisible(decisionPanel, true);
+  setVisible(swipeLayout, false);
+  setVisible(resultsPanel, false);
+  optionGrid.innerHTML = "";
+  decisionStep.textContent = t("stepComments");
+  decisionTitle.textContent = t("commentsStepTitle");
+  const total = memberCount();
+  const done = commentsDoneCount();
+  decisionHint.innerHTML = done > 0 && done < total
+    ? `${done} ${t("of")} ${total} ${t("voted")} \u2014 <strong>${t("waitingForOthers")}</strong>`
+    : t("commentsStepHint");
+  setVisible(backChoiceButton, true);
+  backChoiceButton.textContent = t("backToActivity");
+
+  const commentsBox = document.querySelector("#commentsBox");
+  if (!commentsBox) return;
+  setVisible(commentsBox, true);
+  const ci = document.querySelector("#commentsInput");
+  if (ci) {
+    if (document.activeElement !== ci) ci.value = (state.group?.comments || {})[currentUsername()] || "";
+    ci.placeholder = t("commentsPlaceholder");
+  }
+  const cl = document.querySelector("#commentsLabel"); if (cl) cl.textContent = t("commentsLabel");
+  const submit = document.querySelector("#commentsApplyBtn");
+  const skip = document.querySelector("#commentsSkipBtn");
+  const alreadyDone = Boolean(state.group?.commentStatus?.[currentUsername()]);
+  if (submit) {
+    submit.textContent = alreadyDone ? t("commentSubmitted") : t("submitComment");
+    submit.disabled = alreadyDone;
+  }
+  if (skip) {
+    skip.textContent = t("skip");
+    skip.disabled = alreadyDone;
   }
 }
 
@@ -1060,7 +1139,7 @@ function renderCard() {
   const typeLabel = optionLabel("type", consensus("type")) || place.category;
   activityCategory.textContent    = ratingText ? `${typeLabel} | ${ratingText}` : typeLabel;
   activityTitle.textContent       = place.title;
-  activityDescription.textContent = place.description || place.address || "";
+  activityDescription.textContent = localizePlaceDescription(place.description || place.address || "");
   activityArea.textContent        = place.areaLabel || place.address || "";
   activityTime.textContent        = place.time;
   activityCost.textContent        = place.cost;
@@ -1084,6 +1163,7 @@ function renderCard() {
     favButton.textContent = alreadyFav ? `\u2605 ${t("favourited")}` : `\u2606 ${t("addToFavourites")}`;
     favButton.classList.toggle("is-favourited", alreadyFav);
   }
+  if (reviewsButton) reviewsButton.textContent = t("reviews");
 }
 
 function renderResults() {
@@ -1789,6 +1869,8 @@ function renderApp() {
 
   if (!areaReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("area"); return; }
   if (!typeReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("type"); return; }
+  const hasLoadedPlaces = Boolean((state.group.places || []).length || state.group.placesExhausted);
+  if (!hasLoadedPlaces && !allCommentsDone()) { renderCommentStep(); return; }
 
   searchSummary.textContent = (() => {
     const area = state.group.search?.area;
@@ -1900,7 +1982,7 @@ function redirectForAgeGroup() {
 }
 
 async function chooseOption(kind, optionId, customLabel = "") {
-  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions } });
+  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions, language: state.language } });
   if (kind === "area") state.pendingAreaOption = null;
   state.index = 0; state.group = data.group; renderApp();
 }
@@ -1912,7 +1994,7 @@ async function goBackChoice() {
     renderDecisionStep("area");
     return;
   }
-  const step = (consensus("area") && !consensus("type")) ? "type" : "area";
+  const step = consensus("type") ? "type" : ((consensus("area") && !consensus("type")) ? "type" : "area");
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step } });
   state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
   state.group = data.group; renderApp();
@@ -2115,7 +2197,7 @@ async function runPlacesSearch(overlay, mode) {
   if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
   resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
   try {
-    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup } });
+    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, language: state.language } });
     renderPlaceSearchResults(resultsEl, data);
   } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
 }
@@ -2200,7 +2282,7 @@ async function openPlaceDetails(place) {
   showModal(place.title, body, [{ label: t("close"), primary: true }], { html: true });
   document.querySelector("#detailReviewsBtn")?.addEventListener("click", async () => {
     try {
-      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id } });
+      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id, language: state.language } });
       const reviews = data.reviews || [];
       if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
       const reviewsHtml = reviews.map((r) => `<div class="review-item"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p>${escapeHtml(r.text)}</p></div>`).join("");
@@ -2219,7 +2301,7 @@ async function continueBrowsing() {
     const prevCount = state.group.places?.length || 0;
     const data = await api(`/api/groups/${state.group.code}/more-places`, {
       method: "POST",
-      body: { username: currentUsername(), useAiSuggestions: state.useAiSuggestions }
+      body: { username: currentUsername(), useAiSuggestions: state.useAiSuggestions, language: state.language }
     });
     state.group = data.group;
     if (data.exhausted || !data.places?.length) {
@@ -3224,24 +3306,37 @@ resultList.addEventListener("click", (e) => {
 document.querySelector("#commentsInfoBtn")?.addEventListener("click", () => {
   showModal(t("commentsInfoTitle"), t("commentsInfoBody"), [{ label: t("ok"), primary: true }]);
 });
-document.querySelector("#commentsApplyBtn")?.addEventListener("click", async () => {
+optionGrid.addEventListener("click", (e) => {
+  if (e.target.closest("#aiInfoBtn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    showModal(t("aiInfoTitle"), t("aiInfoBody"), [{ label: t("ok"), primary: true }]);
+  }
+});
+async function finishCommentStep(skip = false) {
   if (!state.group?.code) return;
   const input = document.querySelector("#commentsInput");
   const btn = document.querySelector("#commentsApplyBtn");
-  const comment = input ? input.value.trim() : "";
+  const skipBtn = document.querySelector("#commentsSkipBtn");
+  const comment = skip ? "" : (input ? input.value.trim() : "");
   try {
     if (btn) { btn.disabled = true; btn.textContent = t("updating") || "Updating\u2026"; }
+    if (skipBtn) skipBtn.disabled = true;
     const data = await api(`/api/groups/${state.group.code}/comment`, {
       method: "POST",
-      body: { comment, useAiSuggestions: state.useAiSuggestions }
+      body: { comment, skip, useAiSuggestions: state.useAiSuggestions, language: state.language }
     });
     state.group = data.group;
-    showModal(t("noteSaved") || "Note saved",
-      t("noteSavedBody") || "Your note will be used to pick the best places for your group.",
-      [{ label: t("ok"), primary: true }]);
+    renderApp();
   } catch (e) { showError(e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = t("saveNote") || t("updateSuggestions"); } }
-});
+  finally {
+    if (btn) { btn.disabled = false; btn.textContent = t("submitComment"); }
+    if (skipBtn) skipBtn.disabled = false;
+  }
+}
+
+document.querySelector("#commentsApplyBtn")?.addEventListener("click", () => finishCommentStep(false));
+document.querySelector("#commentsSkipBtn")?.addEventListener("click", () => finishCommentStep(true));
 
 if (inviteToGroupButton) {
   inviteToGroupButton.addEventListener("click", () => openInviteModal().catch((e) => showError(e.message)));
@@ -3259,7 +3354,7 @@ if (reviewsButton) {
     const place = places[state.index];
     if (!place) return;
     try {
-      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id } });
+      const data = await api("/api/reviews", { method: "POST", body: { googlePlaceId: place.googlePlaceId || place.id, language: state.language } });
       const reviews = data.reviews || [];
       if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
       const reviewsHtml = reviews.map((r) => `<div style="margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:8px;"><strong>${escapeHtml(r.author)}</strong> ${r.rating ? `(${r.rating}/5)` : ""}<p style="margin-top:4px;color:var(--muted);">${escapeHtml(r.text)}</p></div>`).join("");
@@ -3269,6 +3364,7 @@ if (reviewsButton) {
 }
 
 optionGrid.addEventListener("click", (e) => {
+  if (e.target.closest("#aiInfoBtn")) return;
   const btn = e.target.closest(".option-card");
   if (!btn) return;
   const kind = btn.dataset.kind;
@@ -3425,7 +3521,7 @@ pageDemo.addEventListener("click", (e) => {
   const reviewsBtn = e.target.closest("[data-reviews]");
   if (reviewsBtn) {
     const placeId = reviewsBtn.dataset.reviews;
-    api("/api/reviews", { method: "POST", body: { googlePlaceId: placeId } })
+    api("/api/reviews", { method: "POST", body: { googlePlaceId: placeId, language: state.language } })
       .then((data) => {
         const reviews = data.reviews || [];
         if (!reviews.length) { showModal(t("reviews"), t("noReviews"), [{ label: t("ok"), primary: true }]); return; }
