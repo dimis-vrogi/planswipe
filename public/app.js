@@ -21,6 +21,7 @@ const state = {
   friendsData: null,
   friendsDataLoaded: false,
   friendsLastRequestCount: -1,
+  friendsTab: "friends",
   lastGroupInviteCount: -1,
   lastDmCount: -1,
   groupSig: "",
@@ -245,6 +246,15 @@ const copy = {
     noActiveGroups: "No active groups", noPastGroups: "No past groups",
     you: "you", friends: "Friends", requestSent: "Request sent",
     noPending: "No pending requests", inboxClear: "No notifications",
+    yourPeople: "Your people",
+    incomingRequests: "Incoming requests",
+    sentRequests: "Sent requests",
+    searchResults: "Search results",
+    noUsersFound: "No users found",
+    noBioYet: "",
+    session: "Session",
+    logoutHint: "You'll be signed out of this device.",
+    logoutConfirm: "Are you sure you want to log out?",
     noPastActivities: "No past activities yet",
     continueBrowsing: "Continue Browsing",
     loadingPlaces: "Loading more places\u2026",
@@ -475,6 +485,15 @@ const copy = {
     noActiveGroups: "Δεν υπάρχουν ενεργές ομάδες", noPastGroups: "Δεν υπάρχουν παλιές ομάδες",
     you: "εσείς", friends: "Φίλοι", requestSent: "Το αίτημα στάλθηκε",
     noPending: "Δεν υπάρχουν εκκρεμή αιτήματα", inboxClear: "Δεν υπάρχουν ειδοποιήσεις",
+    yourPeople: "Οι άνθρωποί σου",
+    incomingRequests: "Εισερχόμενα αιτήματα",
+    sentRequests: "Απεσταλμένα αιτήματα",
+    searchResults: "Αποτελέσματα αναζήτησης",
+    noUsersFound: "Δεν βρέθηκαν χρήστες",
+    noBioYet: "",
+    session: "Συνεδρία",
+    logoutHint: "Θα αποσυνδεθείς από αυτή τη συσκευή.",
+    logoutConfirm: "Σίγουρα θέλεις να αποσυνδεθείς;",
     noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
     continueBrowsing: "Θέλετε να συνεχίσετε να βλέπετε μέρη;",
     noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
@@ -1563,10 +1582,10 @@ async function refreshNotifications() {
     }
     state.lastGroupInviteCount = data.groupInvites || 0;
 
-    if (state.activePage === "messages" && state.pageShellRendered === "messages"
+    if (state.pageShellRendered === "friends" && state.friendsTab === "messages"
         && state.lastDmCount >= 0 && (data.dmMessages || 0) !== state.lastDmCount
         && !document.querySelector("#dmChatOverlay")) {
-      renderMessagesPage().catch((e) => console.warn("Messages refresh error:", e.message));
+      refreshFriendsPage().catch((e) => console.warn("Messages refresh error:", e.message));
     }
     state.lastDmCount = data.dmMessages || 0;
   } catch (e) { console.warn("Notifications refresh error:", e.message); }
@@ -2187,7 +2206,7 @@ function openPlacesSearch() {
     <div class="search-panel">
       <div class="search-panel-head">
         <h3>${escapeHtml(t("searchPlaces"))}</h3>
-        <button class="chat-close-btn" id="placesSearchClose" aria-label="${escapeHtml(t("close"))}">\u2715</button>
+        <button class="modal-close-btn search-close-btn" id="placesSearchClose" aria-label="${escapeHtml(t("close"))}">\u2715</button>
       </div>
       <div class="search-mode-toggle">
         <button type="button" class="search-mode-btn is-active" data-mode="name">${escapeHtml(t("byName"))}</button>
@@ -2526,6 +2545,10 @@ function settingsSectionsHtml() {
         <div class="settings-toggle"><label for="privacyPublic">${t("showProfilePublicly")}</label><input type="checkbox" id="privacyPublic" ${settings.showProfilePublicly !== false ? "checked" : ""}></div>
       </section>
       <button class="btn-primary" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
+      <section class="wide-panel personal-form"><h3>${t("session") || "Session"}</h3>
+        <p class="muted-note">${t("logoutHint") || "You'll be signed out of this device."}</p>
+        <button class="btn-ghost logout-page-btn" type="button" id="logoutPageButton">${t("logout")}</button>
+      </section>
       <section class="wide-panel personal-form danger-zone"><h3>${t("accountManagement")}</h3><button class="danger-button" type="button" id="deleteAccountButton">${t("deleteAccount")}</button></section>
     </div>`;
 }
@@ -2537,63 +2560,129 @@ function userCard(user, action = "") {
 }
 
 async function renderFriendsPage() {
+  pageEyebrow.textContent = t("yourPeople") || "Your people";
+  pageTitle.textContent = t("friends");
+  const tab = state.friendsTab || "friends";
   pageDemo.innerHTML = `
-    <section class="wide-panel"><div class="inline-add">
-      <input id="friendSearchInput" type="text" placeholder="${t("searchByUsername")}">
-      <button id="friendSearchButton" type="button">${t("search")}</button></div>
-      <div id="friendSearchResults" class="demo-grid"></div>
-    </section>
-    <section class="wide-panel"><h3>${t("friends")}</h3><div id="friendList" class="demo-grid"></div></section>
-    <section class="wide-panel"><h3>${t("requests")}</h3><div id="requestList" class="demo-grid"></div></section>`;
+    <div class="friends-search">
+      <span class="friends-search-icon" aria-hidden="true">\u{1F50D}</span>
+      <input id="friendSearchInput" type="text" placeholder="${escapeHtml(t("searchByUsername"))}" autocomplete="off">
+      <button class="btn-primary" id="friendSearchButton" type="button">${escapeHtml(t("search"))}</button>
+    </div>
+    <div id="friendSearchResults" class="people-grid"></div>
+
+    <div class="friends-tabs" role="tablist">
+      <button class="friends-tab ${tab === "friends" ? "is-active" : ""}" type="button" data-friends-tab="friends">
+        ${escapeHtml(t("friends"))}<span class="tab-count" id="tabCountFriends"></span>
+      </button>
+      <button class="friends-tab ${tab === "messages" ? "is-active" : ""}" type="button" data-friends-tab="messages">
+        ${escapeHtml(t("messages"))}<span class="tab-badge is-hidden" id="tabBadgeMessages"></span>
+      </button>
+      <button class="friends-tab ${tab === "requests" ? "is-active" : ""}" type="button" data-friends-tab="requests">
+        ${escapeHtml(t("requests"))}<span class="tab-badge is-hidden" id="tabBadgeRequests"></span>
+      </button>
+    </div>
+    <div id="friendsTabPanel" class="friends-tab-panel"></div>`;
+
+  pageDemo.querySelectorAll("[data-friends-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.friendsTab = btn.dataset.friendsTab;
+      pageDemo.querySelectorAll(".friends-tab").forEach((b) => b.classList.toggle("is-active", b === btn));
+      refreshFriendsPage().catch((e) => showError(e.message));
+    });
+  });
+
   state.friendsLastRequestCount = -1;
   await refreshFriendsPage();
   state.friendsLastRequestCount = state.notifications.friendRequests || 0;
+}
+
+function personRow(user, actionsHtml, subtitle = "") {
+  const bio = subtitle || user.profile?.bio || "";
+  return `<article class="person-row">
+    <div class="person-main">
+      ${profileImage(user, "person-avatar")}
+      <div class="person-text">
+        <h3>${escapeHtml(user.username)}</h3>
+        ${bio ? `<p>${escapeHtml(bio)}</p>` : `<p class="person-muted">${escapeHtml(t("noBioYet") || "")}</p>`}
+      </div>
+    </div>
+    <div class="person-actions">${actionsHtml}</div>
+  </article>`;
+}
+
+function emptyState(icon, title, text) {
+  return `<div class="empty-state">
+    <div class="empty-icon" aria-hidden="true">${icon}</div>
+    <h3>${escapeHtml(title)}</h3>
+    ${text ? `<p>${escapeHtml(text)}</p>` : ""}
+  </div>`;
 }
 
 async function refreshFriendsPage() {
   const data = await api(`/api/friends?username=${encodeURIComponent(currentUsername())}`);
   state.friendsData = data;
   state.friendsDataLoaded = true;
-  const friendList = document.querySelector("#friendList");
-  const requestList = document.querySelector("#requestList");
-  if (!friendList || !requestList) return;
+  const panel = document.querySelector("#friendsTabPanel");
+  if (!panel) return;
+  const tab = state.friendsTab || "friends";
 
-  friendList.innerHTML = data.friends.length
-    ? data.friends.map((u) => userCard(u, `<div class="result-buttons"><button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${t("viewProfile")}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(u.username)}">${t("message")}</button></div>`)).join("")
-    : `<article class="demo-card"><h3>${t("noFriends")}</h3><p>${t("searchByUsername")}</p></article>`;
+  // Tab counters / badges
+  const cf = document.querySelector("#tabCountFriends");
+  if (cf) cf.textContent = data.friends.length ? ` (${data.friends.length})` : "";
+  const rb = document.querySelector("#tabBadgeRequests");
+  if (rb) {
+    const n = data.incoming?.length || 0;
+    rb.textContent = n > 99 ? "99+" : String(n);
+    setVisible(rb, n > 0);
+  }
 
-  const allRequests = [
-    ...data.incoming.map((u) => userCard(u, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">${t("accept")}</button>`)),
-    ...data.outgoing.map((u) => userCard(u, `<span class="request-status">${t("requestSent")}</span>`))
-  ];
-  requestList.innerHTML = allRequests.length
-    ? allRequests.join("")
-    : `<article class="demo-card"><h3>${t("noPending")}</h3></article>`;
+  if (tab === "friends") {
+    panel.innerHTML = data.friends.length
+      ? `<div class="people-list">${data.friends.map((u) => personRow(u,
+          `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${escapeHtml(t("viewProfile"))}</button>
+           <button class="btn-primary" type="button" data-message-friend="${escapeHtml(u.username)}">${escapeHtml(t("message"))}</button>`
+        )).join("")}</div>`
+      : emptyState("\u{1F465}", t("noFriends"), t("searchByUsername"));
+  } else if (tab === "messages") {
+    panel.innerHTML = `<div class="chat-loading">\u2026</div>`;
+    try {
+      const conv = await api(`/api/messages/conversations?username=${encodeURIComponent(currentUsername())}`);
+      const conversations = conv.conversations || [];
+      const totalUnread = conversations.reduce((sum, c) => sum + (c.unread || 0), 0);
+      const mb = document.querySelector("#tabBadgeMessages");
+      if (mb) { mb.textContent = totalUnread > 99 ? "99+" : String(totalUnread); setVisible(mb, totalUnread > 0); }
+      panel.innerHTML = conversations.length
+        ? `<div class="people-list">${conversations.map((c) => `
+            <article class="person-row conversation-row ${c.unread > 0 ? "has-unread" : ""}" data-open-dm="${escapeHtml(c.with)}">
+              <div class="person-main">
+                ${profileImage({ username: c.with, profile: { picture: c.picture || "" } }, "person-avatar")}
+                <div class="person-text">
+                  <h3>${escapeHtml(c.with)}${c.unread > 0 ? `<span class="tab-badge">${c.unread > 99 ? "99+" : c.unread}</span>` : ""}</h3>
+                  <p class="${c.unread > 0 ? "unread-preview" : ""}">${escapeHtml(c.lastMessage ? c.lastMessage.slice(0, 70) : t("startMessaging"))}</p>
+                </div>
+              </div>
+              <div class="person-actions">
+                <button class="btn-primary" type="button" data-open-dm="${escapeHtml(c.with)}">${escapeHtml(t("message"))}</button>
+              </div>
+            </article>`).join("")}</div>`
+        : emptyState("\u{1F4AC}", t("noConversations"), t("startMessaging"));
+    } catch (e) {
+      panel.innerHTML = emptyState("\u{1F4AC}", t("noConversations"), "");
+    }
+  } else {
+    const incoming = data.incoming.map((u) => personRow(u,
+      `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(u.username)}">${escapeHtml(t("viewProfile"))}</button>
+       <button class="btn-primary" type="button" data-accept-friend="${escapeHtml(u.username)}">${escapeHtml(t("accept"))}</button>`));
+    const outgoing = data.outgoing.map((u) => personRow(u, `<span class="request-status">${escapeHtml(t("requestSent"))}</span>`));
+    const sections = [];
+    if (incoming.length) sections.push(`<div class="people-section-title">${escapeHtml(t("incomingRequests") || t("requests"))}</div><div class="people-list">${incoming.join("")}</div>`);
+    if (outgoing.length) sections.push(`<div class="people-section-title">${escapeHtml(t("sentRequests") || t("requestSent"))}</div><div class="people-list">${outgoing.join("")}</div>`);
+    panel.innerHTML = sections.length ? sections.join("") : emptyState("\u{1F4E8}", t("noPending"), "");
+  }
 
   state.friendsLastRequestCount = data.incoming?.length || 0;
   if (state.notifications) state.notifications.friendRequests = state.friendsLastRequestCount;
-}
-
-async function renderMessagesPage() {
-  pageEyebrow.textContent = t("messages");
-  pageTitle.textContent = t("messages");
-  try {
-    const data = await api(`/api/messages/conversations?username=${encodeURIComponent(currentUsername())}`);
-    const conversations = data.conversations || [];
-    if (!conversations.length) {
-      pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noConversations")}</h3><p>${t("startMessaging")}</p></article>`;
-      return;
-    }
-    pageDemo.innerHTML = `<div class="conversation-list">${conversations.map((conv) => `
-      <article class="group-card ${conv.unread > 0 ? 'has-unread' : ''}" data-conversation="${escapeHtml(conv.with)}">
-        <h3>${escapeHtml(conv.with)}${conv.unread > 0 ? `<span class="group-unread-badge">${conv.unread > 99 ? '99+' : conv.unread}</span>` : ""}</h3>
-        <p class="group-meta">${escapeHtml(conv.lastMessage ? conv.lastMessage.slice(0, 60) : "")}</p>
-        <div class="group-actions"><button class="btn-primary" type="button" data-open-dm="${escapeHtml(conv.with)}">${t("message")}</button></div>
-      </article>`).join("")}</div>`;
-  } catch (e) {
-    console.warn("Messages load error:", e.message);
-    pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noConversations")}</h3></article>`;
-  }
 }
 
 async function openDirectMessage(otherUsername) {
@@ -2849,8 +2938,12 @@ function renderProfilePage() {
     return;
   }
   if (state.activePage === "messages") {
-    state.pageShellRendered = "messages";
-    renderMessagesPage().catch((e) => showError(e.message));
+    // Messages now live inside the Friends page as a tab.
+    state.friendsTab = "messages";
+    if (state.pageShellRendered !== "friends") {
+      state.pageShellRendered = "friends";
+      renderFriendsPage().catch((e) => showError(e.message));
+    }
     return;
   }
   if (state.activePage === "friends") {
@@ -2977,14 +3070,18 @@ async function searchFriends() {
   const input = document.querySelector("#friendSearchInput");
   const results = document.querySelector("#friendSearchResults");
   const query = input?.value.trim() || "";
-  if (!results || !query) return;
+  if (!results) return;
+  if (!query) { results.innerHTML = ""; return; }
   const data = await api(`/api/users/search?username=${encodeURIComponent(currentUsername())}&q=${encodeURIComponent(query)}`);
-  results.innerHTML = data.users.length ? data.users.map((user) => {
-    if (user.friendStatus === "friends") return userCard(user, `<div class="result-buttons"><button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${t("viewProfile")}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${t("message")}</button></div>`);
-    if (user.friendStatus === "incoming") return userCard(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${t("accept")}</button>`);
-    if (user.friendStatus === "requested") return userCard(user, `<span class="request-status">${t("requestSent")}</span>`);
-    return userCard(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">${t("addFriend")}</button>`);
-  }).join("") : `<article class="demo-card"><h3>No users found</h3><p>${t("tryAnotherUsername")}</p></article>`;
+  const rows = data.users.map((user) => {
+    if (user.friendStatus === "friends") return personRow(user, `<button class="btn-ghost" type="button" data-view-profile="${escapeHtml(user.username)}">${escapeHtml(t("viewProfile"))}</button><button class="btn-primary" type="button" data-message-friend="${escapeHtml(user.username)}">${escapeHtml(t("message"))}</button>`);
+    if (user.friendStatus === "incoming") return personRow(user, `<button class="btn-primary" type="button" data-accept-friend="${escapeHtml(user.username)}">${escapeHtml(t("accept"))}</button>`);
+    if (user.friendStatus === "requested") return personRow(user, `<span class="request-status">${escapeHtml(t("requestSent"))}</span>`);
+    return personRow(user, `<button class="btn-primary" type="button" data-add-friend="${escapeHtml(user.username)}">${escapeHtml(t("addFriend"))}</button>`);
+  });
+  results.innerHTML = rows.length
+    ? `<div class="people-section-title">${escapeHtml(t("searchResults") || t("results"))}</div><div class="people-list">${rows.join("")}</div>`
+    : emptyState("\u{1F50D}", t("noUsersFound") || "No users found", t("tryAnotherUsername"));
 }
 
 async function exitGroupPermanently(code) {
@@ -3104,6 +3201,7 @@ function showModal(title, message, buttons = [{ label: t("ok"), primary: true, a
   const panelClass = opts.variant === "danger" ? "modal-panel modal-danger" : "modal-panel";
   overlay.innerHTML = `
     <div class="${panelClass}" role="dialog" aria-modal="true">
+      <button class="modal-close-btn" type="button" id="modalCloseBtn" aria-label="${escapeHtml(t("close") || "Close")}">\u2715</button>
       <h3>${escapeHtml(title)}</h3>
       <div class="modal-body">${bodyHtml}</div>
       <div class="modal-actions">${buttons.map((btn, i) =>
@@ -3111,6 +3209,7 @@ function showModal(title, message, buttons = [{ label: t("ok"), primary: true, a
       ).join("")}</div>
     </div>`;
   document.body.appendChild(overlay);
+  overlay.querySelector("#modalCloseBtn")?.addEventListener("click", () => overlay.remove());
   overlay.querySelectorAll("[data-modal-btn]").forEach((el, i) => {
     el.addEventListener("click", () => { overlay.remove(); buttons[i]?.action?.(); });
   });
@@ -3517,6 +3616,14 @@ pageDemo.addEventListener("click", (e) => {
   if (saveProfileBtn) { saveProfile().catch((err) => showError(err.message)); return; }
   const saveSettingsBtn = e.target.closest("#saveSettingsButton");
   if (saveSettingsBtn) { saveSettings().catch((err) => showError(err.message)); return; }
+  const logoutPageBtn = e.target.closest("#logoutPageButton");
+  if (logoutPageBtn) {
+    showModal(t("logout"), t("logoutConfirm") || "Are you sure you want to log out?", [
+      { label: t("cancel"), primary: false },
+      { label: t("logout"), primary: true, action: () => logout() }
+    ]);
+    return;
+  }
   const deleteAccBtn = e.target.closest("#deleteAccountButton");
   if (deleteAccBtn) { deleteAccount().catch((err) => showError(err.message)); return; }
   const prefAddBtn = e.target.closest("[data-pref-add]");
