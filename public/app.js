@@ -204,7 +204,7 @@ const copy = {
     message: "Message",
     heroEyebrow: "Group plans, minus the group-chat chaos",
     heroTitle: "The plan your whole group actually agrees on.",
-    heroDescription: "Pick an area and an activity together, swipe through real nearby places pulled straight from Google Maps, and vote No, Maybe, or Yes. PlanSwipe surfaces the spots everyone's into — so a night out gets settled in minutes, not a hundred messages.",
+    heroDescription: "PlanSwipe helps your group decide where to go — together. Pick an area and an activity, browse real nearby venues, and vote as a group. Everyone's preferences are weighed automatically, so you land on a place you're all happy with in minutes, not messages.",
     heroNote: "Made for the group chats that can never pick a place.",
     whatPlanswipeIs: "What PlanSwipe is",
     sharedDecisionTool: "One shared way to decide where to go",
@@ -256,6 +256,12 @@ const copy = {
     logoutHint: "You'll be signed out of this device.",
     logoutConfirm: "Are you sure you want to log out?",
     noPastActivities: "No past activities yet",
+    placesHistory: "Places & History",
+    yourActivity: "Your activity",
+    myPlan: "My plan",
+    managePlan: "Manage plan",
+    onFreePlan: "You're on the Free plan.",
+    onProPlan: "You're on the Pro plan.",
     continueBrowsing: "Continue Browsing",
     loadingPlaces: "Loading more places\u2026",
     noMoreSuggestions: "No more places matching your selections. Would you like to change your basics?",
@@ -435,7 +441,7 @@ const copy = {
     message: "Μήνυμα",
     heroEyebrow: "Ομαδικά σχέδια, χωρίς το χάος της ομαδικής συνομιλίας",
     heroTitle: "Το σχέδιο που όλη η παρέα σας πραγματικά συμφωνεί.",
-    heroDescription: "Διαλέξτε περιοχή και δραστηριότητα μαζί, κάντε swipe σε πραγματικά κοντινά μέρη απευθείας από το Google Maps και ψηφίστε Όχι, Ίσως ή Ναι. Το PlanSwipe αναδεικνύει τα μέρη που αρέσουν σε όλους — ώστε η έξοδος να κλείνει σε λεπτά, όχι σε εκατό μηνύματα.",
+    heroDescription: "Το PlanSwipe βοηθά την παρέα σου να αποφασίσει πού θα πάτε — μαζί. Διάλεξε περιοχή και δραστηριότητα, δες πραγματικά κοντινά μέρη και ψηφίστε ομαδικά. Οι προτιμήσεις όλων συνυπολογίζονται αυτόματα, ώστε να καταλήξετε σε ένα μέρος που αρέσει σε όλους μέσα σε λεπτά, όχι σε μηνύματα.",
     heroNote: "Φτιαγμένο για τις παρέες που ποτέ δεν καταλήγουν πού να πάνε.",
     whatPlanswipeIs: "Τι είναι το PlanSwipe",
     sharedDecisionTool: "Ένας κοινός τρόπος να αποφασίζετε πού θα πάτε",
@@ -495,6 +501,12 @@ const copy = {
     logoutHint: "Θα αποσυνδεθείς από αυτή τη συσκευή.",
     logoutConfirm: "Σίγουρα θέλεις να αποσυνδεθείς;",
     noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
+    placesHistory: "Μέρη & Ιστορικό",
+    yourActivity: "Η δραστηριότητά σου",
+    myPlan: "Το πλάνο μου",
+    managePlan: "Διαχείριση πλάνου",
+    onFreePlan: "Είσαι στο δωρεάν πλάνο.",
+    onProPlan: "Είσαι στο Pro πλάνο.",
     continueBrowsing: "Θέλετε να συνεχίσετε να βλέπετε μέρη;",
     noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
     newGroup: "Νέα Ομάδα",
@@ -798,7 +810,7 @@ function applyLanguage() {
 
   profileMenu.querySelectorAll("button[data-page]").forEach((btn) => {
     const k = btn.dataset.page;
-    btn.textContent = k === "personal" ? t("profileAndSettings") : t(k === "likedplaces" ? "likedPlaces" : k);
+    btn.textContent = k === "personal" ? t("profileAndSettings") : t(k === "likedplaces" ? "placesHistory" : k);
   });
   logoutButton.textContent = t("logout");
 
@@ -2463,7 +2475,7 @@ async function handleUpgradeToPro() {
 
 // ====== PAGE PANEL RENDERS ======
 const pageContent = {
-  likedplaces: { title: "Liked Places", eyebrow: "History" },
+  likedplaces: { title: "Places & History", eyebrow: "Your activity" },
   groups: { title: "My Groups", eyebrow: "Groups" },
   friends: { title: "Friends", eyebrow: "People" },
   messages: { title: "Messages", eyebrow: "Chat" },
@@ -2530,12 +2542,29 @@ async function renderPersonalInformation() {
   };
   bioEl?.addEventListener("input", checkDirty);
   ageEl?.addEventListener("change", checkDirty);
+
+  // #6: show the current plan in the "My plan" card.
+  api(`/api/subscription/status?username=${encodeURIComponent(currentUsername())}`)
+    .then((d) => {
+      const el = document.querySelector("#myPlanStatus");
+      if (el) el.textContent = (d.plan === "pro") ? (t("onProPlan") || "You're on the Pro plan.") : (t("onFreePlan") || "You're on the Free plan.");
+    })
+    .catch(() => {});
 }
 
 function settingsSectionsHtml() {
   const settings = state.account?.profile?.settings || {};
   return `
     <div class="settings-block">
+      <section class="wide-panel personal-form my-plan-card">
+        <div class="my-plan-head">
+          <div>
+            <h3>${t("myPlan") || "My plan"}</h3>
+            <p class="muted-note" id="myPlanStatus">\u2026</p>
+          </div>
+          <button class="btn-primary" type="button" id="managePlanButton">${t("managePlan") || "Manage plan"}</button>
+        </div>
+      </section>
       <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
         <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
         <div class="settings-toggle"><label for="notifGroupInvite">${t("groupInviteNotif")}</label><input type="checkbox" id="notifGroupInvite" ${settings.groupInviteNotif !== false ? "checked" : ""}></div>
@@ -2830,33 +2859,39 @@ async function renderGroupsPage() {
   pageDemo.innerHTML = html;
 }
 
-async function renderLikedPlacesPage() {
-  pageEyebrow.textContent = t("likedPlaces");
-  pageTitle.textContent = t("likedPlaces");
-  try {
-    const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
-    const places = data.places || [];
-    pageDemo.innerHTML = places.length
-      ? places.map((item) => `<div class="liked-place-card"><h3>${escapeHtml(item.place)}</h3><p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p><span class="vote-tag ${escapeHtml(item.vote)}">${escapeHtml(item.vote)}</span><span class="group-meta">${escapeHtml(item.groupName || "")}</span></div>`).join("")
-      : `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
-  } catch (e) {
-    console.warn("Liked places load error:", e.message);
-    pageDemo.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
-  }
-}
-
-async function renderPastPage() {
+async function renderPlacesHistoryPage() {
+  pageEyebrow.textContent = t("yourActivity") || "Your activity";
+  pageTitle.textContent = t("placesHistory") || "Places & History";
   const account = await loadAccount();
   const activities = account.profile?.pastActivities || [];
   pageDemo.innerHTML = `
-    <section class="wide-panel"><button class="btn-primary" type="button" id="showPastActivityForm">${t("logPastActivity")}</button>
-    <form class="setup-form is-hidden" id="pastActivityForm">
-      <label class="field"><span>${t("area")}</span><input id="pastAreaInput" type="text" placeholder="Athens seaside"></label>
-      <label class="field"><span>${t("activity")}</span><input id="pastActivityInput" type="text" placeholder="Dinner"></label>
-      <label class="field"><span>${t("place")}</span><input id="pastPlaceInput" type="text" placeholder="Restaurant name"></label>
-      <button class="btn-primary" type="button" id="savePastActivityButton">${t("saveActivity")}</button>
-    </form></section>
-    ${activities.length ? activities.map((a, idx) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p><div class="result-buttons" style="margin-top:8px;"><button class="btn-primary" type="button" data-past-fav="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("addToFavourites")}</button><button class="danger-button" type="button" data-past-remove="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("remove")}</button></div></article>`).join("") : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}`;
+    <section class="wide-panel"><h3>${t("likedPlaces")}</h3>
+      <div id="likedPlacesList" class="places-list"><div class="chat-loading">\u2026</div></div>
+    </section>
+    <section class="wide-panel">
+      <div class="section-head-row"><h3>${t("past")}</h3>
+        <button class="btn-primary" type="button" id="showPastActivityForm">${t("logPastActivity")}</button></div>
+      <form class="setup-form is-hidden" id="pastActivityForm">
+        <label class="field"><span>${t("area")}</span><input id="pastAreaInput" type="text" placeholder="Athens seaside"></label>
+        <label class="field"><span>${t("activity")}</span><input id="pastActivityInput" type="text" placeholder="Dinner"></label>
+        <label class="field"><span>${t("place")}</span><input id="pastPlaceInput" type="text" placeholder="Restaurant name"></label>
+        <button class="btn-primary" type="button" id="savePastActivityButton">${t("saveActivity")}</button>
+      </form>
+      <div class="places-list">
+        ${activities.length ? activities.map((a, idx) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p><div class="result-buttons" style="margin-top:8px;"><button class="btn-primary" type="button" data-past-fav="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("addToFavourites")}</button><button class="danger-button" type="button" data-past-remove="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("remove")}</button></div></article>`).join("") : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}
+      </div>
+    </section>`;
+  try {
+    const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
+    const places = data.places || [];
+    const list = document.querySelector("#likedPlacesList");
+    if (list) list.innerHTML = places.length
+      ? places.map((item) => `<div class="liked-place-card"><h3>${escapeHtml(item.place)}</h3><p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p><span class="vote-tag ${escapeHtml(item.vote)}">${escapeHtml(item.vote)}</span><span class="group-meta">${escapeHtml(item.groupName || "")}</span></div>`).join("")
+      : `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+  } catch (e) {
+    const list = document.querySelector("#likedPlacesList");
+    if (list) list.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+  }
 }
 
 async function savePastActivity() {
@@ -2868,7 +2903,7 @@ async function savePastActivity() {
   const pastActivities = [{ area, activity, place, loggedAt: Date.now() }, ...(profile.pastActivities || [])].slice(0, 50);
   const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, pastActivities } } });
   saveAccount(data.user);
-  await renderPastPage();
+  await renderPlacesHistoryPage();
 }
 
 async function renderAccountProfile(username) {
@@ -2964,14 +2999,9 @@ function renderProfilePage() {
     }
     return;
   }
-  if (state.activePage === "likedplaces") {
+  if (state.activePage === "likedplaces" || state.activePage === "past") {
     state.pageShellRendered = "likedplaces";
-    renderLikedPlacesPage().catch((e) => showError(e.message));
-    return;
-  }
-  if (state.activePage === "past") {
-    state.pageShellRendered = "past";
-    renderPastPage().catch((e) => showError(e.message));
+    renderPlacesHistoryPage().catch((e) => showError(e.message));
     return;
   }
   if (state.activePage === "settings") {
@@ -3666,6 +3696,8 @@ pageDemo.addEventListener("click", (e) => {
       .catch((err) => showError(err.message));
     return;
   }
+  const managePlanBtn = e.target.closest("#managePlanButton");
+  if (managePlanBtn) { state.activePage = "subscription"; state.returnRoute = "/personal"; navigate("/subscription"); return; }
   const upgradeBtn = e.target.closest("#upgradeToProBtn");
   if (upgradeBtn) { handleUpgradeToPro().catch((err) => showError(err.message)); return; }
   const acceptInviteBtn = e.target.closest("[data-accept-invite]");
@@ -3692,7 +3724,7 @@ pageDemo.addEventListener("click", (e) => {
     const newActivities = activities.filter((_, i) => i !== idx);
     const profile = state.account?.profile || {};
     api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, pastActivities: newActivities } } })
-      .then((data) => { saveAccount(data.user); renderPastPage(); })
+      .then((data) => { saveAccount(data.user); renderPlacesHistoryPage(); })
       .catch((err) => showError(err.message));
     return;
   }
