@@ -93,6 +93,8 @@ const mimeTypes = {
   ".gif":  "image/gif",
   ".svg":  "image/svg+xml",
   ".ico":  "image/x-icon",
+  ".xml":  "application/xml; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
   ".txt":  "text/plain; charset=utf-8"
 };
 
