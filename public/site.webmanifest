@@ -1,0 +1,14 @@
+{
+  "name": "PlanSwipe",
+  "short_name": "PlanSwipe",
+  "description": "Group planning made simple — discover places, swipe, and vote together.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f3ef",
+  "theme_color": "#12805e",
+  "icons": [
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
