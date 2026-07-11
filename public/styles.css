@@ -527,7 +527,7 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   margin-bottom: 2px;
 }
 
-.topbar h1 {
+.topbar .topbar-name {
   font-size: 1.3rem;
   letter-spacing: -0.02em;
 }
@@ -2263,7 +2263,7 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 /* ---- Type: characterful display face for headings, coral eyebrows ---- */
 h1, h2, h3,
 .hero-copy h1,
-.topbar h1,
+.topbar .topbar-name,
 .page-header h2,
 .results-header h2,
 .group-section-title,
@@ -2413,7 +2413,7 @@ input:focus, textarea:focus, select:focus,
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
-.topbar h1 { font-family: var(--font-display); letter-spacing: -0.02em; }
+.topbar .topbar-name { font-family: var(--font-display); letter-spacing: -0.02em; }
 
 /* ---- Profile button + menu ---- */
 .profile-button {
@@ -2791,7 +2791,7 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
     width: 34px;
     height: 34px;
   }
-  .topbar h1 {
+  .topbar .topbar-name {
     font-size: 1rem;
     line-height: 1;
     white-space: nowrap;
@@ -3325,3 +3325,142 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 .wide-panel, .personal-form { box-sizing: border-box; }
 .wide-panel input, .wide-panel textarea, .wide-panel select,
 .personal-form input, .personal-form textarea, .personal-form select { max-width: 100%; box-sizing: border-box; }
+
+/* ============================================================
+   Mobile fit — My Groups / Friends / Places & History
+   Stop button rows and long text from overflowing the viewport.
+   ============================================================ */
+/* Section titles span the full grid width instead of half */
+.group-section-title { grid-column: 1 / -1; }
+
+/* Grid/flex children must be allowed to shrink below content size */
+.demo-grid > *,
+.group-card,
+.people-list > *,
+.person-row,
+.liked-place-card { min-width: 0; }
+
+/* Long unbreakable text (names, codes, addresses) wraps instead of pushing width */
+.group-card h3,
+.group-card .group-meta,
+.person-text h3,
+.person-text p,
+.liked-place-card h3,
+.liked-place-card p,
+.demo-card h3,
+.demo-card p { overflow-wrap: anywhere; word-break: break-word; }
+
+@media (max-width: 640px) {
+  .page-panel { padding: 16px; }
+
+  /* All action button rows wrap and share width evenly */
+  .group-card .group-actions,
+  .liked-place-card .result-buttons,
+  .demo-card .result-buttons,
+  .person-actions,
+  .detail-actions,
+  .results-actions {
+    flex-wrap: wrap;
+  }
+  .group-card .group-actions > button,
+  .liked-place-card .result-buttons > button,
+  .demo-card .result-buttons > button {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  /* History: liked places go single-column so nothing is squeezed */
+  #likedPlacesList { grid-template-columns: 1fr; }
+
+  /* Friends search pill keeps its button from overflowing */
+  .friends-search { flex-wrap: wrap; }
+  .friends-search input { flex: 1 1 140px; }
+}
+
+/* ============================================================
+   Voting UI polish — refined circular buttons + smoother motion
+   (appended: overrides earlier swipe styles)
+   ============================================================ */
+.swipe-actions {
+  gap: 16px;
+  margin-top: 10px;
+  padding: 6px 0;
+}
+
+.swipe-btn {
+  border-width: 0;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(23, 24, 29, 0.10), 0 1px 2px rgba(23, 24, 29, 0.06);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease, background 0.2s ease, color 0.2s ease;
+}
+.swipe-btn::before { transition: transform 0.2s ease; }
+.swipe-btn:hover { transform: translateY(-4px) scale(1.08); }
+.swipe-btn:hover::before { transform: scale(1.12); }
+.swipe-btn:active { transform: translateY(0) scale(0.9); transition-duration: 0.09s; }
+
+/* No — red */
+.swipe-btn.no { box-shadow: 0 6px 16px rgba(211, 56, 74, 0.18); }
+.swipe-btn.no:hover { background: var(--red); }
+.swipe-btn.no:hover::before { color: #fff; }
+
+/* Maybe — blue */
+.swipe-btn.maybe { box-shadow: 0 6px 16px rgba(58, 123, 213, 0.18); }
+.swipe-btn.maybe:hover { background: #3a7bd5; }
+.swipe-btn.maybe:hover::before { color: #fff; }
+
+/* Yes — the hero action: filled green gradient, white heart */
+.swipe-btn.yes {
+  background: linear-gradient(140deg, var(--green-bright), var(--green));
+  box-shadow: 0 10px 24px rgba(18, 128, 94, 0.34);
+}
+.swipe-btn.yes::before { color: #fff; }
+.swipe-btn.yes:hover { box-shadow: 0 16px 32px rgba(18, 128, 94, 0.42); }
+
+/* Undo + Favourite — quieter secondary actions */
+.swipe-btn.undo, .swipe-btn.fav { box-shadow: 0 4px 12px rgba(23, 24, 29, 0.10); }
+.swipe-btn.undo::before { color: var(--muted); }
+.swipe-btn.fav::before { color: #6d4bd0; }
+.swipe-btn.fav:hover { background: #f2ecff; }
+.swipe-btn.fav.is-favourited { background: var(--gold); box-shadow: 0 8px 20px rgba(255, 210, 122, 0.5); }
+.swipe-btn.fav.is-favourited::before { color: #7a5b12; }
+
+/* Subtle idle bob on the Yes button to invite the primary action */
+@media (prefers-reduced-motion: no-preference) {
+  .swipe-btn.yes { animation: yesPulse 2.8s ease-in-out infinite; }
+  @keyframes yesPulse {
+    0%, 100% { box-shadow: 0 10px 24px rgba(18, 128, 94, 0.34); }
+    50% { box-shadow: 0 12px 30px rgba(18, 128, 94, 0.46); }
+  }
+}
+
+/* Smoother card motion: springy snap-back, graceful new-card entrance */
+.activity-card { transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .card-deck > .activity-card { animation: cardIn 0.34s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* Nicer drag hint chip */
+.swipe-hint {
+  border-width: 0;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(23, 24, 29, 0.18);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.swipe-hint.hint-yes { color: var(--green-strong); }
+.swipe-hint.hint-no { color: var(--red); }
+.swipe-hint.hint-maybe { color: #3a7bd5; }
+
+/* Global smoothing touches */
+html { scroll-behavior: smooth; }
+.btn-primary, .btn-ghost, .swipe-btn, .friends-tab, .search-mode-btn, .person-row, .group-card, .search-card {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
