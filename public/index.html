@@ -121,7 +121,7 @@
             </article>
             <article>
               <h3>Vote and match together</h3>
-              <p>Swipe No, Maybe, or Yes on each spot and instantly see which places your group agrees on. When everyone's in, you've got your plan.</p>
+              <p>Swipe through each spot — right to like, left to pass, up for maybe — and instantly see which places your group agrees on. When everyone's in, you've got your plan.</p>
             </article>
           </div>
         </section>
@@ -153,7 +153,6 @@
             <nav class="profile-menu is-hidden" id="profileMenu" aria-label="Profile menu">
               <button type="button" data-page="groups">My Groups</button>
               <button type="button" data-page="friends">Friends</button>
-              <button type="button" data-page="messages">Messages</button>
               <button type="button" data-page="likedplaces">Places &amp; History</button>
               <button type="button" data-page="personal">Profile &amp; Settings</button>
               <button type="button" id="logoutButton">Logout</button>
@@ -266,30 +265,35 @@
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
           <div class="search-summary" id="searchSummary">Searching...</div>
-          <div class="activity-card" id="activityCard">
-            <img class="activity-photo" id="activityPhoto" alt="" loading="lazy">
-            <div class="card-copy">
-              <div>
-                <p class="activity-category" id="activityCategory">Category</p>
-                <h2 id="activityTitle">Place</h2>
+          <div class="card-deck">
+            <div class="activity-card" id="activityCard">
+              <button class="card-more-btn" id="reviewsButton" type="button">More</button>
+              <div class="swipe-hint" id="swipeHint" aria-hidden="true"></div>
+              <img class="activity-photo" id="activityPhoto" alt="" loading="lazy">
+              <div class="card-copy">
+                <div>
+                  <p class="activity-category" id="activityCategory">Category</p>
+                  <h2 id="activityTitle">Place</h2>
+                </div>
+                <p id="activityDescription">Description</p>
+                <div class="activity-meta">
+                  <span id="activityArea">Area</span>
+                  <span id="activityTime">Time</span>
+                  <span id="activityCost">Cost</span>
+                </div>
+                <div class="place-contact" id="activityContact"></div>
               </div>
-              <p id="activityDescription">Description</p>
-              <div class="activity-meta">
-                <span id="activityArea">Area</span>
-                <span id="activityTime">Time</span>
-                <span id="activityCost">Cost</span>
-              </div>
-              <div class="place-contact" id="activityContact"></div>
             </div>
           </div>
+          <p class="swipe-tip" id="swipeTip"></p>
+          <div class="swipe-actions" aria-label="Swipe choices">
+            <button class="swipe-btn undo" id="undoButton" type="button" aria-label="Undo"></button>
+            <button class="swipe-btn no" id="noButton" type="button" aria-label="No"></button>
+            <button class="swipe-btn maybe" id="maybeButton" type="button" aria-label="Maybe"></button>
+            <button class="swipe-btn yes" id="yesButton" type="button" aria-label="Yes"></button>
+            <button class="swipe-btn fav" id="favButton" type="button" aria-label="Add to Favourites"></button>
+          </div>
         </article>
-        <div class="actions" aria-label="Swipe choices">
-          <button class="choice-button no" id="noButton" type="button" aria-label="No">No</button>
-          <button class="choice-button maybe" id="maybeButton" type="button" aria-label="Maybe">Maybe</button>
-          <button class="choice-button yes" id="yesButton" type="button" aria-label="Yes">Yes</button>
-          <button class="choice-button favourite" id="favButton" type="button" aria-label="Add to Favourites">Add to Favourites</button>
-          <button class="choice-button reviews" id="reviewsButton" type="button" aria-label="Reviews">Reviews</button>
-        </div>
       </section>
 
       <!-- Results panel -->

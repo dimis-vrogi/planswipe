@@ -90,6 +90,7 @@ const noButton             = document.querySelector("#noButton");
 const maybeButton          = document.querySelector("#maybeButton");
 const yesButton            = document.querySelector("#yesButton");
 const favButton            = document.querySelector("#favButton");
+const undoButton           = document.querySelector("#undoButton");
 const reviewsButton        = document.querySelector("#reviewsButton");
 const resultList           = document.querySelector("#resultList");
 const resultsSelectedCount = document.querySelector("#resultsSelectedCount");
@@ -211,7 +212,9 @@ const copy = {
     offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the winners rise to the top. No polls, no pressure, no 200-message thread that ends in \"idk, you pick\".",
     agreeFaster: "Agree on the basics first", agreeFasterText: "Everyone chooses an area and the type of night out together. Once the group agrees, PlanSwipe takes it from there — no endless back-and-forth.",
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
-    voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe No, Maybe, or Yes on each spot and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
+    swipeTip: "Swipe right to like, left to pass, up for maybe",
+    moreButton: "More",
+    voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass, up for maybe — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
@@ -387,7 +390,9 @@ const copy = {
     searchByNamePlaceholder: "Place name (e.g. a bar or restaurant)",
     areaFreeTextPlaceholder: "Type an area, neighborhood, or leave blank",
     categoryFreeTextPlaceholder: "Type anything, e.g. sushi, cocktails, cinema",
-    ageFreeTextPlaceholder: "Type an age group or vibe, e.g. 18-24",
+    ageFreeTextPlaceholder: "type an age group, e.g. 18-24",
+    commentsOptional: "Comments (optional)",
+    commentsPlaceholder: "Anything else? e.g. vegan options, quiet, budget-friendly, outdoor seating",
     aiFilteredResults: "AI-filtered by area, activity, then age group.",
     enterPlaceName: "Enter a place name to search.",
     chooseCategory: "Choose a category to browse.",
@@ -450,8 +455,10 @@ const copy = {
     agreeFasterText: "Όλοι διαλέγουν περιοχή και είδος εξόδου μαζί. Μόλις η ομάδα συμφωνήσει, το PlanSwipe αναλαμβάνει — χωρίς ατελείωτες συζητήσεις.",
     discoverOptions: "Ανακαλύψτε πραγματικά μέρη",
     discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
+    swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση, πάνω για “ίσως”",
+    moreButton: "Περισσότερα",
     voteAsGroup: "Ψηφίστε και ταιριάξτε μαζί",
-    voteAsGroupText: "Κάντε swipe Όχι, Ίσως ή Ναι σε κάθε μέρος και δείτε αμέσως ποια μέρη συμφωνεί η ομάδα σας. Όταν συμφωνούν όλοι, έχετε το σχέδιό σας.",
+    voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση, πάνω για ίσως — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
     dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
     seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
     startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
@@ -702,7 +709,7 @@ Object.assign(copy.el, {
   noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
   agreeFasterText: "Έπιλέξτε περιοχή και είδος μαζί. Έτσι δεν χάνει η ομαδική συνομιλία.",
   discoverOptionsText: "Ανακαλύψτε πραγματικές προτάσεις από το Google Maps για την περιοχή και δραστηριότητα της ομάδας σας.",
-  voteAsGroupText: "Κάντε swipe και ψηφίστε Όχι, Ίσως ή Ναι. Δείτε αμέσως ποια μέρη έχουν τη μεγαλύτερη υποστήριξη."
+  voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση, πάνω για ίσως — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο."
 });
 
 Object.assign(copy.el, {
@@ -721,7 +728,8 @@ Object.assign(copy.el, {
   searchPlaces: "Αναζήτηση μερών",
   areaFreeTextPlaceholder: "Γράψτε περιοχή ή γειτονιά ή αφήστε κενό",
   categoryFreeTextPlaceholder: "Γράψτε ό,τι θέλετε, π.χ. sushi, cocktails, σινεμά",
-  ageFreeTextPlaceholder: "Γράψτε ηλικία ή ύφος, π.χ. 18-24",
+  ageFreeTextPlaceholder: "γράψε ηλικιακή ομάδα, π.χ. 18-24",
+  commentsOptional: "Σχόλια (προαιρετικά)",
   aiFilteredResults: "Φιλτράρισμα με AI: πρώτα περιοχή, μετά δραστηριότητα, μετά ηλικία."
 });
 
@@ -1199,7 +1207,7 @@ function renderCard() {
     renderResults();
     return;
   }
-  activityCard.classList.remove("swipe-yes", "swipe-no");
+  resetCardTransform();
   activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
   activityPhoto.alt               = place.title;
   const ratingText = place.rating ? `${Number(place.rating).toFixed(1)} \u2605` : "";
@@ -1218,19 +1226,23 @@ function renderCard() {
     if (place.mapsUrl) parts.push(`<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener">\u{1F5FA}\uFE0F ${escapeHtml(t("openInMaps"))}</a>`);
     contactEl.innerHTML = parts.join("");
   }
-  noButton.textContent      = t("choiceNo");
-  maybeButton.textContent   = t("choiceMaybe");
-  yesButton.textContent     = t("choiceYes");
-  [noButton, maybeButton, yesButton, favButton].forEach((btn) => {
+  // Icon buttons (labels live in aria-label / the swipe tip)
+  if (noButton) noButton.setAttribute("aria-label", t("choiceNo"));
+  if (maybeButton) maybeButton.setAttribute("aria-label", t("choiceMaybe"));
+  if (yesButton) yesButton.setAttribute("aria-label", t("choiceYes"));
+  if (undoButton) undoButton.disabled = state.index <= 0;
+  const swipeTip = document.querySelector("#swipeTip");
+  if (swipeTip) swipeTip.textContent = t("swipeTip");
+  [noButton, maybeButton, yesButton, favButton, undoButton].forEach((btn) => {
     if (btn) btn.classList.toggle("is-voting", state.votingInProgress);
   });
   if (favButton) {
     const preferences = getPreferences();
     const alreadyFav = (preferences.places || []).some((p) => p.toLowerCase() === place.title?.toLowerCase());
-    favButton.textContent = alreadyFav ? `\u2605 ${t("favourited")}` : `\u2606 ${t("addToFavourites")}`;
+    favButton.setAttribute("aria-label", alreadyFav ? t("favourited") : t("addToFavourites"));
     favButton.classList.toggle("is-favourited", alreadyFav);
   }
-  if (reviewsButton) reviewsButton.textContent = t("reviews");
+  if (reviewsButton) reviewsButton.textContent = t("moreButton") || "More";
 }
 
 function renderResults() {
@@ -2075,6 +2087,25 @@ async function changeBasics() {
   state.group = data.group; renderApp();
 }
 
+function flyOffCard(dir) {
+  const x = dir === "right" ? 720 : dir === "left" ? -720 : 0;
+  const y = dir === "up" ? -820 : 40;
+  const rot = dir === "right" ? 18 : dir === "left" ? -18 : 0;
+  activityCard.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+  activityCard.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+  activityCard.style.opacity = "0";
+}
+function resetCardTransform() {
+  activityCard.style.transition = "";
+  activityCard.style.transform = "";
+  activityCard.style.opacity = "";
+  const hint = document.querySelector("#swipeHint");
+  if (hint) { hint.style.opacity = "0"; hint.className = "swipe-hint"; }
+}
+function dirForVote(value) {
+  return value === "yes" ? "right" : value === "no" ? "left" : "up";
+}
+
 async function vote(value) {
   if (state.votingInProgress) return;
   const places = state.group.places || [];
@@ -2082,17 +2113,76 @@ async function vote(value) {
   if (!place) return;
   state.votingInProgress = true;
   [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.add("is-voting"); });
-  activityCard.classList.add(value === "yes" ? "swipe-yes" : "swipe-no");
+  flyOffCard(dirForVote(value));
   try {
     const data = await api(`/api/groups/${state.group.code}/vote`, { method: "POST", body: { userId: state.user.id, placeId: place.id, vote: value } });
     state.group = data.group;
-    setTimeout(() => { state.index += 1; state.votingInProgress = false; renderApp(); }, 170);
+    setTimeout(() => { state.index += 1; state.votingInProgress = false; renderApp(); }, 240);
   } catch (e) {
     state.votingInProgress = false;
-    activityCard.classList.remove("swipe-yes", "swipe-no");
+    resetCardTransform();
     [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.remove("is-voting"); });
     throw e;
   }
+}
+
+// ===== Swipe / drag gestures on the card =====
+let cardDrag = null;
+function setupCardSwipe() {
+  activityCard.addEventListener("pointerdown", (e) => {
+    if (state.votingInProgress) return;
+    if (!state.group?.places?.[state.index]) return;
+    if (e.target.closest("a, button")) return; // let links / "More" work
+    cardDrag = { x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, id: e.pointerId };
+    activityCard.style.transition = "none";
+    try { activityCard.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  activityCard.addEventListener("pointermove", (e) => {
+    if (!cardDrag) return;
+    cardDrag.dx = e.clientX - cardDrag.x0;
+    cardDrag.dy = e.clientY - cardDrag.y0;
+    activityCard.style.transform = `translate(${cardDrag.dx}px, ${cardDrag.dy}px) rotate(${cardDrag.dx / 20}deg)`;
+    updateSwipeHint(cardDrag.dx, cardDrag.dy);
+  });
+  const finish = () => {
+    if (!cardDrag) return;
+    const { dx, dy } = cardDrag;
+    cardDrag = null;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    const THRESH = 95;
+    let value = null;
+    if (absY > absX && dy < -THRESH) value = "maybe";
+    else if (dx > THRESH) value = "yes";
+    else if (dx < -THRESH) value = "no";
+    if (value) {
+      vote(value).catch((e) => showError(e.message));
+    } else {
+      activityCard.style.transition = "transform 0.25s ease";
+      activityCard.style.transform = "";
+      const hint = document.querySelector("#swipeHint");
+      if (hint) { hint.style.opacity = "0"; hint.className = "swipe-hint"; }
+    }
+  };
+  activityCard.addEventListener("pointerup", finish);
+  activityCard.addEventListener("pointercancel", finish);
+}
+
+function updateSwipeHint(dx, dy) {
+  const hint = document.querySelector("#swipeHint");
+  if (!hint) return;
+  const absX = Math.abs(dx), absY = Math.abs(dy);
+  let label = "", cls = "";
+  if (absY > absX && dy < -40) { label = t("choiceMaybe"); cls = "hint-maybe"; }
+  else if (dx > 40) { label = t("choiceYes"); cls = "hint-yes"; }
+  else if (dx < -40) { label = t("choiceNo"); cls = "hint-no"; }
+  hint.className = "swipe-hint" + (cls ? " " + cls : "");
+  hint.textContent = label;
+  hint.style.opacity = label ? String(Math.min(1, Math.max(absX, absY) / 120)) : "0";
+}
+
+function undoVote() {
+  if (state.votingInProgress) return;
+  if (state.index > 0) { state.index -= 1; renderApp(); }
 }
 
 async function selectPlace(placeId) {
@@ -2237,6 +2327,7 @@ function openPlacesSearch() {
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
+        <label class="search-comments-label">${escapeHtml(t("commentsOptional"))}<textarea id="searchComments" rows="2" placeholder="${escapeHtml(t("commentsPlaceholder"))}"></textarea></label>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     } else {
       fields.innerHTML = `
@@ -2245,6 +2336,7 @@ function openPlacesSearch() {
           <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
+        <label class="search-comments-label">${escapeHtml(t("commentsOptional"))}<textarea id="searchComments" rows="2" placeholder="${escapeHtml(t("commentsPlaceholder"))}"></textarea></label>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     }
     overlay.querySelector("#runSearchBtn").addEventListener("click", () => runPlacesSearch(overlay, mode));
@@ -2270,11 +2362,12 @@ async function runPlacesSearch(overlay, mode) {
   const query = overlay.querySelector("#searchQueryInput")?.value.trim() || "";
   const category = overlay.querySelector("#searchCategory")?.value || "";
   const ageGroup = overlay.querySelector("#searchAge")?.value || "";
+  const comments = overlay.querySelector("#searchComments")?.value.trim() || "";
   if (mode === "name" && !query) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("enterPlaceName"))}</p>`; return; }
   if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
   resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
   try {
-    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, language: state.language } });
+    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, comments, language: state.language } });
     renderPlaceSearchResults(resultsEl, data);
   } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
 }
@@ -3486,6 +3579,8 @@ memberRow.addEventListener("click", (e) => {
 noButton.addEventListener("click", () => vote("no").catch((e) => showError(e.message)));
 maybeButton.addEventListener("click", () => vote("maybe").catch((e) => showError(e.message)));
 yesButton.addEventListener("click", () => vote("yes").catch((e) => showError(e.message)));
+if (undoButton) undoButton.addEventListener("click", undoVote);
+setupCardSwipe();
 backChoiceButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
 reviewButton.addEventListener("click", () => changeBasics().catch((e) => showError(e.message)));
 document.querySelector("#openPlacesSearchButton")?.addEventListener("click", openPlacesSearch);
