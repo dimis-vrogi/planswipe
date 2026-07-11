@@ -763,11 +763,15 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
   }
 }
 
-async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGroup = "", maxCount = 12) {
+async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGroup = "", maxCount = 12, comments = "") {
   if (!openAiApiKey || !googlePlaces.length) return googlePlaces.slice(0, maxCount);
   const cleanArea = String(area || "").trim() || "Athens";
   const cleanActivity = String(activity || "").trim();
   const cleanAge = String(ageGroup || "").trim();
+  const cleanComments = String(comments || "").trim().slice(0, 500);
+  const commentsClause = cleanComments
+    ? ` 4) Honor the user's extra notes/preferences as strict requirements: "${cleanComments}" — exclude any candidate that clearly conflicts with them.`
+    : "";
   try {
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -781,7 +785,7 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
           },
           {
             role: "user",
-            content: `Strictly select places using this priority order: 1) Area must clearly fit "${cleanArea}". 2) Activity/category must clearly fit "${cleanActivity}". 3) Age group or vibe should fit "${cleanAge || "not specified"}". Exclude any candidate that does not clearly satisfy the area and activity. If none clearly fit, return an empty array. Rank the remaining places by area fit first, activity fit second, age/vibe fit third. Pick up to ${maxCount}. Candidates: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, category: p.category, area: p.areaLabel, address: p.address || p.description, rating: p.rating, types: p.primaryType })))}`
+            content: `Strictly select places using this priority order: 1) Area must clearly fit "${cleanArea}". 2) Activity/category must clearly fit "${cleanActivity}". 3) Age group or vibe should fit "${cleanAge || "not specified"}".${commentsClause} Exclude any candidate that does not clearly satisfy the area and activity. If none clearly fit, return an empty array. Rank the remaining places by area fit first, activity fit second, age/vibe and notes third. Pick up to ${maxCount}. Candidates: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, category: p.category, area: p.areaLabel, address: p.address || p.description, rating: p.rating, types: p.primaryType })))}`
           }
         ],
         temperature: 0.1,
@@ -1773,6 +1777,7 @@ async function handleApi(request, response) {
     const areaText = String(body.areaId || body.area || "").trim().slice(0, 120);
     const categoryText = String(body.category || "").trim().slice(0, 120);
     const ageGroup = String(body.ageGroup || "").trim();
+    const comments = String(body.comments || "").trim().slice(0, 500);
     const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
@@ -1790,7 +1795,7 @@ async function handleApi(request, response) {
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
       const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
       const candidates = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 20, [], language) || [];
-      const results = await refineSearchPlacesWithOpenAI(candidates, searchArea.label, catLabel, ageGroup, 12);
+      const results = await refineSearchPlacesWithOpenAI(candidates, searchArea.label, catLabel, ageGroup, 12, comments);
       sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label, aiFiltered: Boolean(openAiApiKey) });
       return;
     }
