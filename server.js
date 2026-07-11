@@ -240,7 +240,16 @@ function serveStatic(request, response) {
       }
       response.writeHead(500); response.end("Server error"); return;
     }
-    response.writeHead(200, { "Content-Type": mimeType(filePath) });
+    const ext = path.extname(filePath).toLowerCase();
+    const headers = { "Content-Type": mimeType(filePath) };
+    if ([".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webmanifest", ".woff", ".woff2"].includes(ext)) {
+      headers["Cache-Control"] = "public, max-age=2592000, immutable"; // 30 days
+    } else if ([".css", ".js"].includes(ext)) {
+      headers["Cache-Control"] = "public, max-age=86400"; // 1 day
+    } else if (ext === ".html") {
+      headers["Cache-Control"] = "no-cache";
+    }
+    response.writeHead(200, headers);
     response.end(data);
   });
 }
