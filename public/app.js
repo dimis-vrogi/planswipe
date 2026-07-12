@@ -213,6 +213,40 @@ const copy = {
     agreeFaster: "Agree on the basics first", agreeFasterText: "Everyone chooses an area and the type of night out together. Once the group agrees, PlanSwipe takes it from there — no endless back-and-forth.",
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
     swipeTip: "Swipe right to like, left to pass, up for maybe",
+    place: "Place",
+    navHome: "Home", navGroups: "Groups", navSearch: "Search", navFriends: "Friends", navProfile: "Profile",
+    appearance: "Appearance", darkMode: "Dark mode",
+    lockInPrompt: "You're all agreed! Set a date and time to lock it in.",
+    lockPlan: "Lock in plan",
+    planLocked: "Plan locked",
+    goingCount: "going",
+    cantMakeCount: "can't make it",
+    imIn: "I'm in",
+    cantMakeIt: "Can't make it",
+    addToCalendar: "Add to calendar",
+    downloadIcs: "Download .ics",
+    changeDate: "Change date",
+    pickDateTime: "Please pick a date and time",
+    tieTitle: "It's a tie!",
+    tieBody: "A few places are neck and neck. Start a quick runoff to settle it.",
+    startRunoff: "Start runoff",
+    runoffTitle: "Runoff — pick one",
+    runoffWinner: "Winner",
+    cancelRunoff: "Cancel runoff",
+    dismiss: "Dismiss",
+    vote: "vote", votes: "votes",
+    openNow: "Open now",
+    closedNow: "Closed",
+    tutorialTitle: "How voting works",
+    tutRight: "Swipe right to like",
+    tutLeft: "Swipe left to pass",
+    tutUp: "Swipe up for maybe",
+    tutNote: "You can also use the buttons below.",
+    gotIt: "Got it",
+    itsAMatch: "It's a match!",
+    matchBody: "Your group agreed on {place}. Time to make it happen!",
+    nice: "Nice!",
+    yourPlace: "your place",
     moreButton: "More",
     voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass, up for maybe — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
@@ -456,6 +490,40 @@ const copy = {
     discoverOptions: "Ανακαλύψτε πραγματικά μέρη",
     discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
     swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση, πάνω για “ίσως”",
+    place: "Μέρος",
+    navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Αναζήτηση", navFriends: "Φίλοι", navProfile: "Προφίλ",
+    appearance: "Εμφάνιση", darkMode: "Σκοτεινό θέμα",
+    lockInPrompt: "Συμφωνήσατε! Ορίστε ημερομηνία και ώρα για να το κλειδώσετε.",
+    lockPlan: "Κλείδωμα σχεδίου",
+    planLocked: "Το σχέδιο κλειδώθηκε",
+    goingCount: "έρχονται",
+    cantMakeCount: "δεν μπορούν",
+    imIn: "Έρχομαι",
+    cantMakeIt: "Δεν μπορώ",
+    addToCalendar: "Προσθήκη στο ημερολόγιο",
+    downloadIcs: "Λήψη .ics",
+    changeDate: "Αλλαγή ημερομηνίας",
+    pickDateTime: "Επίλεξε ημερομηνία και ώρα",
+    tieTitle: "Ισοπαλία!",
+    tieBody: "Κάποια μέρη είναι ισόπαλα. Ξεκίνα έναν γρήγορο β’ γύρο για να λυθεί.",
+    startRunoff: "Έναρξη β’ γύρου",
+    runoffTitle: "Β’ γύρος — διάλεξε ένα",
+    runoffWinner: "Νικητής",
+    cancelRunoff: "Ακύρωση β’ γύρου",
+    dismiss: "Κλείσιμο",
+    vote: "ψήφος", votes: "ψήφοι",
+    openNow: "Ανοιχτό τώρα",
+    closedNow: "Κλειστό",
+    tutorialTitle: "Πώς λειτουργεί η ψηφοφορία",
+    tutRight: "Σύρε δεξιά για “μου αρέσει”",
+    tutLeft: "Σύρε αριστερά για προσπέραση",
+    tutUp: "Σύρε πάνω για “ίσως”",
+    tutNote: "Μπορείς επίσης να χρησιμοποιήσεις τα κουμπιά παρακάτω.",
+    gotIt: "Το κατάλαβα",
+    itsAMatch: "Ταιριάξατε!",
+    matchBody: "Η παρέα σου συμφώνησε στο {place}. Ώρα να το κανονίσετε!",
+    nice: "Τέλεια!",
+    yourPlace: "το μέρος σας",
     moreButton: "Περισσότερα",
     voteAsGroup: "Ψηφίστε και ταιριάξτε μαζί",
     voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση, πάνω για ίσως — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
@@ -1243,6 +1311,186 @@ function renderCard() {
     favButton.classList.toggle("is-favourited", alreadyFav);
   }
   if (reviewsButton) reviewsButton.textContent = t("moreButton") || "More";
+
+  // Progress indicator ("Place X of Y")
+  const progressEl = document.querySelector("#swipeProgress");
+  if (progressEl) {
+    const total = (state.group.places || []).length;
+    progressEl.textContent = total ? `${t("place") || "Place"} ${Math.min(state.index + 1, total)}/${total}` : "";
+  }
+  // Open-now badge
+  const openNowEl = document.querySelector("#activityOpenNow");
+  if (openNowEl) {
+    if (place.openNow === true) { openNowEl.textContent = t("openNow") || "Open now"; openNowEl.className = "open-now-badge is-open"; }
+    else if (place.openNow === false) { openNowEl.textContent = t("closedNow") || "Closed"; openNowEl.className = "open-now-badge is-closed"; }
+    else { openNowEl.className = "open-now-badge is-hidden"; }
+  }
+  // First-run tutorial (once)
+  maybeShowSwipeTutorial();
+}
+
+function maybeShowSwipeTutorial() {
+  const tut = document.querySelector("#swipeTutorial");
+  if (!tut) return;
+  if (localStorage.getItem("planswipe:swipeTutorialSeen")) { tut.classList.add("is-hidden"); return; }
+  // localize
+  const set = (id, key) => { const el = document.querySelector(id); if (el) el.textContent = t(key); };
+  set("#tutorialTitle", "tutorialTitle");
+  set("#tutRight", "tutRight"); set("#tutLeft", "tutLeft"); set("#tutUp", "tutUp");
+  set("#tutNote", "tutNote");
+  const gotIt = document.querySelector("#tutorialGotIt");
+  if (gotIt) gotIt.textContent = t("gotIt");
+  tut.classList.remove("is-hidden");
+}
+
+// ===== Plan-locking + tie-break helpers =====
+function fmtCalDate(dt) {
+  const d = new Date(dt);
+  if (isNaN(d)) return "";
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}00Z`;
+}
+function googleCalUrl(place, dt) {
+  const start = fmtCalDate(dt);
+  const end = fmtCalDate(new Date(new Date(dt).getTime() + 2 * 3600 * 1000));
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `PlanSwipe: ${place.title}`,
+    dates: `${start}/${end}`,
+    details: "Plan with your PlanSwipe group.",
+    location: place.address || place.areaLabel || ""
+  });
+  return `https://www.google.com/calendar/render?${params.toString()}`;
+}
+function downloadIcs(place, dt) {
+  const start = fmtCalDate(dt);
+  const end = fmtCalDate(new Date(new Date(dt).getTime() + 2 * 3600 * 1000));
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PlanSwipe//EN", "BEGIN:VEVENT",
+    `UID:${Date.now()}@planswipe.gr`, `DTSTAMP:${fmtCalDate(new Date())}`,
+    `DTSTART:${start}`, `DTEND:${end}`, `SUMMARY:PlanSwipe: ${place.title}`,
+    `LOCATION:${String(place.address || "").replace(/,/g, "\\,")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "planswipe.ics"; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function planCardHtml(place) {
+  if (!place) return "";
+  const plan = state.group.plan;
+  const me = currentUsername();
+  if (!plan || state.planEditing) {
+    const existingVal = plan?.dateTime ? plan.dateTime.slice(0, 16) : "";
+    return `<div class="plan-card plan-setup">
+      <div class="plan-badge match">\u{1F389} ${escapeHtml(t("itsAMatch"))}</div>
+      <h3>${escapeHtml(place.title)}</h3>
+      <p class="muted-note">${escapeHtml(t("lockInPrompt"))}</p>
+      <div class="plan-datetime-row">
+        <input type="datetime-local" id="planDateTimeInput" value="${escapeHtml(existingVal)}">
+        <button class="btn-primary" type="button" id="lockPlanBtn">${escapeHtml(t("lockPlan"))}</button>
+      </div>
+    </div>`;
+  }
+  const attendance = plan.attendance || {};
+  const ins = Object.entries(attendance).filter(([, s]) => s === "in").map(([u]) => u);
+  const outs = Object.entries(attendance).filter(([, s]) => s === "out").map(([u]) => u);
+  const myStatus = attendance[me];
+  const when = new Date(plan.dateTime);
+  const whenText = isNaN(when) ? plan.dateTime : when.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return `<div class="plan-card">
+    <div class="plan-badge locked">\u2705 ${escapeHtml(t("planLocked"))}</div>
+    <h3>${escapeHtml(place.title)}</h3>
+    <p class="plan-when">\u{1F4C5} ${escapeHtml(whenText)}</p>
+    ${place.address ? `<p class="muted-note">\u{1F4CD} ${escapeHtml(place.address)}</p>` : ""}
+    <div class="plan-attendance">
+      <span class="att-in">\u2705 ${ins.length} ${escapeHtml(t("goingCount"))}</span>
+      ${outs.length ? `<span class="att-out">${outs.length} ${escapeHtml(t("cantMakeCount"))}</span>` : ""}
+    </div>
+    ${ins.length ? `<p class="att-names">${escapeHtml(ins.join(", "))}</p>` : ""}
+    <div class="plan-actions">
+      <button class="btn-primary ${myStatus === "in" ? "rsvp-active" : ""}" type="button" data-rsvp="in">${escapeHtml(t("imIn"))}</button>
+      <button class="btn-ghost ${myStatus === "out" ? "rsvp-active" : ""}" type="button" data-rsvp="out">${escapeHtml(t("cantMakeIt"))}</button>
+    </div>
+    <div class="plan-cal">
+      <a class="btn-ghost" href="${googleCalUrl(place, plan.dateTime)}" target="_blank" rel="noopener">\u{1F4C6} ${escapeHtml(t("addToCalendar"))}</a>
+      <button class="btn-ghost" type="button" id="downloadIcsBtn">${escapeHtml(t("downloadIcs"))}</button>
+      <button class="btn-ghost" type="button" id="changePlanBtn">${escapeHtml(t("changeDate"))}</button>
+    </div>
+  </div>`;
+}
+
+function topTiedCandidates(ranked) {
+  if (ranked.length < 2) return [];
+  const topPct = ranked[0].percent;
+  if (topPct <= 0) return [];
+  const tied = ranked.filter((p) => p.percent === topPct);
+  return tied.length >= 2 ? tied.slice(0, 4) : [];
+}
+function tieBreakHtml(tied) {
+  return `<div class="tiebreak-card">
+    <h3>\u{1F91D} ${escapeHtml(t("tieTitle"))}</h3>
+    <p class="muted-note">${escapeHtml(t("tieBody"))}</p>
+    <button class="btn-primary" type="button" id="startRunoffBtn" data-runoff-cands="${escapeHtml(tied.map((p) => p.id).join(","))}">${escapeHtml(t("startRunoff"))}</button>
+  </div>`;
+}
+function runoffWinnerBanner(place) {
+  if (!place) return "";
+  return `<div class="runoff-winner"><span>\u{1F3C6} ${escapeHtml(t("runoffWinner"))}: <strong>${escapeHtml(place.title)}</strong></span><button class="btn-ghost" type="button" id="runoffClearBtn">${escapeHtml(t("dismiss"))}</button></div>`;
+}
+function renderRunoff() {
+  const r = state.group.runoff;
+  const places = state.group.places || [];
+  const cands = r.candidates.map((id) => places.find((p) => p.id === id)).filter(Boolean);
+  const myVote = r.votes?.[currentUsername()];
+  const tally = {};
+  Object.values(r.votes || {}).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
+  const votedCount = Object.keys(r.votes || {}).length;
+  const total = state.group.members?.length || 1;
+  resultList.innerHTML = `
+    <div class="runoff-panel">
+      <div class="runoff-head"><h3>\u{1F5F3}\uFE0F ${escapeHtml(t("runoffTitle"))}</h3><p class="muted-note">${votedCount}/${total} ${escapeHtml(t("voted"))}</p></div>
+      <div class="runoff-cands">
+        ${cands.map((p) => `
+          <button class="runoff-card ${myVote === p.id ? "is-picked" : ""}" type="button" data-runoff-vote="${escapeHtml(p.id)}">
+            <img src="${escapeHtml(p.photoUrl)}" alt="">
+            <div class="runoff-card-body"><h4>${escapeHtml(p.title)}</h4><span class="runoff-tally">${tally[p.id] || 0} ${escapeHtml(t((tally[p.id] || 0) === 1 ? "vote" : "votes"))}</span></div>
+            ${myVote === p.id ? `<span class="runoff-check">\u2713</span>` : ""}
+          </button>`).join("")}
+      </div>
+      <button class="btn-ghost runoff-cancel" type="button" id="runoffCancelBtn">${escapeHtml(t("cancelRunoff"))}</button>
+    </div>`;
+}
+
+async function lockPlan(dateTime) {
+  if (!dateTime) { showError(t("pickDateTime") || "Please pick a date and time"); return; }
+  try {
+    const data = await api(`/api/groups/${state.group.code}/plan`, { method: "POST", body: { userId: state.user.id, dateTime } });
+    state.group = data.group; state.planEditing = false; renderApp();
+  } catch (e) { showError(e.message); }
+}
+async function rsvpPlan(status) {
+  try {
+    const data = await api(`/api/groups/${state.group.code}/rsvp`, { method: "POST", body: { userId: state.user.id, status } });
+    state.group = data.group; renderApp();
+  } catch (e) { showError(e.message); }
+}
+async function startRunoff(cands) {
+  try {
+    const data = await api(`/api/groups/${state.group.code}/runoff-start`, { method: "POST", body: { userId: state.user.id, candidates: cands } });
+    state.group = data.group; renderApp();
+  } catch (e) { showError(e.message); }
+}
+async function runoffVote(placeId) {
+  try {
+    const data = await api(`/api/groups/${state.group.code}/runoff-vote`, { method: "POST", body: { userId: state.user.id, placeId } });
+    state.group = data.group; renderApp();
+  } catch (e) { showError(e.message); }
+}
+async function clearRunoff() {
+  try {
+    const data = await api(`/api/groups/${state.group.code}/runoff-clear`, { method: "POST", body: { userId: state.user.id } });
+    state.group = data.group; renderApp();
+  } catch (e) { showError(e.message); }
 }
 
 function renderResults() {
@@ -1253,6 +1501,8 @@ function renderResults() {
     resultsSelectedCount.textContent = selectedCount > 0 ? `${selectedCount}/${totalMembers} ${t("selectedCount")}` : "";
   }
   const canAddOwnPlace = state.index >= Math.min(5, allPlaces.length || 5);
+  // Active runoff takes over the results view until a winner is decided.
+  if (state.group.runoff && !state.group.runoff.winner) { renderRunoff(); return; }
   const exhaustedMsg = (state.placesExhausted || state.group.placesExhausted) && state.index >= allPlaces.length
     ? `<div class="places-exhausted-message">${escapeHtml(t("noMoreSuggestions"))}</div>` : "";
   if (!allPlaces.length) {
@@ -1291,7 +1541,20 @@ function renderResults() {
     selectionCounts[placeId] = (selectionCounts[placeId] || 0) + 1;
   });
 
-  resultList.innerHTML = ranked.map((item) => {
+  // Top banner: plan card (matched), runoff winner, or a tie-break offer.
+  const matchId = state.group.consensus?.place;
+  let topBanner = "";
+  if (state.group.runoff && state.group.runoff.winner) {
+    topBanner += runoffWinnerBanner(allPlaces.find((p) => p.id === state.group.runoff.winner));
+  }
+  if (matchId) {
+    topBanner += planCardHtml(allPlaces.find((p) => p.id === matchId));
+  } else if (!state.group.runoff) {
+    const tied = topTiedCandidates(ranked);
+    if (tied.length >= 2) topBanner += tieBreakHtml(tied);
+  }
+
+  resultList.innerHTML = topBanner + ranked.map((item) => {
     const ratingPart = item.rating ? ` | ${Number(item.rating).toFixed(1)} \u2605` : "";
     const selectedByMe = state.group.placeSelections?.[state.user?.id] === item.id;
     const canBook = state.group.consensus?.place === item.id;
@@ -1773,6 +2036,7 @@ function renderRecoverPage() {
 }
 
 function renderApp() {
+  updateBottomNav();
   if (state.activePage === "recover") { renderRecoverPage(); return; }
   if (!isLoggedIn()) {
     setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen && !state.showResetPasswordForm);
@@ -1951,6 +2215,18 @@ function renderApp() {
   const hasLoadedPlaces = Boolean((state.group.places || []).length || state.group.placesExhausted);
   if (!hasLoadedPlaces && !allCommentsDone()) { renderCommentStep(); return; }
 
+  // Places are being fetched (comments done, none back yet) — show a skeleton.
+  if (!hasLoadedPlaces && allCommentsDone()) {
+    setVisible(decisionPanel, false);
+    setVisible(resultsPanel, false);
+    setVisible(swipeLayout, true);
+    if (searchSummary) searchSummary.textContent = t("loadingPlaces") || "Finding places\u2026";
+    const prog = document.querySelector("#swipeProgress"); if (prog) prog.textContent = "";
+    showDeckSkeleton(true);
+    return;
+  }
+  showDeckSkeleton(false);
+
   searchSummary.textContent = (() => {
     const area = state.group.search?.area;
     const activity = state.group.search?.activity;
@@ -1960,9 +2236,11 @@ function renderApp() {
   setVisible(decisionPanel, false);
   setVisible(resultsPanel, true);
   renderResults();
+  checkCelebration();
 
   const totalPlaces = state.group.places || [];
-  if (state.index < totalPlaces.length) { setVisible(swipeLayout, true); renderCard(); }
+  const runoffActive = Boolean(state.group.runoff && !state.group.runoff.winner);
+  if (state.index < totalPlaces.length && !runoffActive) { setVisible(swipeLayout, true); renderCard(); }
   else {
     setVisible(swipeLayout, false);
     if (state.placesExhausted || state.group.placesExhausted) renderResults();
@@ -2183,6 +2461,99 @@ function updateSwipeHint(dx, dy) {
 function undoVote() {
   if (state.votingInProgress) return;
   if (state.index > 0) { state.index -= 1; renderApp(); }
+}
+
+// ===== Loading skeleton on the swipe deck =====
+function showDeckSkeleton(on) {
+  const sk = document.querySelector("#deckSkeleton");
+  if (sk) sk.hidden = !on;
+  if (activityCard) activityCard.style.display = on ? "none" : "";
+  const actions = document.querySelector(".swipe-actions");
+  if (actions) actions.style.visibility = on ? "hidden" : "";
+  const tip = document.querySelector("#swipeTip");
+  if (tip) tip.style.visibility = on ? "hidden" : "";
+  if (on) { const tut = document.querySelector("#swipeTutorial"); if (tut) tut.classList.add("is-hidden"); }
+}
+
+// ===== Match celebration =====
+function checkCelebration() {
+  const matchId = state.group?.consensus?.place || null;
+  if (state.celebratedPlaceId === undefined) { state.celebratedPlaceId = matchId; return; }
+  if (matchId && matchId !== state.celebratedPlaceId) {
+    state.celebratedPlaceId = matchId;
+    const place = (state.group.places || []).find((p) => p.id === matchId);
+    celebrateMatch(place);
+  } else if (!matchId && state.celebratedPlaceId) {
+    state.celebratedPlaceId = null;
+  }
+}
+
+function celebrateMatch(place) {
+  launchConfetti();
+  const name = place?.title || t("yourPlace") || "your place";
+  showModal(
+    `\u{1F389} ${t("itsAMatch") || "It's a match!"}`,
+    (t("matchBody") || "Your group agreed on {place}. Time to make it happen!").replace("{place}", name),
+    [{ label: t("nice") || "Nice!", primary: true }],
+    { html: false }
+  );
+}
+
+function launchConfetti() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  const colors = ["#12805e", "#18a374", "#ff6a42", "#ffd27a", "#3a7bd5", "#e85d9a"];
+  for (let i = 0; i < 70; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = Math.random() * 0.6 + "s";
+    piece.style.animationDuration = 2.4 + Math.random() * 1.6 + "s";
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    layer.appendChild(piece);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 4200);
+}
+
+// ===== Mobile bottom navigation =====
+function setupBottomNav() {
+  const nav = document.querySelector("#bottomNav");
+  if (!nav) return;
+  nav.querySelectorAll("[data-nav]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.nav;
+      if (target === "search") { openPlacesSearch(); return; }
+      const route = target === "main" ? "/main" : "/" + target;
+      navigate(route);
+    });
+  });
+}
+
+function updateBottomNav() {
+  const nav = document.querySelector("#bottomNav");
+  if (!nav) return;
+  const loggedIn = isLoggedIn() && !state.showHero;
+  nav.classList.toggle("is-hidden", !loggedIn);
+  document.body.classList.toggle("has-bottom-nav", loggedIn);
+  const page = state.activePage || "";
+  const map = { "": "main", "groups": "groups", "friends": "friends", "messages": "friends", "personal": "personal" };
+  const active = map[page] || (page.startsWith("profile:") ? "friends" : "main");
+  nav.querySelectorAll("[data-nav]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.nav === active);
+  });
+  nav.querySelectorAll("[data-navlabel]").forEach((el) => {
+    const key = "nav" + el.dataset.navlabel.charAt(0).toUpperCase() + el.dataset.navlabel.slice(1);
+    const val = t(key); if (val) el.textContent = val;
+  });
+  const badge = document.querySelector("#bnFriendsBadge");
+  if (badge) {
+    const n = state.notifications?.friendRequests || 0;
+    badge.textContent = n > 9 ? "9+" : String(n);
+    badge.classList.toggle("is-hidden", n <= 0);
+  }
 }
 
 async function selectPlace(placeId) {
@@ -2657,6 +3028,9 @@ function settingsSectionsHtml() {
           </div>
           <button class="btn-primary" type="button" id="managePlanButton">${t("managePlan") || "Manage plan"}</button>
         </div>
+      </section>
+      <section class="wide-panel personal-form"><h3>${t("appearance") || "Appearance"}</h3>
+        <div class="settings-toggle theme-toggle-row"><label for="darkModeToggle">${t("darkMode") || "Dark mode"}</label><input type="checkbox" id="darkModeToggle" ${document.documentElement.getAttribute("data-theme") === "dark" ? "checked" : ""}></div>
       </section>
       <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
         <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
@@ -3581,6 +3955,20 @@ maybeButton.addEventListener("click", () => vote("maybe").catch((e) => showError
 yesButton.addEventListener("click", () => vote("yes").catch((e) => showError(e.message)));
 if (undoButton) undoButton.addEventListener("click", undoVote);
 setupCardSwipe();
+setupBottomNav();
+function setTheme(dark) {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  try { localStorage.setItem("planswipe:theme", dark ? "dark" : "light"); } catch (_) {}
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", dark ? "#14161b" : "#12805e");
+}
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "darkModeToggle") setTheme(e.target.checked);
+});
+document.querySelector("#tutorialGotIt")?.addEventListener("click", () => {
+  localStorage.setItem("planswipe:swipeTutorialSeen", "1");
+  document.querySelector("#swipeTutorial")?.classList.add("is-hidden");
+});
 backChoiceButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
 reviewButton.addEventListener("click", () => changeBasics().catch((e) => showError(e.message)));
 document.querySelector("#openPlacesSearchButton")?.addEventListener("click", openPlacesSearch);
@@ -3592,6 +3980,21 @@ resultList.addEventListener("click", (e) => {
   if (selectBtn) { selectPlace(selectBtn.dataset.selectPlace).catch((err) => showError(err.message)); return; }
   const bookBtn = e.target.closest("[data-book-place]");
   if (bookBtn) { state.selectedBookPlaceId = state.selectedBookPlaceId === bookBtn.dataset.bookPlace ? "" : bookBtn.dataset.bookPlace; renderResults(); return; }
+  // Plan-locking + tie-break
+  if (e.target.closest("#lockPlanBtn")) { lockPlan(document.querySelector("#planDateTimeInput")?.value); return; }
+  if (e.target.closest("#changePlanBtn")) { state.planEditing = true; renderResults(); return; }
+  if (e.target.closest("#downloadIcsBtn")) {
+    const p = (state.group.places || []).find((x) => x.id === state.group.consensus?.place);
+    if (p && state.group.plan) downloadIcs(p, state.group.plan.dateTime);
+    return;
+  }
+  const rsvpBtn = e.target.closest("[data-rsvp]");
+  if (rsvpBtn) { rsvpPlan(rsvpBtn.dataset.rsvp).catch((err) => showError(err.message)); return; }
+  const startRunoffBtn = e.target.closest("#startRunoffBtn");
+  if (startRunoffBtn) { startRunoff((startRunoffBtn.dataset.runoffCands || "").split(",").filter(Boolean)); return; }
+  const runoffVoteBtn = e.target.closest("[data-runoff-vote]");
+  if (runoffVoteBtn) { runoffVote(runoffVoteBtn.dataset.runoffVote); return; }
+  if (e.target.closest("#runoffCancelBtn") || e.target.closest("#runoffClearBtn")) { clearRunoff(); return; }
   if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace(); }
 });
 [languageButton, appLanguageButton].forEach((btn) => btn.addEventListener("click", toggleLanguage));

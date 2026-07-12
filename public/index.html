@@ -3,11 +3,21 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("planswipe:theme");
+          if (t === "dark" || (!t && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="google-site-verification" content="bC4vDoMJu07jPdbUCT4VZMbGxNa-43YNDvc-eKG8UYg" />
     <meta name="description" content="PlanSwipe helps groups decide where to go. Discover real nearby places, swipe and vote together, and find plans everyone agrees on in minutes.">
     <meta property="og:title" content="PlanSwipe - Group Planning Made Simple">
     <meta property="og:description" content="Discover places your whole group agrees on. Swipe, vote, and make plans together without endless group chats.">
-    <meta property="og:image" content="https://www.planswipe.gr/favicon.png">
+    <meta property="og:image" content="https://www.planswipe.gr/og-image.png">
     <meta property="og:url" content="https://www.planswipe.gr">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="PlanSwipe">
@@ -16,7 +26,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PlanSwipe - Group Planning Made Simple">
     <meta name="twitter:description" content="Discover places your whole group agrees on. Swipe, vote, and make plans together without endless group chats.">
-    <meta name="twitter:image" content="https://www.planswipe.gr/favicon.png">
+    <meta name="twitter:image" content="https://www.planswipe.gr/og-image.png">
     <link rel="canonical" href="https://www.planswipe.gr/">
     <title>PlanSwipe - Group Planning Made Simple</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -272,8 +282,19 @@
       <!-- Swipe layout -->
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
-          <div class="search-summary" id="searchSummary">Searching...</div>
+          <div class="swipe-topline">
+            <div class="search-summary" id="searchSummary">Searching...</div>
+            <div class="swipe-progress" id="swipeProgress"></div>
+          </div>
           <div class="card-deck">
+            <div class="deck-skeleton" id="deckSkeleton" hidden>
+              <div class="skeleton-photo shimmer"></div>
+              <div class="skeleton-lines">
+                <div class="shimmer skeleton-line lg"></div>
+                <div class="shimmer skeleton-line"></div>
+                <div class="shimmer skeleton-line sm"></div>
+              </div>
+            </div>
             <div class="activity-card" id="activityCard">
               <button class="card-more-btn" id="reviewsButton" type="button">More</button>
               <div class="swipe-hint" id="swipeHint" aria-hidden="true"></div>
@@ -288,8 +309,21 @@
                   <span id="activityArea">Area</span>
                   <span id="activityTime">Time</span>
                   <span id="activityCost">Cost</span>
+                  <span class="open-now-badge is-hidden" id="activityOpenNow"></span>
                 </div>
                 <div class="place-contact" id="activityContact"></div>
+              </div>
+            </div>
+            <div class="swipe-tutorial is-hidden" id="swipeTutorial">
+              <div class="tutorial-card">
+                <h3 id="tutorialTitle">How voting works</h3>
+                <ul class="tutorial-list">
+                  <li><span class="tut-dir tut-right">→</span> <span id="tutRight">Swipe right to like</span></li>
+                  <li><span class="tut-dir tut-left">←</span> <span id="tutLeft">Swipe left to pass</span></li>
+                  <li><span class="tut-dir tut-up">↑</span> <span id="tutUp">Swipe up for maybe</span></li>
+                </ul>
+                <p class="tutorial-note" id="tutNote">You can also use the buttons below.</p>
+                <button class="btn-primary" type="button" id="tutorialGotIt">Got it</button>
               </div>
             </div>
           </div>
@@ -319,6 +353,25 @@
         <div class="result-list" id="resultList"></div>
       </section>
     </main>
+
+    <nav class="bottom-nav is-hidden" id="bottomNav" aria-label="Primary">
+      <button class="bottom-nav-btn" type="button" data-nav="main" aria-label="Home">
+        <span class="bn-icon">🏠</span><span class="bn-label" data-navlabel="home">Home</span>
+      </button>
+      <button class="bottom-nav-btn" type="button" data-nav="groups" aria-label="Groups">
+        <span class="bn-icon">👥</span><span class="bn-label" data-navlabel="groups">Groups</span>
+      </button>
+      <button class="bottom-nav-btn bottom-nav-search" type="button" data-nav="search" aria-label="Search places">
+        <span class="bn-icon">🔍</span><span class="bn-label" data-navlabel="search">Search</span>
+      </button>
+      <button class="bottom-nav-btn" type="button" data-nav="friends" aria-label="Friends">
+        <span class="bn-icon">💬</span><span class="bn-label" data-navlabel="friends">Friends</span>
+        <span class="bn-badge is-hidden" id="bnFriendsBadge"></span>
+      </button>
+      <button class="bottom-nav-btn" type="button" data-nav="personal" aria-label="Profile">
+        <span class="bn-icon">⚙️</span><span class="bn-label" data-navlabel="profile">Profile</span>
+      </button>
+    </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/app.js"></script>
