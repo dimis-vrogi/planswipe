@@ -377,8 +377,62 @@ function summarizeGroup(group) {
     reset:     group.reset || null,
     comments:  group.comments || {},
     commentStatus: group.commentStatus || {},
+    plan:      group.plan || null,
+    runoff:    group.runoff || null,
     createdAt: group.createdAt
   };
+}
+
+// ====== EMAIL (Resend, optional) ======
+let _resendClient = null;
+function getResendClient() {
+  if (_resendClient) return _resendClient;
+  if (!process.env.RESEND_API_KEY) return null;
+  try {
+    const { Resend } = require("resend");
+    _resendClient = new Resend(process.env.RESEND_API_KEY);
+    return _resendClient;
+  } catch (e) { console.warn("Resend init failed:", e.message); return null; }
+}
+async function sendEmail(to, subject, html) {
+  const client = getResendClient();
+  const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
+  if (!client || !recipients.length) return false;
+  try {
+    await client.emails.send({
+      from: process.env.RESEND_FROM || "PlanSwipe <noreply@planswipe.gr>",
+      to: recipients,
+      subject,
+      html
+    });
+    return true;
+  } catch (e) { console.warn("Email send failed:", e.message); return false; }
+}
+async function groupMemberEmails(group, onlyUsernames = null) {
+  const out = [];
+  for (const m of group.members || []) {
+    if (onlyUsernames && !onlyUsernames.includes(m.username)) continue;
+    try {
+      const row = await getProfileByUsername(m.username);
+      if (row?.email) out.push(row.email);
+    } catch (_) {}
+  }
+  return out;
+}
+function planEmailHtml(group, place, whenText) {
+  return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+    <h2 style="color:#12805e">Your PlanSwipe plan is set \u{1F389}</h2>
+    <p>Your group <strong>${escapeHtmlServer(group.name || "")}</strong> is going to:</p>
+    <div style="background:#f4f3ef;border-radius:12px;padding:16px;margin:12px 0">
+      <div style="font-size:18px;font-weight:bold">${escapeHtmlServer(place.title || "")}</div>
+      <div style="color:#555">${escapeHtmlServer(place.address || place.areaLabel || "")}</div>
+      <div style="margin-top:8px;color:#12805e;font-weight:bold">${escapeHtmlServer(whenText)}</div>
+    </div>
+    <p style="color:#777;font-size:13px">Open PlanSwipe to RSVP or see who's coming.</p>
+  </div>`;
+}
+function escapeHtmlServer(s) {
+  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function removeUserFromGroup(group, username) {
   const before = group.members?.length || 0;
@@ -643,6 +697,7 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId, language = "en") {
     phone: place.internationalPhoneNumber || place.nationalPhoneNumber || "",
     address: place.formattedAddress || "",
     primaryType: place.primaryType || place.types?.[0] || "",
+    openNow: (place.currentOpeningHours?.openNow ?? place.regularOpeningHours?.openNow ?? null),
     location: place.location || null
   };
 }
@@ -662,6 +717,7 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
     "places.types",
     "places.primaryType",
     "places.regularOpeningHours",
+    "places.currentOpeningHours",
     "places.googleMapsUri",
     "places.editorialSummary",
     "places.websiteUri",
@@ -1538,6 +1594,165 @@ async function handleApi(request, response) {
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Plan-locking: set a date/time for the agreed place =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "plan") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    const body = await readBody(request);
+    const placeId = group.consensus?.place;
+    if (!placeId) { sendJson(response, 400, { error: "Agree on a place first" }); return; }
+    const place = group.places.find((p) => p.id === placeId);
+    if (!place) { sendJson(response, 400, { error: "Place not found" }); return; }
+    const dateTime = String(body.dateTime || "").slice(0, 40);
+    if (!dateTime) { sendJson(response, 400, { error: "A date and time is required" }); return; }
+    const existing = group.plan && group.plan.placeId === placeId ? group.plan : null;
+    group.plan = {
+      placeId,
+      placeName: place.title,
+      address: place.address || place.areaLabel || "",
+      dateTime,
+      createdBy: authUsername,
+      createdAt: existing?.createdAt || Date.now(),
+      attendance: existing?.attendance || {},
+      reminded: false
+    };
+    group.plan.attendance[authUsername] = "in";
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    // Best-effort confirmation email (does nothing if Resend isn't configured)
+    (async () => {
+      try {
+        const emails = await groupMemberEmails(group);
+        const when = new Date(dateTime);
+        const whenText = isNaN(when) ? dateTime : when.toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+        await sendEmail(emails, `Plan set: ${place.title}`, planEmailHtml(group, place, whenText));
+      } catch (_) {}
+    })();
+    return;
+  }
+
+  // ===== RSVP to the plan =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "rsvp") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    if (!group.plan) { sendJson(response, 400, { error: "No plan to RSVP to" }); return; }
+    const body = await readBody(request);
+    if (!group.plan.attendance) group.plan.attendance = {};
+    group.plan.attendance[authUsername] = body.status === "out" ? "out" : "in";
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Clear the plan =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "plan-clear") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    delete group.plan;
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Tie-break: start a runoff among tied places =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "runoff-start") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    const body = await readBody(request);
+    const candidates = (Array.isArray(body.candidates) ? body.candidates : [])
+      .filter((id) => group.places.some((p) => p.id === id)).slice(0, 4);
+    if (candidates.length < 2) { sendJson(response, 400, { error: "Need at least two places for a runoff" }); return; }
+    group.runoff = { candidates, votes: {}, startedBy: authUsername, startedAt: Date.now(), winner: null };
+    group.consensus = group.consensus || {};
+    group.consensus.place = null;
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Runoff vote =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "runoff-vote") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    if (!group.runoff) { sendJson(response, 400, { error: "No active runoff" }); return; }
+    const body = await readBody(request);
+    if (!group.runoff.candidates.includes(body.placeId)) { sendJson(response, 400, { error: "Not a runoff candidate" }); return; }
+    group.runoff.votes[authUsername] = body.placeId;
+    // If everyone has voted, decide the winner (ties broken by rating, then order).
+    const memberCount = group.members?.length || 0;
+    if (Object.keys(group.runoff.votes).length >= memberCount && memberCount > 0) {
+      const tally = {};
+      Object.values(group.runoff.votes).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
+      let best = null, bestCount = -1;
+      group.runoff.candidates.forEach((id) => {
+        const c = tally[id] || 0;
+        const place = group.places.find((p) => p.id === id);
+        const rating = place?.rating || 0;
+        if (c > bestCount || (c === bestCount && best && rating > (group.places.find((p) => p.id === best)?.rating || 0))) {
+          best = id; bestCount = c;
+        }
+      });
+      group.runoff.winner = best;
+      group.consensus = group.consensus || {};
+      group.consensus.place = best;
+      if (!group.placeSelections) group.placeSelections = {};
+      (group.members || []).forEach((m) => { group.placeSelections[m.id] = best; });
+    }
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Dismiss a finished runoff =====
+  if (request.method === "POST" && parts[1] === "groups" && parts[3] === "runoff-clear") {
+    const group = await loadGroup(parts[2]);
+    if (!group) { sendJson(response, 404, { error: "Group not found" }); return; }
+    const authUsername = await requireGroupMember(request, response, group);
+    if (!authUsername) return;
+    delete group.runoff;
+    await saveGroup(group);
+    sendJson(response, 200, { group: summarizeGroup(group) });
+    return;
+  }
+
+  // ===== Scheduled task: send day-before reminders (call from an external cron) =====
+  if (request.method === "POST" && parts[1] === "tasks" && parts[2] === "send-reminders") {
+    const key = url.searchParams.get("key") || request.headers["x-cron-key"];
+    if (!process.env.REMINDER_SECRET || key !== process.env.REMINDER_SECRET) {
+      sendJson(response, 403, { error: "Forbidden" }); return;
+    }
+    const { data, error } = await supabase.from("groups").select("*");
+    if (error) { sendJson(response, 500, { error: error.message }); return; }
+    const now = Date.now();
+    const horizon = now + 24 * 60 * 60 * 1000;
+    let sent = 0;
+    for (const row of data || []) {
+      const group = row.data;
+      const plan = group?.plan;
+      if (!plan || plan.reminded || !plan.dateTime) continue;
+      const when = new Date(plan.dateTime).getTime();
+      if (isNaN(when) || when < now || when > horizon) continue;
+      const inUsers = Object.entries(plan.attendance || {}).filter(([, s]) => s === "in").map(([u]) => u);
+      const emails = await groupMemberEmails(group, inUsers.length ? inUsers : null);
+      const place = (group.places || []).find((p) => p.id === plan.placeId) || { title: plan.placeName, address: plan.address };
+      const whenText = new Date(plan.dateTime).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+      const ok = await sendEmail(emails, `Reminder: ${plan.placeName} is coming up`, planEmailHtml(group, place, whenText));
+      if (ok) { plan.reminded = true; await saveGroup(group); sent++; }
+    }
+    sendJson(response, 200, { ok: true, sent });
     return;
   }
 
