@@ -3766,3 +3766,50 @@ html[data-theme="dark"] .hero-description { color: var(--ink-soft); }
 .theme-toggle-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
+
+/* ============================================================
+   Change 2 — No button: always filled red (mirrors filled green Yes)
+   ============================================================ */
+.swipe-btn.no {
+  background: linear-gradient(140deg, #e86173, var(--red));
+  box-shadow: 0 10px 24px rgba(211, 56, 74, 0.32);
+}
+.swipe-btn.no::before { color: #fff; }
+.swipe-btn.no:hover {
+  background: linear-gradient(140deg, #e86173, var(--red));
+  box-shadow: 0 16px 32px rgba(211, 56, 74, 0.42);
+}
+html[data-theme="dark"] .swipe-btn.no,
+html[data-theme="dark"] .swipe-btn.no:hover {
+  background: linear-gradient(140deg, #e86173, var(--red));
+}
+
+/* ============================================================
+   Change 6 — purple text is invisible in dark mode -> light lavender
+   ============================================================ */
+html[data-theme="dark"] { --purple: #cbbcff; }
+
+/* ============================================================
+   Change 4 — topbar theme toggle button
+   ============================================================ */
+.theme-toggle-btn {
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 12px;
+  min-width: 44px;
+}
+
+/* Change 5 — date + time scheduling inputs */
+.plan-datetime-row input[type="date"],
+.plan-datetime-row input[type="time"] {
+  flex: 1 1 130px;
+  min-height: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  font: inherit;
+  background: var(--panel);
+  color: var(--ink);
+}
+html[data-theme="dark"] .plan-datetime-row input[type="date"],
+html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: dark; }

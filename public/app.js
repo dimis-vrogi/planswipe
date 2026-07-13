@@ -87,7 +87,6 @@ const activityArea         = document.querySelector("#activityArea");
 const activityTime         = document.querySelector("#activityTime");
 const activityCost         = document.querySelector("#activityCost");
 const noButton             = document.querySelector("#noButton");
-const maybeButton          = document.querySelector("#maybeButton");
 const yesButton            = document.querySelector("#yesButton");
 const favButton            = document.querySelector("#favButton");
 const undoButton           = document.querySelector("#undoButton");
@@ -115,7 +114,6 @@ const notificationBadge    = document.querySelector("#notificationBadge");
 const pageEyebrow          = document.querySelector("#pageEyebrow");
 const pageTitle            = document.querySelector("#pageTitle");
 const pageDemo             = document.querySelector("#pageDemo");
-const closePageButton      = document.querySelector("#closePageButton");
 const languageButton       = document.querySelector("#languageButton");
 const appLanguageButton    = document.querySelector("#appLanguageButton");
 const continueBrowseButton = document.querySelector("#continueBrowseButton");
@@ -212,12 +210,13 @@ const copy = {
     offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the winners rise to the top. No polls, no pressure, no 200-message thread that ends in \"idk, you pick\".",
     agreeFaster: "Agree on the basics first", agreeFasterText: "Everyone chooses an area and the type of night out together. Once the group agrees, PlanSwipe takes it from there — no endless back-and-forth.",
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
-    swipeTip: "Swipe right to like, left to pass, up for maybe",
+    swipeTip: "Swipe right to like, left to pass",
     place: "Place",
     navHome: "Home", navGroups: "Groups", navSearch: "Search", navFriends: "Friends", navProfile: "Profile",
     appearance: "Appearance", darkMode: "Dark mode",
     lockInPrompt: "You're all agreed! Set a date and time to lock it in.",
     lockPlan: "Lock in plan",
+    date: "Date", time: "Time",
     planLocked: "Plan locked",
     goingCount: "going",
     cantMakeCount: "can't make it",
@@ -240,7 +239,6 @@ const copy = {
     tutorialTitle: "How voting works",
     tutRight: "Swipe right to like",
     tutLeft: "Swipe left to pass",
-    tutUp: "Swipe up for maybe",
     tutNote: "You can also use the buttons below.",
     gotIt: "Got it",
     itsAMatch: "It's a match!",
@@ -248,7 +246,7 @@ const copy = {
     nice: "Nice!",
     yourPlace: "your place",
     moreButton: "More",
-    voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass, up for maybe — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
+    voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
@@ -489,12 +487,13 @@ const copy = {
     agreeFasterText: "Όλοι διαλέγουν περιοχή και είδος εξόδου μαζί. Μόλις η ομάδα συμφωνήσει, το PlanSwipe αναλαμβάνει — χωρίς ατελείωτες συζητήσεις.",
     discoverOptions: "Ανακαλύψτε πραγματικά μέρη",
     discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
-    swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση, πάνω για “ίσως”",
+    swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση",
     place: "Μέρος",
     navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Αναζήτηση", navFriends: "Φίλοι", navProfile: "Προφίλ",
     appearance: "Εμφάνιση", darkMode: "Σκοτεινό θέμα",
     lockInPrompt: "Συμφωνήσατε! Ορίστε ημερομηνία και ώρα για να το κλειδώσετε.",
     lockPlan: "Κλείδωμα σχεδίου",
+    date: "Ημερομηνία", time: "Ώρα",
     planLocked: "Το σχέδιο κλειδώθηκε",
     goingCount: "έρχονται",
     cantMakeCount: "δεν μπορούν",
@@ -517,7 +516,6 @@ const copy = {
     tutorialTitle: "Πώς λειτουργεί η ψηφοφορία",
     tutRight: "Σύρε δεξιά για “μου αρέσει”",
     tutLeft: "Σύρε αριστερά για προσπέραση",
-    tutUp: "Σύρε πάνω για “ίσως”",
     tutNote: "Μπορείς επίσης να χρησιμοποιήσεις τα κουμπιά παρακάτω.",
     gotIt: "Το κατάλαβα",
     itsAMatch: "Ταιριάξατε!",
@@ -526,7 +524,7 @@ const copy = {
     yourPlace: "το μέρος σας",
     moreButton: "Περισσότερα",
     voteAsGroup: "Ψηφίστε και ταιριάξτε μαζί",
-    voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση, πάνω για ίσως — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
+    voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
     dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
     seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
     startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
@@ -777,7 +775,7 @@ Object.assign(copy.el, {
   noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
   agreeFasterText: "Έπιλέξτε περιοχή και είδος μαζί. Έτσι δεν χάνει η ομαδική συνομιλία.",
   discoverOptionsText: "Ανακαλύψτε πραγματικές προτάσεις από το Google Maps για την περιοχή και δραστηριότητα της ομάδας σας.",
-  voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση, πάνω για ίσως — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο."
+  voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο."
 });
 
 Object.assign(copy.el, {
@@ -851,7 +849,6 @@ function applyLanguage() {
   const topbarEyb = document.querySelector(".topbar .eyebrow");
   if (topbarEyb) topbarEyb.textContent = t("groupPlans");
   resetButton.textContent       = t("leaveGroup");
-  closePageButton.textContent   = t("back");
   if (inviteToGroupButton) inviteToGroupButton.textContent = t("inviteToGroup");
   const pseText = document.querySelector("#placesSearchEntryText");
   if (pseText) pseText.textContent = t("searchPlacesEntry");
@@ -881,7 +878,6 @@ function applyLanguage() {
   backFromJoinButton.textContent   = t("back");
   homeButton.textContent         = t("home");
   noButton.textContent           = t("choiceNo");
-  maybeButton.textContent        = t("choiceMaybe");
   yesButton.textContent          = t("choiceYes");
 
   profileMenu.querySelectorAll("button[data-page]").forEach((btn) => {
@@ -1296,12 +1292,11 @@ function renderCard() {
   }
   // Icon buttons (labels live in aria-label / the swipe tip)
   if (noButton) noButton.setAttribute("aria-label", t("choiceNo"));
-  if (maybeButton) maybeButton.setAttribute("aria-label", t("choiceMaybe"));
   if (yesButton) yesButton.setAttribute("aria-label", t("choiceYes"));
   if (undoButton) undoButton.disabled = state.index <= 0;
   const swipeTip = document.querySelector("#swipeTip");
   if (swipeTip) swipeTip.textContent = t("swipeTip");
-  [noButton, maybeButton, yesButton, favButton, undoButton].forEach((btn) => {
+  [noButton, yesButton, favButton, undoButton].forEach((btn) => {
     if (btn) btn.classList.toggle("is-voting", state.votingInProgress);
   });
   if (favButton) {
@@ -1336,7 +1331,7 @@ function maybeShowSwipeTutorial() {
   // localize
   const set = (id, key) => { const el = document.querySelector(id); if (el) el.textContent = t(key); };
   set("#tutorialTitle", "tutorialTitle");
-  set("#tutRight", "tutRight"); set("#tutLeft", "tutLeft"); set("#tutUp", "tutUp");
+  set("#tutRight", "tutRight"); set("#tutLeft", "tutLeft");
   set("#tutNote", "tutNote");
   const gotIt = document.querySelector("#tutorialGotIt");
   if (gotIt) gotIt.textContent = t("gotIt");
@@ -1380,13 +1375,15 @@ function planCardHtml(place) {
   const plan = state.group.plan;
   const me = currentUsername();
   if (!plan || state.planEditing) {
-    const existingVal = plan?.dateTime ? plan.dateTime.slice(0, 16) : "";
+    const existingDate = plan?.dateTime ? plan.dateTime.slice(0, 10) : "";
+    const existingTime = plan?.dateTime ? plan.dateTime.slice(11, 16) : "";
     return `<div class="plan-card plan-setup">
       <div class="plan-badge match">\u{1F389} ${escapeHtml(t("itsAMatch"))}</div>
       <h3>${escapeHtml(place.title)}</h3>
       <p class="muted-note">${escapeHtml(t("lockInPrompt"))}</p>
       <div class="plan-datetime-row">
-        <input type="datetime-local" id="planDateTimeInput" value="${escapeHtml(existingVal)}">
+        <input type="date" id="planDateInput" value="${escapeHtml(existingDate)}" aria-label="${escapeHtml(t("date") || "Date")}">
+        <input type="time" id="planTimeInput" value="${escapeHtml(existingTime)}" step="60" aria-label="${escapeHtml(t("time") || "Time")}">
         <button class="btn-primary" type="button" id="lockPlanBtn">${escapeHtml(t("lockPlan"))}</button>
       </div>
     </div>`;
@@ -1513,21 +1510,20 @@ function renderResults() {
   Object.values(state.group.votes || {}).forEach((userVotes) => {
     Object.entries(userVotes).forEach(([placeId, vote]) => {
       const v = vote === true ? "yes" : vote === false ? "no" : vote;
-      if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, maybe: 0, no: 0 };
+      if (!votesByPlace[placeId]) votesByPlace[placeId] = { yes: 0, no: 0 };
       if (v === "yes") votesByPlace[placeId].yes++;
-      else if (v === "maybe") votesByPlace[placeId].maybe++;
       else votesByPlace[placeId].no++;
     });
   });
   const total  = state.group.members.length || 1;
   const ranked = allPlaces
     .map((p) => {
-      const v = votesByPlace[p.id] || { yes: 0, maybe: 0, no: 0 };
+      const v = votesByPlace[p.id] || { yes: 0, no: 0 };
       const percent = Math.round((v.yes / total) * 100);
       return { ...p, ...v, total, percent };
     })
-    .filter((p) => p.yes > 0 || p.maybe > 0)
-    .sort((a, b) => b.percent - a.percent || b.yes - a.yes || b.maybe - a.maybe);
+    .filter((p) => p.yes > 0)
+    .sort((a, b) => b.percent - a.percent || b.yes - a.yes);
 
   if (!ranked.length) {
     resultList.innerHTML = `<article class="result-card"><div class="result-icon"></div><div><h3>${t("noStrongChoice")}</h3><p>${t("keepSwiping")}</p></div><strong class="result-score">0%</strong></article>
@@ -1570,7 +1566,7 @@ function renderResults() {
     <article class="result-card">
       <img class="result-icon" src="${escapeHtml(item.photoUrl)}" alt="">
       <div><h3>${escapeHtml(item.title)}</h3>
-      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(optionLabel("type", consensus("type")) || item.category)}${ratingPart} | ${item.yes}/${item.total} yes, ${item.maybe || 0} maybe</p>
+      <p>${escapeHtml(item.areaLabel)} | ${escapeHtml(optionLabel("type", consensus("type")) || item.category)}${ratingPart} | ${item.yes}/${item.total} yes</p>
       ${selLabel}
       <div class="result-buttons">
         <button class="btn-ghost" type="button" data-select-place="${escapeHtml(item.id)}">${selectedByMe ? t("selectedThisPlace") : t("selectThisPlace")}</button>
@@ -2390,7 +2386,7 @@ async function vote(value) {
   const place = places[state.index];
   if (!place) return;
   state.votingInProgress = true;
-  [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.add("is-voting"); });
+  [noButton, yesButton].forEach((btn) => { if (btn) btn.classList.add("is-voting"); });
   flyOffCard(dirForVote(value));
   try {
     const data = await api(`/api/groups/${state.group.code}/vote`, { method: "POST", body: { userId: state.user.id, placeId: place.id, vote: value } });
@@ -2399,7 +2395,7 @@ async function vote(value) {
   } catch (e) {
     state.votingInProgress = false;
     resetCardTransform();
-    [noButton, maybeButton, yesButton].forEach((btn) => { if (btn) btn.classList.remove("is-voting"); });
+    [noButton, yesButton].forEach((btn) => { if (btn) btn.classList.remove("is-voting"); });
     throw e;
   }
 }
@@ -2429,8 +2425,7 @@ function setupCardSwipe() {
     const absX = Math.abs(dx), absY = Math.abs(dy);
     const THRESH = 95;
     let value = null;
-    if (absY > absX && dy < -THRESH) value = "maybe";
-    else if (dx > THRESH) value = "yes";
+    if (dx > THRESH) value = "yes";
     else if (dx < -THRESH) value = "no";
     if (value) {
       vote(value).catch((e) => showError(e.message));
@@ -2450,8 +2445,7 @@ function updateSwipeHint(dx, dy) {
   if (!hint) return;
   const absX = Math.abs(dx), absY = Math.abs(dy);
   let label = "", cls = "";
-  if (absY > absX && dy < -40) { label = t("choiceMaybe"); cls = "hint-maybe"; }
-  else if (dx > 40) { label = t("choiceYes"); cls = "hint-yes"; }
+  if (dx > 40) { label = t("choiceYes"); cls = "hint-yes"; }
   else if (dx < -40) { label = t("choiceNo"); cls = "hint-no"; }
   hint.className = "swipe-hint" + (cls ? " " + cls : "");
   hint.textContent = label;
@@ -2644,14 +2638,12 @@ function addToFavourites(place) {
   const profile = state.account?.profile || {};
   const preferences = { ...(profile.preferences || {}), places: [...(profile.preferences?.places || [])] };
   const title = place.title.trim();
-  if (!preferences.places.some((p) => p.toLowerCase() === title.toLowerCase())) {
-    preferences.places.push(title);
-    api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } })
-      .then((data) => { saveAccount(data.user); renderCard(); })
-      .catch((err) => showError(err.message));
-  } else {
-    showError(t("alreadyInFavourites"));
-  }
+  const idx = preferences.places.findIndex((p) => p.toLowerCase() === title.toLowerCase());
+  if (idx === -1) preferences.places.push(title);   // add
+  else preferences.places.splice(idx, 1);           // toggle off (remove)
+  api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, preferences } } })
+    .then((data) => { saveAccount(data.user); renderCard(); })
+    .catch((err) => showError(err.message));
 }
 
 // ====== #3: STANDALONE PLACE SEARCH ======
@@ -3932,14 +3924,6 @@ profileMenu.addEventListener("click", (e) => {
   }
   if (e.target.closest("#logoutButton")) profileMenu.classList.add("is-hidden");
 });
-closePageButton.addEventListener("click", () => {
-  const dest = state.activePage.startsWith("profile:") ? "/friends"
-    : state.activePage === "personal" && state.returnRoute ? state.returnRoute
-    : "/main";
-  state.activePage = "";
-  state.returnRoute = "/main";
-  navigate(dest);
-});
 document.addEventListener("click", (e) => { if (!e.target.closest(".profile-wrap")) profileMenu.classList.add("is-hidden"); });
 
 memberRow.addEventListener("click", (e) => {
@@ -3951,20 +3935,26 @@ memberRow.addEventListener("click", (e) => {
 });
 
 noButton.addEventListener("click", () => vote("no").catch((e) => showError(e.message)));
-maybeButton.addEventListener("click", () => vote("maybe").catch((e) => showError(e.message)));
 yesButton.addEventListener("click", () => vote("yes").catch((e) => showError(e.message)));
 if (undoButton) undoButton.addEventListener("click", undoVote);
 setupCardSwipe();
 setupBottomNav();
+function isDarkMode() { return document.documentElement.getAttribute("data-theme") === "dark"; }
 function setTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   try { localStorage.setItem("planswipe:theme", dark ? "dark" : "light"); } catch (_) {}
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", dark ? "#14161b" : "#12805e");
+  const tbtn = document.querySelector("#themeToggleBtn");
+  if (tbtn) tbtn.textContent = dark ? "\u2600\uFE0F" : "\u{1F319}";
+  const dm = document.querySelector("#darkModeToggle");
+  if (dm) dm.checked = dark;
 }
 document.addEventListener("change", (e) => {
   if (e.target && e.target.id === "darkModeToggle") setTheme(e.target.checked);
 });
+document.querySelector("#themeToggleBtn")?.addEventListener("click", () => setTheme(!isDarkMode()));
+(function () { const tb = document.querySelector("#themeToggleBtn"); if (tb) tb.textContent = isDarkMode() ? "\u2600\uFE0F" : "\u{1F319}"; })();
 document.querySelector("#tutorialGotIt")?.addEventListener("click", () => {
   localStorage.setItem("planswipe:swipeTutorialSeen", "1");
   document.querySelector("#swipeTutorial")?.classList.add("is-hidden");
@@ -3981,7 +3971,12 @@ resultList.addEventListener("click", (e) => {
   const bookBtn = e.target.closest("[data-book-place]");
   if (bookBtn) { state.selectedBookPlaceId = state.selectedBookPlaceId === bookBtn.dataset.bookPlace ? "" : bookBtn.dataset.bookPlace; renderResults(); return; }
   // Plan-locking + tie-break
-  if (e.target.closest("#lockPlanBtn")) { lockPlan(document.querySelector("#planDateTimeInput")?.value); return; }
+  if (e.target.closest("#lockPlanBtn")) {
+    const d = document.querySelector("#planDateInput")?.value;
+    const tm = document.querySelector("#planTimeInput")?.value;
+    lockPlan(d && tm ? `${d}T${tm}` : "");
+    return;
+  }
   if (e.target.closest("#changePlanBtn")) { state.planEditing = true; renderResults(); return; }
   if (e.target.closest("#downloadIcsBtn")) {
     const p = (state.group.places || []).find((x) => x.id === state.group.consensus?.place);

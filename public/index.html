@@ -139,7 +139,7 @@
             </article>
             <article>
               <h3>Vote and match together</h3>
-              <p>Swipe through each spot — right to like, left to pass, up for maybe — and instantly see which places your group agrees on. When everyone's in, you've got your plan.</p>
+              <p>Swipe through each spot — right to like, left to pass — and instantly see which places your group agrees on. When everyone's in, you've got your plan.</p>
             </article>
           </div>
         </section>
@@ -161,6 +161,7 @@
             <span class="places-search-placeholder" id="placesSearchEntryText">Search places</span>
           </button>
           <button class="btn-ghost" id="homeButton" type="button">Home</button>
+          <button class="btn-ghost theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode"></button>
           <button class="btn-ghost" id="appLanguageButton" type="button">EL</button>
           <button class="btn-ghost" id="resetButton" type="button">Exit Group</button>
           <div class="profile-wrap">
@@ -232,7 +233,6 @@
             <p class="eyebrow" id="pageEyebrow">Profile</p>
             <h2 id="pageTitle">Inbox</h2>
           </div>
-          <button class="btn-ghost" id="closePageButton" type="button">Back</button>
         </div>
         <div class="demo-grid" id="pageDemo"></div>
       </section>
@@ -320,7 +320,6 @@
                 <ul class="tutorial-list">
                   <li><span class="tut-dir tut-right">→</span> <span id="tutRight">Swipe right to like</span></li>
                   <li><span class="tut-dir tut-left">←</span> <span id="tutLeft">Swipe left to pass</span></li>
-                  <li><span class="tut-dir tut-up">↑</span> <span id="tutUp">Swipe up for maybe</span></li>
                 </ul>
                 <p class="tutorial-note" id="tutNote">You can also use the buttons below.</p>
                 <button class="btn-primary" type="button" id="tutorialGotIt">Got it</button>
@@ -331,7 +330,6 @@
           <div class="swipe-actions" aria-label="Swipe choices">
             <button class="swipe-btn undo" id="undoButton" type="button" aria-label="Undo"></button>
             <button class="swipe-btn no" id="noButton" type="button" aria-label="No"></button>
-            <button class="swipe-btn maybe" id="maybeButton" type="button" aria-label="Maybe"></button>
             <button class="swipe-btn yes" id="yesButton" type="button" aria-label="Yes"></button>
             <button class="swipe-btn fav" id="favButton" type="button" aria-label="Add to Favourites"></button>
           </div>
