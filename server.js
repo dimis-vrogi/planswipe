@@ -1762,7 +1762,7 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     if (!(await requireGroupMember(request, response, group, body.userId))) return;
     if (!group.places.some((p) => p.id === body.placeId)) { sendJson(response, 400, { error: "Invalid place" }); return; }
-    const value = ["yes", "maybe", "no"].includes(body.vote) ? body.vote : (body.liked ? "yes" : "no");
+    const value = ["yes", "no"].includes(body.vote) ? body.vote : (body.liked ? "yes" : "no");
     if (!group.votes[body.userId]) group.votes[body.userId] = {};
     group.votes[body.userId][body.placeId] = value;
     await saveGroup(group);
