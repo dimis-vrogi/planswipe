@@ -67,7 +67,6 @@ const backFromCreateButton = document.querySelector("#backFromCreateButton");
 const backFromJoinButton   = document.querySelector("#backFromJoinButton");
 const createButton         = document.querySelector("#createButton");
 const joinButton           = document.querySelector("#joinButton");
-const resetButton          = document.querySelector("#resetButton");
 const reviewButton         = document.querySelector("#reviewButton");
 const groupName            = document.querySelector("#groupName");
 const groupCode            = document.querySelector("#groupCode");
@@ -803,6 +802,7 @@ Object.assign(copy.el, {
 function applyLanguage() {
   document.documentElement.lang = state.language;
   if (languageButton) languageButton.textContent = state.language === "en" ? "EL" : "EN";
+  if (appLanguageButton) appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
   heroLoginButton.textContent   = t("login");
   if (heroSignupButton) heroSignupButton.textContent = t("createAccount");
   heroEnterButton.textContent   = t("enterPlanswipe");
@@ -847,7 +847,6 @@ function applyLanguage() {
 
   const topbarEyb = document.querySelector(".topbar .eyebrow");
   if (topbarEyb) topbarEyb.textContent = t("groupPlans");
-  resetButton.textContent       = t("leaveGroup");
   if (inviteToGroupButton) inviteToGroupButton.textContent = t("inviteToGroup");
   const pseText = document.querySelector("#placesSearchEntryText");
   if (pseText) pseText.textContent = t("searchPlacesEntry");
@@ -2173,14 +2172,6 @@ function renderApp() {
 
   setTopbarAvatar(state.account?.profile?.picture, currentUsername());
 
-  // When no group active, show "New Group" button instead of "Exit Current Group"
-  if (state.group && state.user) {
-    setVisible(resetButton, true);
-    resetButton.textContent = t("leaveGroup");
-  } else {
-    setVisible(resetButton, true);
-    resetButton.textContent = t("newGroup");
-  }
   refreshNotifications();
 
   if (state.activePage) {
@@ -2925,7 +2916,7 @@ async function renderSubscriptionPage() {
       <div class="subscription-card pro-card">
         ${isPro ? `<span class="pro-badge">${t("pro")}</span>` : ""}
         <h3>${t("pro")}</h3>
-        <div class="price">\u20ac5.99 <small>/month</small></div>
+        <div class="price">\u20ac1.99 <small>/month</small></div>
         <p>${t("proPlanDesc")}</p>
         <ul class="features">
           <li>Unlimited groups</li>
@@ -3060,12 +3051,6 @@ function settingsSectionsHtml() {
       </section>
       <section class="wide-panel personal-form"><h3>${t("appearance") || "Appearance"}</h3>
         <div class="settings-toggle theme-toggle-row"><label for="darkModeToggle">${t("darkMode") || "Dark mode"}</label><input type="checkbox" id="darkModeToggle" ${document.documentElement.getAttribute("data-theme") === "dark" ? "checked" : ""}></div>
-        <div class="settings-toggle theme-toggle-row"><label for="languageSelect">${t("language") || "Language"}</label>
-          <select id="languageSelect" class="settings-select">
-            <option value="en" ${state.language === "en" ? "selected" : ""}>English</option>
-            <option value="el" ${state.language === "el" ? "selected" : ""}>Ελληνικά</option>
-          </select>
-        </div>
       </section>
       <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
         <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
@@ -3944,15 +3929,6 @@ forgotPasswordButton.addEventListener("click", () => {
 });
 
 homeButton.addEventListener("click", () => navigate(isLoggedIn() ? "/main" : "/home"));
-resetButton.addEventListener("click", () => {
-  if (state.group && state.user) {
-    leaveGroup();
-  } else {
-    // "New Group" button was clicked — show create/join UI
-    state.setupMode = "";
-    navigate("/main");
-  }
-});
 logoutButton.addEventListener("click", logout);
 
 profileButton.addEventListener("click", (e) => { e.stopPropagation(); profileMenu.classList.toggle("is-hidden"); });
