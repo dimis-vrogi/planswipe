@@ -886,7 +886,10 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
   const areaLabel = areaOption.label || areaOption.id || "Athens";
   const typeLabel = typeOption.label || typeOption.id || "Activity";
   const typeId = typeOption.id || "";
-  const query = buildPlaceSearchQuery(areaOption, typeOption);
+  let query = buildPlaceSearchQuery(areaOption, typeOption);
+  // #3: let the group's notes steer the actual Google search, not just the ranking.
+  const noteKeywords = String(options.comments || "").replace(/\s*\|\s*/g, ", ").trim().slice(0, 120);
+  if (noteKeywords) query = `${query} ${noteKeywords}`;
 
   if (googleApiKey) {
     const googlePlaces = await googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, 20, excludeTitles, options.language || "en");
