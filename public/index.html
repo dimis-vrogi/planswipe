@@ -6,8 +6,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("planswipe:theme");
-          if (t === "dark" || (!t && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          if (localStorage.getItem("planswipe:theme") === "dark") {
             document.documentElement.setAttribute("data-theme", "dark");
           }
         } catch (e) {}
@@ -282,6 +281,7 @@
       <!-- Swipe layout -->
       <section class="swipe-layout is-hidden" id="swipeLayout">
         <article class="card-stage" aria-live="polite">
+          <div class="swipe-tint" id="swipeTint" aria-hidden="true"></div>
           <div class="swipe-topline">
             <div class="search-summary" id="searchSummary">Searching...</div>
             <div class="swipe-progress" id="swipeProgress"></div>

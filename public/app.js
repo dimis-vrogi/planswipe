@@ -1155,7 +1155,7 @@ function renderDecisionStep(kind) {
     decisionHint.innerHTML = t("decisionHint");
   }
 
-  setVisible(backChoiceButton, Boolean(state.pendingAreaOption));
+  setVisible(backChoiceButton, Boolean(state.pendingAreaOption) || kind === "type");
   if (backChoiceButton && !backChoiceButton.classList.contains("is-hidden")) {
     backChoiceButton.textContent = t("back") || "Back";
   }
@@ -2347,7 +2347,11 @@ async function goBackChoice() {
     renderDecisionStep("area");
     return;
   }
-  const step = consensus("type") ? "type" : ((consensus("area") && !consensus("type")) ? "type" : "area");
+  // Step one question back through the basics.
+  let step;
+  if (consensus("area") && consensus("type")) step = "type";      // comment step -> back to activity type
+  else if (consensus("area") && !consensus("type")) step = "area"; // type step -> back to area
+  else return;                                                     // area step: nothing before it
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step } });
   state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
   state.group = data.group; renderApp();
@@ -2407,22 +2411,36 @@ function setupCardSwipe() {
     if (state.votingInProgress) return;
     if (!state.group?.places?.[state.index]) return;
     if (e.target.closest("a, button")) return; // let links / "More" work
-    cardDrag = { x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, id: e.pointerId };
-    activityCard.style.transition = "none";
-    try { activityCard.setPointerCapture(e.pointerId); } catch (_) {}
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    cardDrag = { x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, id: e.pointerId, active: false, decided: false };
   });
   activityCard.addEventListener("pointermove", (e) => {
-    if (!cardDrag) return;
+    if (!cardDrag || cardDrag.id !== e.pointerId) return;
     cardDrag.dx = e.clientX - cardDrag.x0;
     cardDrag.dy = e.clientY - cardDrag.y0;
-    activityCard.style.transform = `translate(${cardDrag.dx}px, ${cardDrag.dy}px) rotate(${cardDrag.dx / 20}deg)`;
-    updateSwipeHint(cardDrag.dx, cardDrag.dy);
+    if (!cardDrag.decided) {
+      const ax = Math.abs(cardDrag.dx), ay = Math.abs(cardDrag.dy);
+      if (ax < 10 && ay < 10) return;      // wait for a clear direction
+      if (ay >= ax) { cardDrag = null; return; } // vertical intent -> let the page scroll
+      cardDrag.decided = true; cardDrag.active = true;
+      activityCard.style.transition = "none";
+      try { activityCard.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    if (cardDrag.active) {
+      if (e.cancelable) e.preventDefault();
+      const dx = cardDrag.dx;                       // horizontal movement only
+      activityCard.style.transform = `translateX(${dx}px) rotate(${dx / 20}deg)`;
+      updateSwipeHint(dx);
+      setSwipeTint(dx);
+    }
   });
   const finish = () => {
-    if (!cardDrag) return;
-    const { dx, dy } = cardDrag;
+    if (!cardDrag) { clearSwipeTint(); return; }
+    const active = cardDrag.active;
+    const dx = cardDrag.dx;
     cardDrag = null;
-    const absX = Math.abs(dx), absY = Math.abs(dy);
+    clearSwipeTint();
+    if (!active) return;                            // a tap or a vertical scroll
     const THRESH = 95;
     let value = null;
     if (dx > THRESH) value = "yes";
@@ -2440,16 +2458,28 @@ function setupCardSwipe() {
   activityCard.addEventListener("pointercancel", finish);
 }
 
-function updateSwipeHint(dx, dy) {
+function setSwipeTint(dx) {
+  const tint = document.querySelector("#swipeTint");
+  if (!tint) return;
+  const strength = Math.min(0.55, Math.abs(dx) / 260);
+  if (dx > 12) { tint.className = "swipe-tint tint-yes"; tint.style.opacity = String(strength); }
+  else if (dx < -12) { tint.className = "swipe-tint tint-no"; tint.style.opacity = String(strength); }
+  else { tint.style.opacity = "0"; }
+}
+function clearSwipeTint() {
+  const tint = document.querySelector("#swipeTint");
+  if (tint) { tint.style.opacity = "0"; }
+}
+
+function updateSwipeHint(dx) {
   const hint = document.querySelector("#swipeHint");
   if (!hint) return;
-  const absX = Math.abs(dx), absY = Math.abs(dy);
   let label = "", cls = "";
   if (dx > 40) { label = t("choiceYes"); cls = "hint-yes"; }
   else if (dx < -40) { label = t("choiceNo"); cls = "hint-no"; }
   hint.className = "swipe-hint" + (cls ? " " + cls : "");
   hint.textContent = label;
-  hint.style.opacity = label ? String(Math.min(1, Math.max(absX, absY) / 120)) : "0";
+  hint.style.opacity = label ? String(Math.min(1, Math.abs(dx) / 120)) : "0";
 }
 
 function undoVote() {
