@@ -212,8 +212,8 @@ const copy = {
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
     swipeTip: "Swipe right to like, left to pass",
     place: "Place",
-    navHome: "Home", navGroups: "Groups", navSearch: "Search", navFriends: "Friends", navProfile: "Profile",
-    appearance: "Appearance", darkMode: "Dark mode",
+    navHome: "Home", navGroups: "Groups", navSearch: "Search", navFriends: "Friends", navProfile: "Settings",
+    appearance: "Appearance", darkMode: "Dark mode", language: "Language",
     lockInPrompt: "You're all agreed! Set a date and time to lock it in.",
     lockPlan: "Lock in plan",
     date: "Date", time: "Time",
@@ -489,8 +489,8 @@ const copy = {
     discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
     swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση",
     place: "Μέρος",
-    navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Αναζήτηση", navFriends: "Φίλοι", navProfile: "Προφίλ",
-    appearance: "Εμφάνιση", darkMode: "Σκοτεινό θέμα",
+    navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Αναζήτηση", navFriends: "Φίλοι", navProfile: "Ρυθμίσεις",
+    appearance: "Εμφάνιση", darkMode: "Σκοτεινό θέμα", language: "Γλώσσα",
     lockInPrompt: "Συμφωνήσατε! Ορίστε ημερομηνία και ώρα για να το κλειδώσετε.",
     lockPlan: "Κλείδωμα σχεδίου",
     date: "Ημερομηνία", time: "Ώρα",
@@ -802,8 +802,7 @@ Object.assign(copy.el, {
 // ====== LANGUAGE ======
 function applyLanguage() {
   document.documentElement.lang = state.language;
-  languageButton.textContent    = state.language === "en" ? "EL" : "EN";
-  appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
+  if (languageButton) languageButton.textContent = state.language === "en" ? "EL" : "EN";
   heroLoginButton.textContent   = t("login");
   if (heroSignupButton) heroSignupButton.textContent = t("createAccount");
   heroEnterButton.textContent   = t("enterPlanswipe");
@@ -901,6 +900,14 @@ function applyLanguage() {
 
 function toggleLanguage() {
   state.language = state.language === "en" ? "el" : "en";
+  localStorage.setItem("planswipe:language", state.language);
+  applyLanguage();
+  renderApp();
+}
+function setLanguage(lang) {
+  const next = lang === "el" ? "el" : "en";
+  if (next === state.language) return;
+  state.language = next;
   localStorage.setItem("planswipe:language", state.language);
   applyLanguage();
   renderApp();
@@ -3053,6 +3060,12 @@ function settingsSectionsHtml() {
       </section>
       <section class="wide-panel personal-form"><h3>${t("appearance") || "Appearance"}</h3>
         <div class="settings-toggle theme-toggle-row"><label for="darkModeToggle">${t("darkMode") || "Dark mode"}</label><input type="checkbox" id="darkModeToggle" ${document.documentElement.getAttribute("data-theme") === "dark" ? "checked" : ""}></div>
+        <div class="settings-toggle theme-toggle-row"><label for="languageSelect">${t("language") || "Language"}</label>
+          <select id="languageSelect" class="settings-select">
+            <option value="en" ${state.language === "en" ? "selected" : ""}>English</option>
+            <option value="el" ${state.language === "el" ? "selected" : ""}>Ελληνικά</option>
+          </select>
+        </div>
       </section>
       <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
         <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
@@ -3930,7 +3943,7 @@ forgotPasswordButton.addEventListener("click", () => {
   renderApp();
 });
 
-homeButton.addEventListener("click", () => navigate("/home"));
+homeButton.addEventListener("click", () => navigate(isLoggedIn() ? "/main" : "/home"));
 resetButton.addEventListener("click", () => {
   if (state.group && state.user) {
     leaveGroup();
@@ -4022,7 +4035,10 @@ resultList.addEventListener("click", (e) => {
   if (e.target.closest("#runoffCancelBtn") || e.target.closest("#runoffClearBtn")) { clearRunoff(); return; }
   if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace(); }
 });
-[languageButton, appLanguageButton].forEach((btn) => btn.addEventListener("click", toggleLanguage));
+[languageButton, appLanguageButton].forEach((btn) => btn && btn.addEventListener("click", toggleLanguage));
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "languageSelect") setLanguage(e.target.value);
+});
 
 // #4: Comments box — info popup + apply (re-rank with the note)
 document.querySelector("#commentsInfoBtn")?.addEventListener("click", () => {
