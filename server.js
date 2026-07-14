@@ -399,13 +399,19 @@ async function sendEmail(to, subject, html) {
   const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!client || !recipients.length) return false;
   try {
-    await client.emails.send({
+    const { data, error } = await client.emails.send({
       from: process.env.RESEND_FROM || "PlanSwipe <noreply@planswipe.gr>",
       to: recipients,
       subject,
       html
     });
-    return true;
+    // Resend resolves with an { error } object (rather than throwing) for problems
+    // like an unverified domain or rejected recipient — treat that as a failure.
+    if (error) {
+      console.warn("Email send rejected:", error.message || JSON.stringify(error));
+      return false;
+    }
+    return Boolean(data);
   } catch (e) { console.warn("Email send failed:", e.message); return false; }
 }
 async function groupMemberEmails(group, onlyUsernames = null) {
