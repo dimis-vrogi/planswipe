@@ -4,7 +4,7 @@ const path = require("path");
 const crypto = require("crypto");
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
