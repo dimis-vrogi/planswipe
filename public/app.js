@@ -290,7 +290,7 @@ const copy = {
     logoutHint: "You'll be signed out of this device.",
     logoutConfirm: "Are you sure you want to log out?",
     noPastActivities: "No past activities yet",
-    placesHistory: "Places & History",
+    placesHistory: "Places & History", viewMore: "View more", viewLess: "View less",
     yourActivity: "Your activity",
     myPlan: "My plan",
     managePlan: "Manage plan",
@@ -573,7 +573,7 @@ const copy = {
     logoutHint: "Θα αποσυνδεθείς από αυτή τη συσκευή.",
     logoutConfirm: "Σίγουρα θέλεις να αποσυνδεθείς;",
     noPastActivities: "Δεν υπάρχουν ακόμα παλιές δραστηριότητες",
-    placesHistory: "Μέρη & Ιστορικό",
+    placesHistory: "Μέρη & Ιστορικό", viewMore: "Δείτε περισσότερα", viewLess: "Δείτε λιγότερα",
     yourActivity: "Η δραστηριότητά σου",
     myPlan: "Το πλάνο μου",
     managePlan: "Διαχείριση πλάνου",
@@ -3346,11 +3346,46 @@ async function renderGroupsPage() {
   pageDemo.innerHTML = html;
 }
 
+const LIKED_LIMIT = 8;
+const PAST_LIMIT = 5;
+
+function likedCardHtml(item) {
+  return `<div class="liked-place-card"><h3>${escapeHtml(item.place)}</h3><p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p><span class="vote-tag ${escapeHtml(item.vote)}">${escapeHtml(item.vote)}</span><span class="group-meta">${escapeHtml(item.groupName || "")}</span></div>`;
+}
+function pastCardHtml(a, idx) {
+  return `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p><div class="result-buttons" style="margin-top:8px;"><button class="btn-primary" type="button" data-past-fav="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("addToFavourites")}</button><button class="danger-button" type="button" data-past-remove="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("remove")}</button></div></article>`;
+}
+function viewMoreButton(id, remaining, expanded) {
+  return `<button class="btn-ghost view-more-btn" type="button" id="${id}">${expanded ? t("viewLess") : `${t("viewMore")} (${remaining})`}</button>`;
+}
+function paintLikedList() {
+  const list = document.querySelector("#likedPlacesList");
+  if (!list) return;
+  const all = state.likedCache || [];
+  if (!all.length) { list.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`; return; }
+  const shown = state.likedExpanded ? all : all.slice(0, LIKED_LIMIT);
+  let html = shown.map(likedCardHtml).join("");
+  if (all.length > LIKED_LIMIT) html += viewMoreButton("likedViewMore", all.length - LIKED_LIMIT, state.likedExpanded);
+  list.innerHTML = html;
+}
+function paintPastList() {
+  const list = document.querySelector("#pastList");
+  if (!list) return;
+  const all = state.pastCache || [];
+  if (!all.length) { list.innerHTML = `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`; return; }
+  const shown = state.pastExpanded ? all : all.slice(0, PAST_LIMIT);
+  let html = shown.map((a, idx) => pastCardHtml(a, idx)).join("");
+  if (all.length > PAST_LIMIT) html += viewMoreButton("pastViewMore", all.length - PAST_LIMIT, state.pastExpanded);
+  list.innerHTML = html;
+}
+
 async function renderPlacesHistoryPage() {
   pageEyebrow.textContent = t("yourActivity") || "Your activity";
   pageTitle.textContent = t("placesHistory") || "Places & History";
+  state.likedExpanded = false;
+  state.pastExpanded = false;
   const account = await loadAccount();
-  const activities = account.profile?.pastActivities || [];
+  state.pastCache = account.profile?.pastActivities || [];
   pageDemo.innerHTML = `
     <section class="wide-panel"><h3>${t("likedPlaces")}</h3>
       <div id="likedPlacesList" class="places-list"><div class="chat-loading">\u2026</div></div>
@@ -3364,21 +3399,16 @@ async function renderPlacesHistoryPage() {
         <label class="field"><span>${t("place")}</span><input id="pastPlaceInput" type="text" placeholder="Restaurant name"></label>
         <button class="btn-primary" type="button" id="savePastActivityButton">${t("saveActivity")}</button>
       </form>
-      <div class="places-list">
-        ${activities.length ? activities.map((a, idx) => `<article class="demo-card"><h3>${escapeHtml(a.place)}</h3><p>${escapeHtml(a.area)} | ${escapeHtml(a.activity)}</p><div class="result-buttons" style="margin-top:8px;"><button class="btn-primary" type="button" data-past-fav="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("addToFavourites")}</button><button class="danger-button" type="button" data-past-remove="${idx}" style="font-size:0.85rem;min-height:34px;padding:0 12px;">${t("remove")}</button></div></article>`).join("") : `<article class="demo-card"><h3>${t("noPastActivities")}</h3></article>`}
-      </div>
+      <div id="pastList" class="places-list"></div>
     </section>`;
+  paintPastList();
   try {
     const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
-    const places = data.places || [];
-    const list = document.querySelector("#likedPlacesList");
-    if (list) list.innerHTML = places.length
-      ? places.map((item) => `<div class="liked-place-card"><h3>${escapeHtml(item.place)}</h3><p>${escapeHtml(item.area)} | ${escapeHtml(item.activity)}</p><span class="vote-tag ${escapeHtml(item.vote)}">${escapeHtml(item.vote)}</span><span class="group-meta">${escapeHtml(item.groupName || "")}</span></div>`).join("")
-      : `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+    state.likedCache = data.places || [];
   } catch (e) {
-    const list = document.querySelector("#likedPlacesList");
-    if (list) list.innerHTML = `<article class="demo-card"><h3>${t("noLikedPlaces")}</h3></article>`;
+    state.likedCache = [];
   }
+  paintLikedList();
 }
 
 async function savePastActivity() {
@@ -3452,6 +3482,15 @@ function renderProfilePage() {
   const content = pageContent[state.activePage];
   if (!content && !state.activePage.startsWith("profile:")) return;
   if (content) { pageEyebrow.textContent = content.eyebrow; pageTitle.textContent = content.title; }
+  // Instant loading feedback when switching to a different page (not on same-page polls).
+  const targetShell =
+    state.activePage === "settings" ? "personal" :
+    state.activePage === "messages" ? "friends" :
+    state.activePage === "past" ? "likedplaces" :
+    state.activePage;
+  if (state.pageShellRendered !== targetShell && pageDemo) {
+    pageDemo.innerHTML = `<div class="page-loading"><span class="spinner" aria-label="Loading"></span></div>`;
+  }
   if (state.activePage === "personal") {
     state.pageShellRendered = "personal";
     renderPersonalInformation().then(() => {
@@ -4229,6 +4268,8 @@ pageDemo.addEventListener("click", (e) => {
     if (activity) addToFavourites({ title: activity.place });
     return;
   }
+  if (e.target.closest("#likedViewMore")) { state.likedExpanded = !state.likedExpanded; paintLikedList(); return; }
+  if (e.target.closest("#pastViewMore")) { state.pastExpanded = !state.pastExpanded; paintPastList(); return; }
   // Handle past activity remove
   const pastRemoveBtn = e.target.closest("[data-past-remove]");
   if (pastRemoveBtn) {
