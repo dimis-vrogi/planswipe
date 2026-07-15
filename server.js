@@ -219,6 +219,8 @@ async function verifyPassword(password, hash) {
 // ====== STATIC FILES ======
 function serveStatic(request, response) {
   let urlPath = request.url.split("?")[0];
+  const contentPages = { "/how-it-works": "/how-it-works.html", "/faq": "/how-it-works.html" };
+  if (contentPages[urlPath]) urlPath = contentPages[urlPath];
   if (urlPath === "/" || !path.extname(urlPath)) urlPath = "/index.html";
   const filePath = path.join(publicRoot, urlPath);
   if (!filePath.startsWith(publicRoot)) { response.writeHead(403); response.end("Forbidden"); return; }
@@ -424,6 +426,16 @@ async function groupMemberEmails(group, onlyUsernames = null) {
     } catch (_) {}
   }
   return out;
+}
+function formatWhen(dt) {
+  try {
+    const d = new Date(dt);
+    if (isNaN(d)) return String(dt || "");
+    return d.toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+  } catch (_) {
+    try { return new Date(dt).toISOString().replace("T", " ").slice(0, 16); }
+    catch (__) { return String(dt || ""); }
+  }
 }
 function planEmailHtml(group, place, whenText) {
   return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
@@ -1637,8 +1649,7 @@ async function handleApi(request, response) {
     (async () => {
       try {
         const emails = await groupMemberEmails(group);
-        const when = new Date(dateTime);
-        const whenText = isNaN(when) ? dateTime : when.toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+        const whenText = formatWhen(dateTime);
         await sendEmail(emails, `Plan set: ${place.title}`, planEmailHtml(group, place, whenText));
       } catch (_) {}
     })();
@@ -1747,21 +1758,26 @@ async function handleApi(request, response) {
     if (error) { sendJson(response, 500, { error: error.message }); return; }
     const now = Date.now();
     const horizon = now + 24 * 60 * 60 * 1000;
-    let sent = 0;
+    let sent = 0, errors = 0;
     for (const row of data || []) {
-      const group = row.data;
-      const plan = group?.plan;
-      if (!plan || plan.reminded || !plan.dateTime) continue;
-      const when = new Date(plan.dateTime).getTime();
-      if (isNaN(when) || when < now || when > horizon) continue;
-      const inUsers = Object.entries(plan.attendance || {}).filter(([, s]) => s === "in").map(([u]) => u);
-      const emails = await groupMemberEmails(group, inUsers.length ? inUsers : null);
-      const place = (group.places || []).find((p) => p.id === plan.placeId) || { title: plan.placeName, address: plan.address };
-      const whenText = new Date(plan.dateTime).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
-      const ok = await sendEmail(emails, `Reminder: ${plan.placeName} is coming up`, planEmailHtml(group, place, whenText));
-      if (ok) { plan.reminded = true; await saveGroup(group); sent++; }
+      try {
+        const group = row.data;
+        const plan = group?.plan;
+        if (!plan || plan.reminded || !plan.dateTime) continue;
+        const when = new Date(plan.dateTime).getTime();
+        if (isNaN(when) || when < now || when > horizon) continue;
+        const inUsers = Object.entries(plan.attendance || {}).filter(([, s]) => s === "in").map(([u]) => u);
+        const emails = await groupMemberEmails(group, inUsers.length ? inUsers : null);
+        if (!emails.length) continue; // no one to email — skip without marking reminded
+        const place = (group.places || []).find((p) => p.id === plan.placeId) || { title: plan.placeName, address: plan.address };
+        const ok = await sendEmail(emails, `Reminder: ${plan.placeName} is coming up`, planEmailHtml(group, place, formatWhen(plan.dateTime)));
+        if (ok) { plan.reminded = true; await saveGroup(group); sent++; }
+      } catch (e) {
+        errors++;
+        console.warn("Reminder error for group", row?.code || "(unknown)", "-", e.message);
+      }
     }
-    sendJson(response, 200, { ok: true, sent });
+    sendJson(response, 200, { ok: true, sent, errors });
     return;
   }
 
@@ -2194,5 +2210,5 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   console.log(`PlanSwipe running at http://127.0.0.1:${port}`);
-  console.log("Mode: Supabase + bcrypt");
+  console.log("Mode: Supabase + bcryptjs");
 });
