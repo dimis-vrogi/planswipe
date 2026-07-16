@@ -111,7 +111,10 @@
               <h2>Enter PlanSwipe</h2>
               <input id="loginUsername" type="text" placeholder="Username" autocomplete="username">
               <input id="loginEmail" type="email" placeholder="Email" autocomplete="email">
-              <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+              <div class="password-field">
+                <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+                <button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Show password" tabindex="-1">&#128065;</button>
+              </div>
               <div class="password-strength is-hidden" id="passwordStrength" aria-live="polite"></div>
                 <button id="loginButton" type="button" class="btn-ghost">Login</button>
               <button id="registerButton" type="button" class="btn-ghost">Create Account</button>

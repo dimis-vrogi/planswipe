@@ -301,7 +301,7 @@ const copy = {
     noMoreSuggestions: "No more places matching your selections. Would you like to change your basics?",
     newGroup: "New Group",
     backToVoting: "Back to Voting",
-    exitGroupPermanent: "Exit Group Permanently",
+    exitGroupPermanent: "Exit Group Permanently", deleteSelected: "Delete selected", selectGroup: "Select group", selected: "selected", confirmDeleteGroups: "Delete the selected groups? This can\u2019t be undone.", someGroupsFailed: "Some groups couldn\u2019t be removed. Please try again.",
     confirmExitGroup: "Are you sure you want to permanently leave this group?",
     accountManagement: "Account Management",
     choiceNo: "No", choiceMaybe: "Maybe", choiceYes: "Yes",
@@ -373,7 +373,7 @@ const copy = {
     recoverPassword: "Recover Password",
     newPasswordPlaceholder: "New password",
     confirmPasswordPlaceholder: "Confirm new password",
-    resetPassword: "Reset Password",
+    resetPassword: "Reset Password", showPassword: "Show password", hidePassword: "Hide password",
     passwordResetSuccess: "Password reset successfully!",
     passwordResetSuccessBody: "Your password has been changed. You can now log in with your new password.",
     enterUsernameOrEmail: "Enter your username or email.",
@@ -583,7 +583,7 @@ const copy = {
     noMoreSuggestions: "Δεν υπάρχουν άλλα μέρη που ταιριάζουν με τις επιλογές σας. Θέλετε να αλλάξετε τα βασικά;",
     newGroup: "Νέα Ομάδα",
     backToVoting: "Επιστροφή στην Ψηφοφορία",
-    exitGroupPermanent: "Μόνιμη έξοδος από ομάδα",
+    exitGroupPermanent: "Μόνιμη έξοδος από ομάδα", deleteSelected: "Διαγραφή επιλεγμένων", selectGroup: "Επιλογή ομάδας", selected: "επιλεγμένα", confirmDeleteGroups: "Διαγραφή των επιλεγμένων ομάδων; Δεν αναιρείται.", someGroupsFailed: "Κάποιες ομάδες δεν διαγράφηκαν. Δοκιμάστε ξανά.",
     confirmExitGroup: "Είστε σίγουροι ότι θέλετε να φύγετε μόνιμα;",
     accountManagement: "Διαχείριση Λογαριασμού",
     choiceNo: "Όχι", choiceMaybe: "Ίσως", choiceYes: "Ναι",
@@ -664,7 +664,7 @@ const copy = {
     recoverPassword: "Ανάκτηση Κωδικού",
     newPasswordPlaceholder: "Νέος κωδικός",
     confirmPasswordPlaceholder: "Επιβεβαίωση νέου κωδικού",
-    resetPassword: "Επαναφορά Κωδικού",
+    resetPassword: "Επαναφορά Κωδικού", showPassword: "Εμφάνιση κωδικού", hidePassword: "Απόκρυψη κωδικού",
     passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς!",
     passwordResetSuccessBody: "Ο κωδικός σας άλλαξε. Μπορείτε τώρα να συνδεθείτε με τον νέο σας κωδικό.",
     enterUsernameOrEmail: "Εισαγάγετε το όνομα χρήστη ή το email σας.",
@@ -903,15 +903,6 @@ function toggleLanguage() {
   applyLanguage();
   renderApp();
 }
-function setLanguage(lang) {
-  const next = lang === "el" ? "el" : "en";
-  if (next === state.language) return;
-  state.language = next;
-  localStorage.setItem("planswipe:language", state.language);
-  applyLanguage();
-  renderApp();
-}
-
 // ====== UTILITY ======
 function setVisible(el, visible) { el.classList.toggle("is-hidden", !visible); }
 function isLoggedIn()    { return Boolean(localStorage.getItem("planswipe:login")); }
@@ -930,23 +921,6 @@ function escapeHtml(value) {
   s = s.replace(/\u0022/g, quot);
   s = s.replace(/'/g, apos);
   return s;
-}
-
-function localizePlaceDescription(value) {
-  let text = String(value || "");
-  text = text.replace(/β€”/g, "\u2014").replace(/Β·/g, "\u00b7");
-  if (state.language === "el") {
-    text = text
-      .replace(/\bstars\b/g, "αστέρια")
-      .replace(/\breviews\b/g, "κριτικές")
-      .replace(/\bHours not listed\b/g, "Δεν αναφέρονται ώρες");
-  } else {
-    text = text
-      .replace(/\bαστέρια\b/g, "stars")
-      .replace(/\bκριτικές\b/g, "reviews")
-      .replace(/\bΔεν αναφέρονται ώρες\b/g, "Hours not listed");
-  }
-  return text;
 }
 
 function localizePlaceDescription(value) {
@@ -3321,7 +3295,8 @@ async function renderGroupsPage() {
   const data = await api(`/api/groups/mine?username=${encodeURIComponent(currentUsername())}`);
   const active = data.groups || [];
   const past = data.pastGroups || [];
-  
+  state.selectedGroups = new Set();
+
   let groupInvites = [];
   try {
     const accountData = await loadAccount();
@@ -3329,9 +3304,12 @@ async function renderGroupsPage() {
   } catch (_) {}
 
   let html = `<h3 class="group-section-title">${t("activeGroups")}</h3>`;
-  html += active.length
-    ? active.map((g) => `<article class="group-card"><h3>${escapeHtml(g.name)}${g.unreadCount > 0 ? `<span class="group-unread-badge">${g.unreadCount > 99 ? "99+" : g.unreadCount}</span>` : ""}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></article>`).join("")
-    : `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
+  if (active.length) {
+    html += `<div class="bulk-bar is-hidden" id="groupBulkBar"><span id="bulkCount"></span><button class="danger-button" type="button" id="bulkDeleteBtn">${t("deleteSelected") || "Delete selected"}</button></div>`;
+    html += active.map((g) => `<article class="group-card group-card-selectable"><label class="group-select"><input type="checkbox" class="group-check" data-select-group="${escapeHtml(g.code)}" aria-label="${t("selectGroup") || "Select group"}"></label><div class="group-card-body"><h3>${escapeHtml(g.name)}${g.unreadCount > 0 ? `<span class="group-unread-badge">${g.unreadCount > 99 ? "99+" : g.unreadCount}</span>` : ""}</h3><p class="group-meta">Code ${escapeHtml(g.code)} | ${g.memberCount} member${g.memberCount === 1 ? "" : "s"}</p><div class="group-actions"><button class="btn-primary" type="button" data-open-group="${escapeHtml(g.code)}">Open</button><button class="danger-button" type="button" data-exit-group="${escapeHtml(g.code)}">${t("exitGroupPermanent")}</button></div></div></article>`).join("");
+  } else {
+    html += `<article class="demo-card"><h3>${t("noActiveGroups")}</h3></article>`;
+  }
 
   html += `<h3 class="group-section-title">${t("groupInvites")}</h3>`;
   html += groupInvites.length
@@ -3344,6 +3322,32 @@ async function renderGroupsPage() {
     : `<article class="demo-card"><h3>${t("noPastGroups")}</h3></article>`;
 
   pageDemo.innerHTML = html;
+}
+
+function updateGroupBulkBar() {
+  const bar = document.querySelector("#groupBulkBar");
+  if (!bar) return;
+  const n = state.selectedGroups ? state.selectedGroups.size : 0;
+  bar.classList.toggle("is-hidden", n === 0);
+  const count = document.querySelector("#bulkCount");
+  if (count) count.textContent = `${n} ${t("selected") || "selected"}`;
+}
+
+async function deleteSelectedGroups() {
+  const codes = Array.from(state.selectedGroups || []);
+  if (!codes.length) return;
+  if (!confirm((t("confirmDeleteGroups") || "Delete the selected groups? This can't be undone.") + ` (${codes.length})`)) return;
+  let failed = 0;
+  for (const code of codes) {
+    try {
+      await api("/api/groups/exit", { method: "POST", body: { username: currentUsername(), groupCode: code } });
+      if (state.groupCode === code) leaveGroup();
+    } catch (e) { failed++; }
+  }
+  state.selectedGroups = new Set();
+  state.pageShellRendered = "";
+  if (failed) showError(t("someGroupsFailed") || "Some groups couldn't be removed. Please try again.");
+  navigate("/groups");
 }
 
 const LIKED_LIMIT = 8;
@@ -3403,7 +3407,7 @@ async function renderPlacesHistoryPage() {
     </section>`;
   paintPastList();
   try {
-    const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}`);
+    const data = await api(`/api/liked-places?username=${encodeURIComponent(currentUsername())}&userId=${encodeURIComponent(state.user?.id || "")}`);
     state.likedCache = data.places || [];
   } catch (e) {
     state.likedCache = [];
@@ -3958,6 +3962,15 @@ backFromJoinButton.addEventListener("click", () => { state.setupMode = ""; rende
 createButton.addEventListener("click", () => createGroup().catch((e) => showError(e.message)));
 joinButton.addEventListener("click", () => joinGroup().catch((e) => showError(e.message)));
 loginButton.addEventListener("click", () => login().catch((e) => showError(e.message)));
+document.querySelector("#loginPasswordToggle")?.addEventListener("click", () => {
+  const input = document.querySelector("#loginPassword");
+  const btn = document.querySelector("#loginPasswordToggle");
+  if (!input) return;
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  btn.classList.toggle("is-showing", show);
+  btn.setAttribute("aria-label", show ? (t("hidePassword") || "Hide password") : (t("showPassword") || "Show password"));
+});
 registerButton.addEventListener("click", () => registerUser().catch((e) => showError(e.message)));
 [loginUsername, loginEmail, loginPassword].forEach((input) => { input.addEventListener("keydown", (e) => { if (e.key === "Enter") (state.authMode === "signup" ? registerUser() : login()).catch((err) => showError(err.message)); }); });
 loginPassword.addEventListener("input", renderPasswordStrength);
@@ -4051,10 +4064,6 @@ resultList.addEventListener("click", (e) => {
   if (e.target.closest("#addOwnPlaceButton")) { addOwnPlace(); }
 });
 [languageButton, appLanguageButton].forEach((btn) => btn && btn.addEventListener("click", toggleLanguage));
-document.addEventListener("change", (e) => {
-  if (e.target && e.target.id === "languageSelect") setLanguage(e.target.value);
-});
-
 // #4: Comments box — info popup + apply (re-rank with the note)
 document.querySelector("#commentsInfoBtn")?.addEventListener("click", () => {
   showModal(t("commentsInfoTitle"), t("commentsInfoBody"), [{ label: t("ok"), primary: true }]);
@@ -4196,6 +4205,7 @@ pageDemo.addEventListener("click", (e) => {
   if (openGroupBtn) { codeInput.value = openGroupBtn.dataset.openGroup; state.activePage = ""; joinGroup().catch((err) => showError(err.message)); return; }
   const exitGroupBtn = e.target.closest("[data-exit-group]");
   if (exitGroupBtn) { exitGroupPermanently(exitGroupBtn.dataset.exitGroup).catch((err) => showError(err.message)); return; }
+  if (e.target.closest("#bulkDeleteBtn")) { deleteSelectedGroups().catch((err) => showError(err.message)); return; }
   const saveProfileBtn = e.target.closest("#saveProfileButton");
   if (saveProfileBtn) { saveProfile().catch((err) => showError(err.message)); return; }
   const saveSettingsBtn = e.target.closest("#saveSettingsButton");
@@ -4301,6 +4311,14 @@ pageDemo.addEventListener("click", (e) => {
 });
 
 pageDemo.addEventListener("change", (e) => { if (e.target.id === "profilePictureInput") updateProfilePicture(e.target.files?.[0]).catch((err) => showError(err.message)); });
+pageDemo.addEventListener("change", (e) => {
+  const cb = e.target.closest(".group-check");
+  if (!cb) return;
+  if (!state.selectedGroups) state.selectedGroups = new Set();
+  if (cb.checked) state.selectedGroups.add(cb.dataset.selectGroup);
+  else state.selectedGroups.delete(cb.dataset.selectGroup);
+  updateGroupBulkBar();
+});
 pageDemo.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "friendSearchInput") { e.preventDefault(); searchFriends().catch((err) => showError(err.message)); } });
 
 boot().catch((e) => showError(e.message));

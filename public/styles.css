@@ -3174,7 +3174,6 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 }
 .swipe-hint.hint-yes { color: var(--green); right: 22px; left: auto; transform: rotate(8deg); }
 .swipe-hint.hint-no { color: var(--red); transform: rotate(-8deg); }
-.swipe-hint.hint-maybe { color: #3a7bd5; left: 50%; transform: translateX(-50%) rotate(-2deg); }
 
 .swipe-tip {
   text-align: center;
@@ -3217,13 +3216,11 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 .swipe-btn.undo, .swipe-btn.fav { width: 52px; height: 52px; }
 .swipe-btn.undo::before { content: "\21A9"; color: var(--muted); font-size: 1.3rem; }
 .swipe-btn.no::before { content: "\2715"; color: var(--red); font-weight: 800; }
-.swipe-btn.maybe::before { content: "\2605"; color: #3a7bd5; }
 .swipe-btn.yes { width: 72px; height: 72px; }
 .swipe-btn.yes::before { content: "\2665"; color: var(--green); font-size: 1.75rem; }
 .swipe-btn.fav::before { content: "\1F516"; font-size: 1.25rem; }
 
 .swipe-btn.no:hover { border-color: var(--red); background: #fff0f1; }
-.swipe-btn.maybe:hover { border-color: #3a7bd5; background: #eef4fc; }
 .swipe-btn.yes:hover { border-color: var(--green); background: var(--green-light); }
 .swipe-btn.fav.is-favourited { background: var(--gold); border-color: var(--gold); }
 .swipe-btn.undo:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -3409,9 +3406,6 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 .swipe-btn.no:hover::before { color: #fff; }
 
 /* Maybe — blue */
-.swipe-btn.maybe { box-shadow: 0 6px 16px rgba(58, 123, 213, 0.18); }
-.swipe-btn.maybe:hover { background: #3a7bd5; }
-.swipe-btn.maybe:hover::before { color: #fff; }
 
 /* Yes — the hero action: filled green gradient, white heart */
 .swipe-btn.yes {
@@ -3460,7 +3454,6 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 }
 .swipe-hint.hint-yes { color: var(--green-strong); }
 .swipe-hint.hint-no { color: var(--red); }
-.swipe-hint.hint-maybe { color: #3a7bd5; }
 
 /* Global smoothing touches */
 html { scroll-behavior: smooth; }
@@ -3557,7 +3550,6 @@ html { scroll-behavior: smooth; }
 }
 .tut-right { background: var(--green-light); color: var(--green-strong); }
 .tut-left { background: #fff0f1; color: var(--red); }
-.tut-up { background: #eef4fc; color: #3a7bd5; }
 .tutorial-note { color: var(--muted); font-size: 0.85rem; margin: 0 0 14px; }
 .tutorial-card .btn-primary { width: 100%; }
 
@@ -3744,11 +3736,9 @@ html[data-theme="dark"] .swipe-btn.yes { background: linear-gradient(140deg, var
 html[data-theme="dark"] .shimmer { background: linear-gradient(100deg, #22252c 30%, #2c2f38 50%, #22252c 70%); background-size: 200% 100%; }
 html[data-theme="dark"] .chat-bubble-theirs { background: #2a2e37; color: var(--ink); }
 html[data-theme="dark"] .liked-place-card .vote-tag.maybe,
-html[data-theme="dark"] .tut-up { background: rgba(58, 123, 213, 0.20); }
 html[data-theme="dark"] .liked-place-card .vote-tag.no,
 html[data-theme="dark"] .tut-left,
 html[data-theme="dark"] .swipe-btn.no:hover { background: rgba(211, 56, 74, 0.22); }
-html[data-theme="dark"] .swipe-btn.maybe:hover { background: rgba(58, 123, 213, 0.22); }
 html[data-theme="dark"] .swipe-btn.fav:hover { background: rgba(109, 75, 208, 0.22); }
 html[data-theme="dark"] .tut-right { background: var(--green-light); }
 html[data-theme="dark"] .friends-tabs,
@@ -3909,17 +3899,6 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
 .personal-form .field span { overflow-wrap: anywhere; }
 
 /* Settings language selector */
-.settings-select {
-  min-height: 40px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-md);
-  padding: 0 12px;
-  font: inherit;
-  background: var(--panel);
-  color: var(--ink);
-  cursor: pointer;
-}
-html[data-theme="dark"] .settings-select { color-scheme: dark; }
 
 /* ============================================================
    Settings action boxes (My plan / Log out / Delete account)
@@ -3983,3 +3962,43 @@ html[data-theme="dark"] .settings-select { color-scheme: dark; }
 .offer-more-link { text-align: center; margin: 24px 0 0; }
 .offer-more-link a { color: var(--green-strong); font-weight: 700; text-decoration: none; }
 .offer-more-link a:hover { text-decoration: underline; }
+
+/* Show/hide password toggle on login */
+.password-field { position: relative; display: block; }
+.password-field input { width: 100%; box-sizing: border-box; padding-right: 46px; }
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 6px 8px;
+  opacity: 0.55;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.password-toggle:hover { opacity: 0.9; }
+.password-toggle.is-showing { opacity: 1; }
+
+/* Multi-select delete in My Groups */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+.bulk-bar #bulkCount { font-weight: 700; }
+.bulk-bar .danger-button { min-height: 40px; padding: 0 18px; white-space: nowrap; }
+.group-card-selectable { position: relative; display: flex; align-items: flex-start; gap: 12px; }
+.group-card-body { flex: 1 1 auto; min-width: 0; }
+.group-select { flex: 0 0 auto; display: flex; align-items: center; padding-top: 4px; }
+.group-select input { width: 20px; height: 20px; cursor: pointer; accent-color: var(--green); }
