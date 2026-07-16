@@ -670,21 +670,6 @@ function buildPlaceDescription(place, typeLabel, areaLabel, language = "en") {
   return parts.join(" — ");
 }
 
-function buildPlaceDescription(place, typeLabel, areaLabel, language = "en") {
-  const lang = placeLanguage(language);
-  const summary = place.editorialSummary?.text?.trim();
-  const address = place.formattedAddress?.trim() || "";
-  const rating = place.rating ? `${Number(place.rating).toFixed(1)} ${lang === "el" ? "αστέρια" : "stars"}` : "";
-  const reviewCount = place.userRatingCount ? `${place.userRatingCount} ${lang === "el" ? "κριτικές" : "reviews"}` : "";
-  const ratingLine = [rating, reviewCount].filter(Boolean).join(" · ");
-  const parts = [];
-  if (summary) parts.push(summary);
-  else parts.push(lang === "el" ? `${typeLabel} στην περιοχή ${areaLabel}` : `${typeLabel} in ${areaLabel}`);
-  if (address) parts.push(address);
-  if (ratingLine) parts.push(ratingLine);
-  return parts.join(" — ");
-}
-
 function fallbackPhotoForType(typeId) {
   const photos = {
     restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80",
@@ -716,6 +701,11 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId, language = "en") {
     address: place.formattedAddress || "",
     primaryType: place.primaryType || place.types?.[0] || "",
     openNow: (place.currentOpeningHours?.openNow ?? place.regularOpeningHours?.openNow ?? null),
+    summary: place.editorialSummary?.text || "",
+    reviewSnippets: (place.reviews || [])
+      .slice(0, 2)
+      .map((r) => String(r.text?.text || r.originalText?.text || r.text || "").replace(/\s+/g, " ").trim().slice(0, 180))
+      .filter(Boolean),
     location: place.location || null
   };
 }
@@ -742,11 +732,18 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
     "places.nationalPhoneNumber",
     "places.internationalPhoneNumber"
   ].join(",");
+  // Known-good minimal mask: if the full mask is ever rejected (e.g. an unsupported
+  // field), we retry with this so place loading never silently fails completely.
+  const minimalFieldMask = [
+    "places.id", "places.displayName", "places.formattedAddress", "places.location",
+    "places.rating", "places.userRatingCount", "places.priceLevel", "places.photos",
+    "places.types", "places.primaryType", "places.regularOpeningHours", "places.googleMapsUri"
+  ].join(",");
 
   // Resolve the strict rectangle for the selected area (fixed bounds or geocoded).
   const rect = await resolveAreaRectangle(areaOption);
 
-  async function runSearch(useIncludedType) {
+  async function runSearch(useIncludedType, mask = fieldMask) {
     const body = { textQuery: query, maxResultCount: 20, languageCode: placeLanguage(language) };
     const includedType = activityIncludedTypes[typeId];
     if (useIncludedType && includedType) body.includedType = includedType;
@@ -757,13 +754,18 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": googleApiKey,
-        "X-Goog-FieldMask": fieldMask
+        "X-Goog-FieldMask": mask
       },
       body: JSON.stringify(body)
     });
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
       console.warn("Google Places search failed:", response.status, errText.slice(0, 200));
+      // A 400 is usually a field-mask problem — retry once with the minimal safe mask.
+      if (response.status === 400 && mask !== minimalFieldMask) {
+        console.warn("Retrying Google Places search with minimal field mask.");
+        return runSearch(useIncludedType, minimalFieldMask);
+      }
       return null;
     }
     const data = await response.json();
@@ -816,8 +818,19 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
       body: JSON.stringify({
         model: openAiModel,
         messages: [
-          { role: "system", content: "You select places from a provided list only. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
-          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${commentsContext} ${pastContext} ${likedContext} ${rankingInstructions} Places: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, address: p.description })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
+          { role: "system", content: "You select and rank places from a provided list only, using each place's rating, price, editorial summary and real review snippets to judge how well it fits the group's notes and vibe. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
+          { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${commentsContext} ${pastContext} ${likedContext} ${rankingInstructions} Use the summary and reviews to judge vibe (e.g. quiet, lively, romantic, family-friendly, vegan, budget). Places: ${JSON.stringify(googlePlaces.map((p) => ({
+            title: p.title,
+            category: p.category,
+            area: p.areaLabel,
+            rating: p.rating || undefined,
+            reviews_count: p.userRatingCount || undefined,
+            price: p.cost || undefined,
+            open_now: p.openNow === null ? undefined : p.openNow,
+            summary: p.summary || undefined,
+            reviews: (p.reviewSnippets && p.reviewSnippets.length) ? p.reviewSnippets : undefined,
+            address: p.address || p.description
+          })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
         temperature: 0.4, max_tokens: 500
       })
@@ -868,7 +881,7 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
           },
           {
             role: "user",
-            content: `Strictly select places using this priority order: 1) Area must clearly fit "${cleanArea}". 2) Activity/category must clearly fit "${cleanActivity}". 3) Age group or vibe should fit "${cleanAge || "not specified"}".${commentsClause} Exclude any candidate that does not clearly satisfy the area and activity. If none clearly fit, return an empty array. Rank the remaining places by area fit first, activity fit second, age/vibe and notes third. Pick up to ${maxCount}. Candidates: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, category: p.category, area: p.areaLabel, address: p.address || p.description, rating: p.rating, types: p.primaryType })))}`
+            content: `Strictly select places using this priority order: 1) Area must clearly fit "${cleanArea}". 2) Activity/category must clearly fit "${cleanActivity}". 3) Age group or vibe should fit "${cleanAge || "not specified"}".${commentsClause} Use each place's summary and reviews to judge vibe. Exclude any candidate that does not clearly satisfy the area and activity. If none clearly fit, return an empty array. Rank the remaining places by area fit first, activity fit second, age/vibe and notes third. Pick up to ${maxCount}. Candidates: ${JSON.stringify(googlePlaces.map((p) => ({ title: p.title, category: p.category, area: p.areaLabel, address: p.address || p.description, rating: p.rating, price: p.cost || undefined, summary: p.summary || undefined, reviews: (p.reviewSnippets && p.reviewSnippets.length) ? p.reviewSnippets : undefined, types: p.primaryType })))}`
           }
         ],
         temperature: 0.1,
@@ -1956,15 +1969,17 @@ async function handleApi(request, response) {
   // ── Liked places ──
   if (request.method === "GET" && parts[1] === "liked-places") {
     const username  = url.searchParams.get("username") || "";
+    const userId    = url.searchParams.get("userId") || "";
     if (!(await requireAuth(request, response, username))) return;
     const allGroups = await getAllGroups();
     const places    = [];
     for (const groupRow of allGroups) {
       const group = groupRow.data;
-      if (!group?.members?.some((m) => m.username === username)) continue;
-      if (!group.votes) continue;
-      const member = group.members.find((m) => m.username === username);
-      const uVotes = group.votes[member?.id] || group.votes[username] || {};
+      if (!group?.votes) continue;
+      // Include the user's liked places whether or not they are STILL a member,
+      // so leaving a group doesn't erase its places from their history.
+      const member = group.members?.find((m) => m.username === username);
+      const uVotes = group.votes[userId] || group.votes[member?.id] || group.votes[username] || {};
       for (const [placeId, vote] of Object.entries(uVotes)) {
         if (vote === "yes" || vote === true) {
           const place = group.places?.find((p) => p.id === placeId);
