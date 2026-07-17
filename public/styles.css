@@ -4002,3 +4002,7 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
 .group-card-body { flex: 1 1 auto; min-width: 0; }
 .group-select { flex: 0 0 auto; display: flex; align-items: center; padding-top: 4px; }
 .group-select input { width: 20px; height: 20px; cursor: pointer; accent-color: var(--green); }
+
+/* Swipe card image: neutral while the new photo loads (prevents stale/wrong image flash) */
+.activity-photo { transition: opacity 0.2s ease; background: var(--panel-2); }
+.activity-photo.is-loading { opacity: 0; }

@@ -1014,9 +1014,17 @@ function saveAccount(user) {
   setTopbarAvatar(user?.profile?.picture, user?.username || currentUsername());
 }
 
-async function loadAccount() {
+async function loadAccount(forceFresh = false) {
   if (!isLoggedIn()) return null;
-  const data = await api(`/api/account?username=${encodeURIComponent(currentUsername())}&viewer=${encodeURIComponent(currentUsername())}`);
+  const url = `/api/account?username=${encodeURIComponent(currentUsername())}&viewer=${encodeURIComponent(currentUsername())}`;
+  // If we already have the account cached, return it instantly so pages render without
+  // waiting on the network, and refresh in the background for next time. We don't
+  // re-render on the background refresh, to avoid clobbering anything the user is editing.
+  if (state.account && !forceFresh) {
+    api(url).then((data) => { if (data?.user) saveAccount(data.user); }).catch(() => {});
+    return state.account;
+  }
+  const data = await api(url);
   saveAccount(data.user);
   return data.user;
 }
@@ -1252,8 +1260,14 @@ function renderCard() {
     return;
   }
   resetCardTransform();
-  activityPhoto.src               = place.photoUrl || "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
-  activityPhoto.alt               = place.title;
+  const FALLBACK_PHOTO = "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=80";
+  const targetSrc = place.photoUrl || FALLBACK_PHOTO;
+  activityPhoto.alt = place.title;
+  // Hide the outgoing photo immediately so a fast swipe never shows the previous place's image.
+  activityPhoto.classList.add("is-loading");
+  activityPhoto.onload = () => activityPhoto.classList.remove("is-loading");
+  activityPhoto.onerror = () => { activityPhoto.onerror = null; activityPhoto.src = FALLBACK_PHOTO; activityPhoto.classList.remove("is-loading"); };
+  activityPhoto.src = targetSrc;
   const ratingText = place.rating ? `${Number(place.rating).toFixed(1)} \u2605` : "";
   const typeLabel = optionLabel("type", consensus("type")) || place.category;
   activityCategory.textContent    = ratingText ? `${typeLabel} | ${ratingText}` : typeLabel;
