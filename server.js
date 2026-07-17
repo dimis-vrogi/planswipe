@@ -51,7 +51,7 @@ const STRIPE_PRICE_PRO_YEARLY = 4999; // $49.99 in cents
 // ====== RATE LIMITER ======
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_MAX = 150; // per IP per minute — swipe-voting is POST-heavy, and users can share a NAT
 function isRateLimited(ip) {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
@@ -761,6 +761,9 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
       console.warn("Google Places search failed:", response.status, errText.slice(0, 200));
+      if (response.status === 403) {
+        console.warn("Google 403 = the API key/request is being FORBIDDEN. Check (in Google Cloud): 1) the key's Application restrictions are NOT 'HTTP referrers' (that blocks server calls — use 'None' or IP), 2) the key's API restrictions include 'Places API (New)' and 'Geocoding API', 3) 'Places API (New)' is enabled for the project, 4) billing is active.");
+      }
       // A 400 is usually a field-mask problem — retry once with the minimal safe mask.
       if (response.status === 400 && mask !== minimalFieldMask) {
         console.warn("Retrying Google Places search with minimal field mask.");
