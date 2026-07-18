@@ -1299,19 +1299,35 @@ async function handleApi(request, response) {
     const group = await loadGroup(body.groupCode);
     if (!group) { sendJson(response, 200, { success: true }); return; }
     const pastGroup = { code: group.code, name: group.name, memberCount: group.members?.length || 0, exitedAt: Date.now() };
+
+    // Snapshot this user's liked places BEFORE removal (removeUserFromGroup deletes their votes),
+    // so leaving a group never erases its places from their history.
+    const member = group.members?.find((m) => m.username === body.username);
+    const uVotes = group.votes?.[member?.id] || group.votes?.[body.username] || {};
+    const likedSnapshot = [];
+    for (const [placeId, vote] of Object.entries(uVotes)) {
+      if (vote === "yes" || vote === true) {
+        const place = group.places?.find((p) => p.id === placeId);
+        if (place) likedSnapshot.push({ place: place.title, area: place.areaLabel, activity: place.category, vote: "yes", groupName: group.name });
+      }
+    }
+
     if (removeUserFromGroup(group, body.username)) await saveGroup(group);
 
     const profileRow = await getProfileByUsername(body.username);
     if (profileRow) {
       const pastGroups = profileRow.profile?.pastGroups || [];
-      if (!pastGroups.some((g) => g.code === pastGroup.code)) {
-        pastGroups.unshift(pastGroup);
-        await upsertProfile({
-          username: body.username,
-          email: profileRow.email || "",
-          profile: { ...profileRow.profile, pastGroups: pastGroups.slice(0, 50) }
-        });
-      }
+      if (!pastGroups.some((g) => g.code === pastGroup.code)) pastGroups.unshift(pastGroup);
+      // Merge the liked-place snapshot into a durable archive (deduped by place + group).
+      const archive = profileRow.profile?.likedPlacesArchive || [];
+      const keyOf = (x) => `${x.place}|${x.groupName}`;
+      const seen = new Set(archive.map(keyOf));
+      likedSnapshot.forEach((s) => { if (!seen.has(keyOf(s))) { archive.push(s); seen.add(keyOf(s)); } });
+      await upsertProfile({
+        username: body.username,
+        email: profileRow.email || "",
+        profile: { ...profileRow.profile, pastGroups: pastGroups.slice(0, 50), likedPlacesArchive: archive.slice(0, 200) }
+      });
     }
     sendJson(response, 200, { success: true, pastGroup });
     return;
@@ -1448,24 +1464,11 @@ async function handleApi(request, response) {
         group.votes = {};
       }
     } else {
+      // Not everyone agrees yet. Do NOT wipe anyone's selection — keep every choice so
+      // members can see each other's picks and converge by tapping the same option.
+      // Just don't advance, and clear any stale consensus for this step.
       if (group.consensus?.[kind]) group.consensus[kind] = null;
-      // #6: everyone has picked but they don't agree — reset choices so they re-pick,
-      // and leave a marker so clients can show the "not everyone agrees" warning once.
-      const everyoneChose = Object.keys(group.choices[kind] || {}).length === totalMembers && totalMembers > 1;
-      if (everyoneChose) {
-        group.choices[kind] = {};
-        if (kind === "area") {
-          group.choices.type = {};
-          group.consensus.area = null; group.consensus.type = null;
-          group.search = null; group.places = []; group.placesExhausted = false;
-          group.commentStatus = {};
-        } else {
-          group.consensus.type = null;
-          group.commentStatus = {};
-          group.search = null; group.places = []; group.placesExhausted = false;
-        }
-        group.reset = { id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, kind };
-      }
+      group.reset = null;
     }
     await saveGroup(group);
     sendJson(response, 200, { group: summarizeGroup(group) });
@@ -1976,20 +1979,31 @@ async function handleApi(request, response) {
     if (!(await requireAuth(request, response, username))) return;
     const allGroups = await getAllGroups();
     const places    = [];
+    const seen      = new Set();
+    const keyOf     = (x) => `${x.place}|${x.groupName || ""}`;
     for (const groupRow of allGroups) {
       const group = groupRow.data;
       if (!group?.votes) continue;
-      // Include the user's liked places whether or not they are STILL a member,
-      // so leaving a group doesn't erase its places from their history.
+      // Include the user's liked places whether or not they are STILL a member.
       const member = group.members?.find((m) => m.username === username);
       const uVotes = group.votes[userId] || group.votes[member?.id] || group.votes[username] || {};
       for (const [placeId, vote] of Object.entries(uVotes)) {
         if (vote === "yes" || vote === true) {
           const place = group.places?.find((p) => p.id === placeId);
-          if (place) places.push({ place: place.title, area: place.areaLabel, activity: place.category, vote, groupName: group.name });
+          if (place) {
+            const entry = { place: place.title, area: place.areaLabel, activity: place.category, vote, groupName: group.name };
+            if (!seen.has(keyOf(entry))) { seen.add(keyOf(entry)); places.push(entry); }
+          }
         }
       }
     }
+    // Add the durable archive of places from groups the user has permanently left.
+    try {
+      const profileRow = await getProfileByUsername(username);
+      (profileRow?.profile?.likedPlacesArchive || []).forEach((entry) => {
+        if (!seen.has(keyOf(entry))) { seen.add(keyOf(entry)); places.push(entry); }
+      });
+    } catch (_) {}
     sendJson(response, 200, { places });
     return;
   }
