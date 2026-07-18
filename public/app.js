@@ -68,6 +68,7 @@ const backFromJoinButton   = document.querySelector("#backFromJoinButton");
 const createButton         = document.querySelector("#createButton");
 const joinButton           = document.querySelector("#joinButton");
 const reviewButton         = document.querySelector("#reviewButton");
+const exitCurrentGroupButton = document.querySelector("#exitCurrentGroupButton");
 const groupName            = document.querySelector("#groupName");
 const groupCode            = document.querySelector("#groupCode");
 const memberRow            = document.querySelector("#memberRow");
@@ -261,7 +262,7 @@ const copy = {
     addActivityText: "Suggest a different activity type.",
     addOwn: "Add your own", liveChoices: "Live choices",
     resultsTitle: "What you can do", aiSuggestions: "AI Suggestions",
-    changeBasics: "Change basics", noStrongChoice: "No strong choice yet",
+    changeBasics: "Change basics", exitCurrentGroup: "Exit current group", confirmExitTemp: "Leave this group for now? You can rejoin anytime from My Groups.", noStrongChoice: "No strong choice yet",
     keepSwiping: "Keep swiping or wait for the rest of the group.",
     noFriends: "No friends yet", searchByUsername: "Search by username", search: "Search",
     requests: "Requests", saveProfile: "Save Profile", age: "Age", ageGroup: "Age group", bio: "Bio",
@@ -374,6 +375,8 @@ const copy = {
     newPasswordPlaceholder: "New password",
     confirmPasswordPlaceholder: "Confirm new password",
     resetPassword: "Reset Password", showPassword: "Show password", hidePassword: "Hide password",
+    account: "Account",
+    recoveryEmailSent: "If an account exists for {email}, a password reset link has been sent. Check your inbox.",
     passwordResetSuccess: "Password reset successfully!",
     passwordResetSuccessBody: "Your password has been changed. You can now log in with your new password.",
     enterUsernameOrEmail: "Enter your username or email.",
@@ -541,7 +544,7 @@ const copy = {
     addActivityText: "Προτείνετε άλλο είδους δραστηριότητας.",
     addOwn: "Πρόσθεσε δικό σου", liveChoices: "Ζωντανές επιλογές",
     resultsTitle: "Τι μπορείτε να κάνετε", aiSuggestions: "Προτάσεις AI",
-    changeBasics: "Αλλαγή βασικών", noStrongChoice: "Δεν υπάρχει ακόμα δυνατή επιλογή",
+    changeBasics: "Αλλαγή βασικών", exitCurrentGroup: "Έξοδος από ομάδα", confirmExitTemp: "Έξοδος από την ομάδα προς το παρόν; Μπορείς να επιστρέψεις από τις Ομάδες μου.", noStrongChoice: "Δεν υπάρχει ακόμα δυνατή επιλογή",
     keepSwiping: "Συνεχίστε το swipe ή περιμένετε την υπόλοιπη ομάδα.",
     noFriends: "Δεν έχετε ακόμα φίλους",
     searchByUsername: "Αναζήτηση με όνομα χρήστη", search: "Αναζήτηση",
@@ -665,6 +668,23 @@ const copy = {
     newPasswordPlaceholder: "Νέος κωδικός",
     confirmPasswordPlaceholder: "Επιβεβαίωση νέου κωδικού",
     resetPassword: "Επαναφορά Κωδικού", showPassword: "Εμφάνιση κωδικού", hidePassword: "Απόκρυψη κωδικού",
+    account: "Λογαριασμός",
+    recoveryEmailSent: "Αν υπάρχει λογαριασμός για {email}, έχει σταλεί σύνδεσμος επαναφοράς κωδικού. Έλεγξε τα εισερχόμενά σου.",
+    ageFreeTextPlaceholder: "γράψε ηλικιακή ομάδα, π.χ. 18-24",
+    aiFilteredResults: "Φιλτραρισμένα με AI κατά περιοχή, δραστηριότητα και ηλικιακή ομάδα.",
+    aiInfoBody: "Η AI χρησιμοποιεί την επιλεγμένη περιοχή, το είδος δραστηριότητας, τις ηλικιακές ομάδες, προηγούμενες δραστηριότητες, αγαπημένα μέρη και τυχόν σχόλια. Τα σχόλια θεωρούνται αυστηρές απαιτήσεις, οπότε μέρη που σαφώς συγκρούονται με αυτά αποκλείονται.",
+    aiInfoTitle: "Πώς φιλτράρει η AI τα μέρη",
+    areaFreeTextPlaceholder: "Γράψε περιοχή ή γειτονιά, ή άφησέ το κενό",
+    backToActivity: "Πίσω στη δραστηριότητα",
+    categoryFreeTextPlaceholder: "Γράψε οτιδήποτε, π.χ. sushi, cocktails, σινεμά",
+    commentSubmitted: "Το σχόλιο καταχωρήθηκε",
+    commentsOptional: "Σχόλια (προαιρετικά)",
+    commentsStepHint: "Πρόσθεσε απαιτήσεις όπως budget, ένταση, διατροφικές ανάγκες, καθιστικό, ή τι να αποφύγουμε. Μπορείς και να το παραλείψεις.",
+    commentsStepTitle: "Κάποιες σημειώσεις πριν βρούμε μέρη;",
+    loadingPlaces: "Φόρτωση περισσότερων μερών\u2026",
+    skip: "Παράλειψη",
+    stepComments: "Βήμα 3 από 3",
+    submitComment: "Υποβολή σχολίου",
     passwordResetSuccess: "Ο κωδικός επαναφέρθηκε επιτυχώς!",
     passwordResetSuccessBody: "Ο κωδικός σας άλλαξε. Μπορείτε τώρα να συνδεθείτε με τον νέο σας κωδικό.",
     enterUsernameOrEmail: "Εισαγάγετε το όνομα χρήστη ή το email σας.",
@@ -852,6 +872,7 @@ function applyLanguage() {
   if (pseText) pseText.textContent = t("searchPlacesEntry");
   if (continueBrowseButton) continueBrowseButton.textContent = t("continueBrowsing");
   reviewButton.textContent      = t("changeBasics");
+  if (exitCurrentGroupButton) exitCurrentGroupButton.textContent = t("exitCurrentGroup");
 
   const setupH2 = document.querySelector("#setupPanel h2");
   if (setupH2) setupH2.textContent = t("startPlanning");
@@ -1456,30 +1477,35 @@ async function lockPlan(dateTime) {
   if (!dateTime) { showError(t("pickDateTime") || "Please pick a date and time"); return; }
   try {
     const data = await api(`/api/groups/${state.group.code}/plan`, { method: "POST", body: { userId: state.user.id, dateTime } });
+    state.groupMutationAt = Date.now();
     state.group = data.group; state.planEditing = false; renderApp();
   } catch (e) { showError(e.message); }
 }
 async function rsvpPlan(status) {
   try {
     const data = await api(`/api/groups/${state.group.code}/rsvp`, { method: "POST", body: { userId: state.user.id, status } });
+    state.groupMutationAt = Date.now();
     state.group = data.group; renderApp();
   } catch (e) { showError(e.message); }
 }
 async function startRunoff(cands) {
   try {
     const data = await api(`/api/groups/${state.group.code}/runoff-start`, { method: "POST", body: { userId: state.user.id, candidates: cands } });
+    state.groupMutationAt = Date.now();
     state.group = data.group; renderApp();
   } catch (e) { showError(e.message); }
 }
 async function runoffVote(placeId) {
   try {
     const data = await api(`/api/groups/${state.group.code}/runoff-vote`, { method: "POST", body: { userId: state.user.id, placeId } });
+    state.groupMutationAt = Date.now();
     state.group = data.group; renderApp();
   } catch (e) { showError(e.message); }
 }
 async function clearRunoff() {
   try {
     const data = await api(`/api/groups/${state.group.code}/runoff-clear`, { method: "POST", body: { userId: state.user.id } });
+    state.groupMutationAt = Date.now();
     state.group = data.group; renderApp();
   } catch (e) { showError(e.message); }
 }
@@ -2191,6 +2217,7 @@ function renderApp() {
   const typeReady = consensus("type");
 
   if (reviewButton) setVisible(reviewButton, areaReady && typeReady);
+  if (exitCurrentGroupButton) setVisible(exitCurrentGroupButton, Boolean(state.group));
 
   if (!areaReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("area"); return; }
   if (!typeReady) { setVisible(decisionPanel, true); setVisible(swipeLayout, false); setVisible(resultsPanel, false); renderDecisionStep("type"); return; }
@@ -2236,8 +2263,12 @@ function renderApp() {
 // ====== GROUP POLLING ======
 async function refreshGroup() {
   if (!state.groupCode) return;
+  const startedAt = Date.now();
   try {
     const data = await api(`/api/groups/${state.groupCode}`);
+    // If the user made a choice/vote while this poll was in flight, that response is
+    // authoritative — discard this now-stale poll so it can't revert their selection.
+    if (state.groupMutationAt && state.groupMutationAt > startedAt) return;
     const newGroup = data.group;
     state.pollErrorCount = 0;
 
@@ -2323,7 +2354,8 @@ function redirectForAgeGroup() {
 async function chooseOption(kind, optionId, customLabel = "") {
   const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions, language: state.language } });
   if (kind === "area") state.pendingAreaOption = null;
-  state.index = 0; state.group = data.group; renderApp();
+  state.groupMutationAt = Date.now();
+  state.index = 0; state.group = data.group; state.groupSig = JSON.stringify(data.group); renderApp();
 }
 
 async function goBackChoice() {
@@ -2340,6 +2372,7 @@ async function goBackChoice() {
   else return;                                                     // area step: nothing before it
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step } });
   state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
+  state.groupMutationAt = Date.now();
   state.group = data.group; renderApp();
 }
 
@@ -2348,6 +2381,7 @@ async function changeBasics() {
   if (!state.group || !state.user) return;
   const data = await api(`/api/groups/${state.group.code}/back`, { method: "POST", body: { userId: state.user.id, step: "area" } });
   state.index = 0; state.pendingAreaOption = null; state.placesExhausted = false;
+  state.groupMutationAt = Date.now();
   state.group = data.group; renderApp();
 }
 
@@ -2380,6 +2414,7 @@ async function vote(value) {
   flyOffCard(dirForVote(value));
   try {
     const data = await api(`/api/groups/${state.group.code}/vote`, { method: "POST", body: { userId: state.user.id, placeId: place.id, vote: value } });
+    state.groupMutationAt = Date.now();
     state.group = data.group;
     setTimeout(() => { state.index += 1; state.votingInProgress = false; renderApp(); }, 240);
   } catch (e) {
@@ -2568,6 +2603,7 @@ function updateBottomNav() {
 
 async function selectPlace(placeId) {
   const data = await api(`/api/groups/${state.group.code}/select-place`, { method: "POST", body: { userId: state.user.id, placeId } });
+  state.groupMutationAt = Date.now();
   state.group = data.group;
   renderResults();
 }
@@ -2623,6 +2659,7 @@ function addOwnPlace() {
             category: state.group.search?.activity || ""
           }
         });
+        state.groupMutationAt = Date.now();
         state.group = data.group;
         state.index = Math.max(0, (state.group.places || []).length - 1);
         renderApp();
@@ -2853,6 +2890,7 @@ async function continueBrowsing() {
       method: "POST",
       body: { username: currentUsername(), useAiSuggestions: state.useAiSuggestions, language: state.language }
     });
+    state.groupMutationAt = Date.now();
     state.group = data.group;
     if (data.exhausted || !data.places?.length) {
       state.placesExhausted = true;
@@ -3882,12 +3920,20 @@ function showError(message) {
 
 function openLogin() {
   state.authMode = "login";
-  state.loginOpen = true; renderApp(); loginUsername.focus();
+  state.loginOpen = true; renderApp();
+  requestAnimationFrame(() => {
+    (loginForm || loginUsername)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    loginUsername.focus({ preventScroll: true });
+  });
 }
 
 function openSignup() {
   state.authMode = "signup";
-  state.loginOpen = true; renderApp(); loginUsername.focus();
+  state.loginOpen = true; renderApp();
+  requestAnimationFrame(() => {
+    (loginForm || loginUsername)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    loginUsername.focus({ preventScroll: true });
+  });
 }
 
 // ====== BOOT ======
@@ -4046,6 +4092,11 @@ document.querySelector("#tutorialGotIt")?.addEventListener("click", () => {
 });
 backChoiceButton.addEventListener("click", () => goBackChoice().catch((e) => showError(e.message)));
 reviewButton.addEventListener("click", () => changeBasics().catch((e) => showError(e.message)));
+document.querySelector("#exitCurrentGroupButton")?.addEventListener("click", () => {
+  if (!confirm(t("confirmExitTemp") || "Leave this group for now? You can rejoin anytime from My Groups.")) return;
+  leaveGroup();
+  navigate("/groups");
+});
 document.querySelector("#openPlacesSearchButton")?.addEventListener("click", openPlacesSearch);
 if (continueBrowseButton) {
   continueBrowseButton.addEventListener("click", () => continueBrowsing().catch((e) => showError(e.message)));
@@ -4102,6 +4153,7 @@ async function finishCommentStep(skip = false) {
       method: "POST",
       body: { comment, skip, useAiSuggestions: state.useAiSuggestions, language: state.language }
     });
+    state.groupMutationAt = Date.now();
     state.group = data.group;
     renderApp();
   } catch (e) { showError(e.message); }
@@ -4335,4 +4387,13 @@ pageDemo.addEventListener("change", (e) => {
 });
 pageDemo.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.id === "friendSearchInput") { e.preventDefault(); searchFriends().catch((err) => showError(err.message)); } });
 
-boot().catch((e) => showError(e.message));
+function hideAppLoader() {
+  const loader = document.querySelector("#appLoader");
+  if (loader && !loader.classList.contains("is-hidden")) {
+    loader.classList.add("is-hidden");
+    setTimeout(() => loader.remove(), 400);
+  }
+}
+boot().catch((e) => showError(e.message)).finally(hideAppLoader);
+// Safety net: never let the loader stay up if something stalls during boot.
+setTimeout(hideAppLoader, 8000);

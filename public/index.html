@@ -12,6 +12,25 @@
         } catch (e) {}
       })();
     </script>
+    <style>
+      #appLoader {
+        position: fixed; inset: 0; z-index: 100000;
+        display: flex; align-items: center; justify-content: center;
+        background: #f4f3ef;
+        transition: opacity 0.35s ease;
+      }
+      html[data-theme="dark"] #appLoader { background: #14161b; }
+      #appLoader.is-hidden { opacity: 0; pointer-events: none; }
+      .app-loader-inner { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .app-loader-logo { border-radius: 16px; }
+      .app-loader-spinner {
+        width: 38px; height: 38px; border-radius: 50%;
+        border: 4px solid rgba(18,128,94,0.18); border-top-color: #12805e;
+        animation: appLoaderSpin 0.7s linear infinite;
+      }
+      @keyframes appLoaderSpin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .app-loader-spinner { animation-duration: 1.6s; } }
+    </style>
     <meta name="google-site-verification" content="bC4vDoMJu07jPdbUCT4VZMbGxNa-43YNDvc-eKG8UYg" />
     <meta name="description" content="PlanSwipe helps groups decide where to go. Discover real nearby places, swipe and vote together, and find plans everyone agrees on in minutes.">
     <meta property="og:title" content="PlanSwipe - Group Planning Made Simple">
@@ -60,6 +79,12 @@
   </head>
 
   <body>
+    <div id="appLoader" aria-hidden="true">
+      <div class="app-loader-inner">
+        <img src="/logo.png" alt="" width="64" height="64" class="app-loader-logo">
+        <div class="app-loader-spinner"></div>
+      </div>
+    </div>
     <main class="app-shell">
       <!-- Hero Screen (shown when not logged in OR on /home route) -->
 
@@ -249,6 +274,7 @@
         <div class="group-actions-row">
           <button class="btn-primary" id="inviteToGroupButton" type="button">Invite to Group</button>
           <button class="btn-ghost is-hidden" id="reviewButton" type="button">Change basics</button>
+          <button class="btn-ghost is-hidden" id="exitCurrentGroupButton" type="button">Exit current group</button>
         </div>
         <div class="member-row" id="memberRow" aria-label="Group members"></div>
       </section>

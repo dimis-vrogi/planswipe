@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("planswipe:theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>How PlanSwipe Works — Plan Where to Go With Friends | PlanSwipe</title>
     <meta name="description" content="See how PlanSwipe helps your group decide where to go out. Pick an area and activity, swipe through real nearby places, vote together, and lock in a plan everyone agrees on — in minutes.">
     <link rel="canonical" href="https://www.planswipe.gr/how-it-works">
