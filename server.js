@@ -722,6 +722,11 @@ function mapGooglePlace(place, areaLabel, typeLabel, typeId, language = "en") {
   };
 }
 
+// Short-lived cache of raw Google search results (pre-exclusion), so "more places"
+// requests and same-area/type searches skip the network. openNow may lag up to the TTL.
+const googleSearchCache = new Map();
+const GOOGLE_SEARCH_TTL_MS = 10 * 60 * 1000;
+
 async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, maxResults = 20, excludeTitles = [], language = "en") {
   if (!googleApiKey) return null;
   const exclude = new Set(excludeTitles.map((t) => String(t).toLowerCase()));
@@ -791,9 +796,21 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
   }
 
   try {
-    let places = await runSearch(true);
-    if (!places?.length && activityIncludedTypes[typeId]) {
-      places = await runSearch(false);
+    const cacheKey = `${query}||${rect ? JSON.stringify(rect) : "norect"}||${language}||${typeId}`;
+    const cached = googleSearchCache.get(cacheKey);
+    let places;
+    if (cached && (Date.now() - cached.at) < GOOGLE_SEARCH_TTL_MS) {
+      places = cached.places;
+      console.log("[places] google cache hit");
+    } else {
+      places = await runSearch(true);
+      if (!places?.length && activityIncludedTypes[typeId]) {
+        places = await runSearch(false);
+      }
+      if (places?.length) {
+        googleSearchCache.set(cacheKey, { places, at: Date.now() });
+        if (googleSearchCache.size > 200) googleSearchCache.delete(googleSearchCache.keys().next().value);
+      }
     }
     if (!places?.length) return null;
     return places
@@ -833,7 +850,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
       body: JSON.stringify({
         model: openAiModel,
         messages: [
-          { role: "system", content: "You select and rank places from a provided list only, using each place's rating, price, editorial summary and real review snippets to judge how well it fits the group's notes and vibe. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Do not invent places. If unsure, return an empty array." },
+          { role: "system", content: "You select and rank places from a provided list only, using each place's rating, price, editorial summary and real review snippets to judge how well it fits the group's notes and vibe. Return ONLY a JSON array of objects with \"place\" (exact title from the list) and \"reason\" keys. Keep each reason under 8 words. Do not invent places. If unsure, return an empty array." },
           { role: "user", content: `Area: ${area}. Activity: ${activity}. ${ageContext} ${commentsContext} ${pastContext} ${likedContext} ${rankingInstructions} Use the summary and reviews to judge vibe (e.g. quiet, lively, romantic, family-friendly, vegan, budget). Places: ${JSON.stringify(googlePlaces.map((p) => ({
             title: p.title,
             category: p.category,
@@ -847,7 +864,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
             address: p.address || p.description
           })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
-        temperature: 0.4, max_tokens: 500
+        temperature: 0.4, max_tokens: 300
       })
     });
     if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
@@ -892,7 +909,7 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
         messages: [
           {
             role: "system",
-            content: "You strictly filter Google Places candidates. Return ONLY a JSON array of objects with \"place\" and \"reason\". Use exact place titles from the candidate list. Never invent places."
+            content: "You strictly filter Google Places candidates. Return ONLY a JSON array of objects with \"place\" and \"reason\". Keep each reason under 8 words. Use exact place titles from the candidate list. Never invent places."
           },
           {
             role: "user",
@@ -900,7 +917,7 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
           }
         ],
         temperature: 0.1,
-        max_tokens: 700
+        max_tokens: 300
       })
     });
     if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
@@ -938,11 +955,14 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
   if (noteKeywords) query = `${query} ${noteKeywords}`;
 
   if (googleApiKey) {
+    const tGoogle = Date.now();
     const googlePlaces = await googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId, 20, excludeTitles, options.language || "en");
+    const tAi = Date.now();
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
         : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || [], options.pastActivities || [], options.likedPlaces || [], options.comments || "");
+      console.log(`[places] google=${tAi - tGoogle}ms openai=${Date.now() - tAi}ms candidates=${googlePlaces.length}`);
       return { places: refined, source: options.useAi === false ? "google" : "google-ai", query, exhausted: false };
     }
     return { places: [], source: "google", query, exhausted: true };
