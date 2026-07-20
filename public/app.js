@@ -3939,7 +3939,13 @@ function openSignup() {
 // ====== BOOT ======
 async function boot() {
   applyLanguage();
+  // Start the options fetch immediately — it needs no auth, so it can overlap
+  // the Supabase config/session round-trip instead of waiting behind it.
+  const optionsP = api("/api/options");
   await configureSupabaseAuth();
+  // Account load only needs the session token, so it can start now and overlap
+  // the rest of boot instead of blocking serially later.
+  const accountP = isLoggedIn() ? loadAccount().catch(() => null) : Promise.resolve(null);
 
   // Handle password reset from email link
   if (state.supabaseClient && window.location.hash) {
@@ -3977,19 +3983,17 @@ async function boot() {
     }
   }
 
-  if (isLoggedIn() && state.supabaseClient) {
-    const { data } = await state.supabaseClient.auth.getSession();
-    if (!data.session) {
-      localStorage.removeItem("planswipe:login"); localStorage.removeItem("planswipe:email");
-      localStorage.removeItem("planswipe:account"); state.account = null;
-    }
+  if (isLoggedIn() && state.supabaseClient && !state.supabaseSession) {
+    // Session was already fetched inside configureSupabaseAuth — no session means logged out.
+    localStorage.removeItem("planswipe:login"); localStorage.removeItem("planswipe:email");
+    localStorage.removeItem("planswipe:account"); state.account = null;
   }
 
-  const options = await api("/api/options");
+  const options = await optionsP;
   state.areas = options.areas;
   state.types = options.types;
 
-  if (isLoggedIn()) await loadAccount().catch(() => null);
+  await accountP;
   window.addEventListener("popstate", onUrlChange);
 
   // #3: an invite link takes priority over normal boot routing.
