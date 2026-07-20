@@ -15,6 +15,18 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const openAiApiKey = process.env.OPENAI_API_KEY || "";
 const openAiModel = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+// Fetch with a hard timeout so a slow upstream (e.g. OpenAI tail latency) can't
+// stall place loading — callers' try/catch fallbacks handle the abort.
+async function fetchWithTimeout(url, options = {}, ms = 7000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 const BCRYPT_ROUNDS = 10;
 const APP_ORIGIN = process.env.APP_ORIGIN || "https://www.planswipe.gr";
 // #1: subscriptions stay OFF until you flip this to "true" (and configure Stripe).
@@ -815,7 +827,7 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
       ? `The group added these notes as STRICT REQUIREMENTS: "${trimmedComments}". ONLY include a place if it clearly satisfies these requirements. Exclude every place that does not clearly match them, even if that means returning very few places or an empty list. Never include a place that conflicts with these notes.`
       : "";
     const rankingInstructions = "IMPORTANT: Rank the places in DECLINING order of relevance. Prioritize based on: 1) The group's notes above (if any) 2) Past activities (places similar to where they've been before) 3) Liked places (places similar to ones they've liked) 4) Age group suitability. Return the most relevant ones first.";
-    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    const aiResponse = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
       body: JSON.stringify({
@@ -872,7 +884,7 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
     ? ` 4) Honor the user's extra notes/preferences as strict requirements: "${cleanComments}" — exclude any candidate that clearly conflicts with them.`
     : "";
   try {
-    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    const aiResponse = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiApiKey}` },
       body: JSON.stringify({
@@ -974,7 +986,14 @@ async function handleApi(request, response) {
   if (request.method === "GET" && parts[1] === "config") {
     sendJson(response, 200, { supabaseUrl, supabaseAnonKey }); return;
   }
+  // Lightweight health check — used by uptime/keep-alive pings. No auth, no DB work.
+  if (request.method === "GET" && parts[1] === "health") {
+    sendJson(response, 200, { ok: true, uptime: Math.floor(process.uptime()) });
+    return;
+  }
+
   if (request.method === "GET" && parts[1] === "options") {
+    response.setHeader("Cache-Control", "public, max-age=3600");
     sendJson(response, 200, { areas: areaOptions, types: typeOptions }); return;
   }
 
