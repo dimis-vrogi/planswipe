@@ -2594,16 +2594,6 @@ textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible,
   transition: var(--transition);
 }
 .pick-chip:hover { background: var(--green); color: #fff; transform: translateY(-1px); }
-/* Country box feature: "usual areas" chips + country field in the pick modal */
-.usual-areas { display: grid; gap: 6px; margin-bottom: 4px; }
-.pick-country-label {
-  display: grid;
-  gap: 4px;
-  margin-top: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--muted);
-}
 .pick-input {
   width: 100%;
   min-height: 46px;

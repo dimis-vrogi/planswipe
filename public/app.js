@@ -822,12 +822,14 @@ Object.assign(copy.el, {
 Object.assign(copy.en, {
   country: "Country",
   countryPlaceholder: "e.g. Greece, France",
-  usualAreas: "Your usual areas"
+  groupCountryHint: "Where will this group be going out?",
+  countryRequired: "Please enter the group's country."
 });
 Object.assign(copy.el, {
   country: "Χώρα",
   countryPlaceholder: "π.χ. Ελλάδα, Γαλλία",
-  usualAreas: "Οι συνηθισμένες σου περιοχές"
+  groupCountryHint: "Σε ποια χώρα θα βγαίνει αυτή η ομάδα;",
+  countryRequired: "Συμπλήρωσε τη χώρα της ομάδας."
 });
 
 // Default value for the editable Country field, per app language.
@@ -835,24 +837,11 @@ function defaultCountryValue() {
   return state.language === "el" ? "Ελλάδα" : "Greece";
 }
 
-// Top usual area+country pairs recorded by the server from your searches.
-function getUsualAreas(limit = 4) {
-  const list = state.account?.profile?.usualAreas;
-  return Array.isArray(list) ? list.slice(0, limit) : [];
-}
-
-// Chips markup shared by the standalone search and the group area picker.
-// One tap fills both the area and the country fields (via the click handler).
-function usualAreaChipsHtml() {
-  const list = getUsualAreas();
-  if (!list.length) return "";
-  const chips = list.map((u) => {
-    const area = String(u.area || "");
-    const country = String(u.country || "Greece");
-    const label = country === "Greece" ? area : `${area} · ${country}`;
-    return `<button type="button" class="pick-chip usual-area-chip" data-usual-area="${escapeHtml(area)}" data-usual-country="${escapeHtml(country)}">${escapeHtml(label)}</button>`;
-  }).join("");
-  return `<div class="usual-areas"><div class="pick-favs-label">${escapeHtml(t("usualAreas"))}</div><div class="pick-favs">${chips}</div></div>`;
+// Mirrors the server's Greece detection so the UI can adapt (e.g. hide Athens quick-picks).
+function isGreeceCountry(input) {
+  const clean = String(input || "").trim().toLowerCase();
+  if (!clean) return true;
+  return ["greece", "gr", "hellas", "ελλάδα", "ελλαδα", "ελλάς", "ελλας"].includes(clean);
 }
 
 // ====== LANGUAGE ======
@@ -927,6 +916,9 @@ function applyLanguage() {
 
   const cfs = createForm.querySelector(".field span"); if (cfs) cfs.textContent = t("groupName");
   groupInput.placeholder = t("fridayCrew");
+  const gcl = document.querySelector("#groupCountryLabel"); if (gcl) gcl.textContent = t("country");
+  const gci = document.querySelector("#groupCountryInput");
+  if (gci && ["", "greece", "ελλάδα"].includes(gci.value.trim().toLowerCase())) gci.value = defaultCountryValue();
   const jfs = joinForm.querySelector(".field span");   if (jfs) jfs.textContent = t("groupCodeLabel");
   createButton.textContent       = t("createGroup");
   joinButton.textContent         = t("joinGroup");
@@ -1162,7 +1154,15 @@ async function registerUser() {
 function selected(kind)        { return state.group?.choices?.[kind]?.[state.user?.id] || null; }
 function consensus(kind)       { return state.group?.consensus?.[kind] || null; }
 function memberCount()         { return state.group?.members?.length || 1; }
-function optionsFor(kind)      { return state.group?.options?.[kind] || (kind === "area" ? state.areas : state.types); }
+function optionsFor(kind) {
+  const base = state.group?.options?.[kind] || (kind === "area" ? state.areas : state.types);
+  // Non-Greece groups: the built-in Athens quick-picks don't apply — members add
+  // their own areas instead (searched in the group's country).
+  if (kind === "area" && state.group && !isGreeceCountry(state.group.country)) {
+    return (base || []).filter((o) => !["north_suburbs", "athens_center", "south_suburbs"].includes(o.id));
+  }
+  return base;
+}
 function optionScore(kind, id) { return state.group?.counts?.[kind]?.[id] || 0; }
 
 // ====== RENDER ======
@@ -2368,7 +2368,10 @@ function saveSession(user, group) {
 async function createGroup() {
   const username = currentUsername() || "Friend";
   if (!state.account?.profile?.ageGroup) { redirectForAgeGroup(); return; }
-  const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim() } });
+  const countryInput = document.querySelector("#groupCountryInput");
+  const country = countryInput?.value.trim() || "";
+  if (!country) { showError(t("countryRequired")); countryInput?.focus(); return; }
+  const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim(), country } });
   saveSession(data.user, data.group);
 }
 
@@ -2388,8 +2391,8 @@ function redirectForAgeGroup() {
   navigate("/personal");
 }
 
-async function chooseOption(kind, optionId, customLabel = "", customCountry = "") {
-  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, customCountry, useAiSuggestions: state.useAiSuggestions, language: state.language } });
+async function chooseOption(kind, optionId, customLabel = "") {
+  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions, language: state.language } });
   if (kind === "area") state.pendingAreaOption = null;
   state.groupMutationAt = Date.now();
   state.index = 0; state.group = data.group; state.groupSig = JSON.stringify(data.group); renderApp();
@@ -2647,7 +2650,7 @@ async function selectPlace(placeId) {
 
 // #2: a small picker that lets you add a value by typing OR by tapping one of
 // your saved favourites in that category (areas / activities / places).
-function pickWithFavourites({ title, favourites, placeholder, onPick, withCountry = false }) {
+function pickWithFavourites({ title, favourites, placeholder, onPick }) {
   document.querySelector("#pickModal")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "pickModal";
@@ -2657,19 +2660,11 @@ function pickWithFavourites({ title, favourites, placeholder, onPick, withCountr
     ? `<div class="pick-favs-label">${escapeHtml(t("fromYourFavourites") || "From your favourites")}</div>
        <div class="pick-favs">${favs.map((f) => `<button type="button" class="pick-chip" data-fav="${escapeHtml(f)}">${escapeHtml(f)}</button>`).join("")}</div>`
     : "";
-  const usualBlock = withCountry ? usualAreaChipsHtml() : "";
-  const countryBlock = withCountry
-    ? `<label class="pick-country-label">${escapeHtml(t("country"))}
-         <input type="text" id="pickCountry" class="pick-input" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off">
-       </label>`
-    : "";
   overlay.innerHTML = `
     <div class="modal-panel" role="dialog" aria-modal="true">
       <h3>${escapeHtml(title)}</h3>
-      ${usualBlock}
       ${favBlock}
       <input type="text" id="pickInput" class="pick-input" placeholder="${escapeHtml(placeholder || t("orTypeNew") || "Or type a new one")}" autocomplete="off">
-      ${countryBlock}
       <div class="modal-actions">
         <button class="btn-ghost" type="button" id="pickCancel">${escapeHtml(t("cancel"))}</button>
         <button class="btn-primary" type="button" id="pickAdd">${escapeHtml(t("add") || "Add")}</button>
@@ -2677,13 +2672,10 @@ function pickWithFavourites({ title, favourites, placeholder, onPick, withCountr
     </div>`;
   document.body.appendChild(overlay);
   const close = () => overlay.remove();
-  const pickedCountry = () => (withCountry ? (overlay.querySelector("#pickCountry")?.value.trim() || "") : "");
-  const choose = (val, country) => { const v = String(val || "").trim(); if (!v) return; const c = country !== undefined ? country : pickedCountry(); close(); onPick(v, c); };
-  overlay.querySelectorAll(".usual-area-chip").forEach((c) => c.addEventListener("click", () => choose(c.dataset.usualArea, c.dataset.usualCountry || "")));
-  overlay.querySelectorAll(".pick-chip:not(.usual-area-chip)").forEach((c) => c.addEventListener("click", () => choose(c.dataset.fav)));
+  const choose = (val) => { const v = String(val || "").trim(); if (!v) return; close(); onPick(v); };
+  overlay.querySelectorAll(".pick-chip").forEach((c) => c.addEventListener("click", () => choose(c.dataset.fav)));
   overlay.querySelector("#pickAdd").addEventListener("click", () => choose(overlay.querySelector("#pickInput").value));
   overlay.querySelector("#pickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") choose(e.target.value); });
-  overlay.querySelector("#pickCountry")?.addEventListener("keydown", (e) => { if (e.key === "Enter") choose(overlay.querySelector("#pickInput").value); });
   overlay.querySelector("#pickCancel").addEventListener("click", close);
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
   setTimeout(() => overlay.querySelector("#pickInput")?.focus(), 30);
@@ -2788,18 +2780,22 @@ function openPlacesSearch() {
     if (mode === "name") {
       fields.innerHTML = `
         <input type="text" id="searchQueryInput" class="search-query" placeholder="${escapeHtml(t("searchByNamePlaceholder"))}" autocomplete="off">
-        ${usualAreaChipsHtml()}
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
+        </div>
+        <div class="search-filter-row">
           <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
         </div>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     } else {
       fields.innerHTML = `
-        ${usualAreaChipsHtml()}
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
+        </div>
+        <div class="search-filter-row">
           <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
+        </div>
+        <div class="search-filter-row">
           <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
@@ -2810,13 +2806,6 @@ function openPlacesSearch() {
     overlay.querySelectorAll("input").forEach((input) => {
       input.addEventListener("keydown", (e) => { if (e.key === "Enter") runPlacesSearch(overlay, mode); });
     });
-    // Usual-areas chips: one tap fills BOTH the area and the country fields.
-    overlay.querySelectorAll(".usual-area-chip").forEach((chip) => chip.addEventListener("click", () => {
-      const areaInput = overlay.querySelector("#searchArea");
-      const countryInput = overlay.querySelector("#searchCountry");
-      if (areaInput) areaInput.value = chip.dataset.usualArea || "";
-      if (countryInput) countryInput.value = chip.dataset.usualCountry || defaultCountryValue();
-    }));
   };
   renderFields();
   overlay.querySelectorAll(".search-mode-btn").forEach((b) => b.addEventListener("click", () => {
@@ -4276,8 +4265,7 @@ optionGrid.addEventListener("click", (e) => {
       title: kind === "area" ? (t("addAnArea") || "Add an area") : (t("addAnActivity") || "Add an activity"),
       favourites: favs,
       placeholder: kind === "area" ? t("addAnotherArea") : t("addAnotherActivity"),
-      withCountry: kind === "area",
-      onPick: (label, country) => chooseOption(kind, "", label, country || "").catch((err) => showError(err.message))
+      onPick: (label) => chooseOption(kind, "", label).catch((err) => showError(err.message))
     });
     return;
   }
