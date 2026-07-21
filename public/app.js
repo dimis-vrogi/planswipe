@@ -207,7 +207,7 @@ const copy = {
     heroNote: "Built for the group chats that can never agree on a place.",
     whatPlanswipeIs: "What PlanSwipe is",
     sharedDecisionTool: "One shared way to decide where to go",
-    offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the winners rise to the top. No polls, no pressure, no 200-message thread that ends in \"idk, you pick\".",
+    offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the front-runners rise to the top. No polls, no pressure, and no endless thread that never reaches a decision.",
     agreeFaster: "Agree on the basics first", agreeFasterText: "Everyone chooses an area and the type of night out together. Once the group agrees, PlanSwipe takes it from there — no endless back-and-forth.",
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
     swipeTip: "Swipe right to like, left to pass",
@@ -484,7 +484,7 @@ const copy = {
     heroNote: "Φτιαγμένο για τις παρέες που ποτέ δεν καταλήγουν πού να πάνε.",
     whatPlanswipeIs: "Τι είναι το PlanSwipe",
     sharedDecisionTool: "Ένας κοινός τρόπος να αποφασίζετε πού θα πάτε",
-    offerText: "Φτιάξτε μια ομάδα με τους φίλους σας, συμφωνήστε στα βασικά, κάντε swipe σε πραγματικές επιλογές και δείτε τους νικητές να ανεβαίνουν στην κορυφή. Χωρίς ψηφοφορίες, χωρίς πίεση, χωρίς ατελείωτη συνομιλία που καταλήγει στο «δεν ξέρω, διάλεξε εσύ».",
+    offerText: "Φτιάξτε μια ομάδα με τους φίλους σας, συμφωνήστε στα βασικά, κάντε swipe σε πραγματικές επιλογές και δείτε τους φαβορί να ανεβαίνουν στην κορυφή. Χωρίς ψηφοφορίες, χωρίς πίεση και χωρίς ατελείωτη συνομιλία που δεν καταλήγει ποτέ σε απόφαση.",
     agreeFaster: "Πρώτα συμφωνήστε στα βασικά",
     agreeFasterText: "Όλοι διαλέγουν περιοχή και είδος εξόδου μαζί. Μόλις η ομάδα συμφωνήσει, το PlanSwipe αναλαμβάνει — χωρίς ατελείωτες συζητήσεις.",
     discoverOptions: "Ανακαλύψτε πραγματικά μέρη",
@@ -2777,12 +2777,16 @@ async function runPlacesSearch(overlay, mode) {
   const query = overlay.querySelector("#searchQueryInput")?.value.trim() || "";
   const category = overlay.querySelector("#searchCategory")?.value || "";
   const ageGroup = overlay.querySelector("#searchAge")?.value || "";
-  const comments = overlay.querySelector("#searchComments")?.value.trim() || "";
+  // Comments only exist in browse mode; by-name search never uses them.
+  const comments = mode === "browse" ? (overlay.querySelector("#searchComments")?.value.trim() || "") : "";
   if (mode === "name" && !query) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("enterPlaceName"))}</p>`; return; }
   if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
   resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
   try {
-    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, comments, language: state.language } });
+    const body = mode === "browse"
+      ? { mode, query, areaId, category, ageGroup, comments, language: state.language }
+      : { mode, query, areaId, language: state.language };
+    const data = await api("/api/places/search", { method: "POST", body });
     renderPlaceSearchResults(resultsEl, data);
   } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
 }
