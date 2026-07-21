@@ -73,34 +73,131 @@
     <main class="doc">
       <nav class="doc-nav">
         <a class="doc-brand" href="/"><img src="/logo.png" alt="PlanSwipe logo" width="36" height="36"> PlanSwipe</a>
-        <a class="btn-ghost" href="/" style="text-decoration:none;padding:8px 18px;border-radius:999px;">Open app</a>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn-ghost" id="docLangToggle" type="button" style="padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit;font-weight:700;">EL</button>
+          <a class="btn-ghost" href="/" data-i18n="openApp" style="text-decoration:none;padding:8px 18px;border-radius:999px;">Open app</a>
+        </div>
       </nav>
 
-      <h1>How PlanSwipe works</h1>
-      <p class="lede">PlanSwipe turns "so… where do we go?" into a plan your whole group actually agrees on. Choose the basics together, swipe through real nearby places, and let everyone's votes decide — in minutes, not a hundred messages.</p>
+      <h1 data-i18n="title">How PlanSwipe works</h1>
+      <p class="lede" data-i18n="lede">PlanSwipe turns "so… where do we go?" into a plan your whole group actually agrees on. Choose the basics together, swipe through real nearby places, and let everyone's votes decide — in minutes, not a hundred messages.</p>
 
-      <h2>Four steps to a plan</h2>
+      <h2 data-i18n="stepsTitle">Four steps to a plan</h2>
       <ol class="steps">
-        <li class="step"><span class="step-num">1</span><div><h3>Create a group and invite friends</h3><p>Start a group and share the code or invite link. Everyone joins in a tap — no accounts to hunt down.</p></div></li>
-        <li class="step"><span class="step-num">2</span><div><h3>Agree on the basics</h3><p>The group picks an area and the type of outing together. Add a note like "outdoor seating" or "budget-friendly" and the suggestions adapt.</p></div></li>
-        <li class="step"><span class="step-num">3</span><div><h3>Swipe through real places</h3><p>Browse actual venues from Google Maps — photos, ratings, hours and reviews. Swipe right to like, left to pass.</p></div></li>
-        <li class="step"><span class="step-num">4</span><div><h3>Match, then lock it in</h3><p>PlanSwipe surfaces the place everyone's into. Set a date, RSVP, add it to your calendar, and get a reminder before you go.</p></div></li>
+        <li class="step"><span class="step-num">1</span><div><h3 data-i18n="step1Title">Create a group and invite friends</h3><p data-i18n="step1Text">Start a group and share the code or invite link. Everyone joins in a tap — no accounts to hunt down.</p></div></li>
+        <li class="step"><span class="step-num">2</span><div><h3 data-i18n="step2Title">Agree on the basics</h3><p data-i18n="step2Text">The group picks an area and the type of outing together. Add a note like "outdoor seating" or "budget-friendly" and the suggestions adapt.</p></div></li>
+        <li class="step"><span class="step-num">3</span><div><h3 data-i18n="step3Title">Swipe through real places</h3><p data-i18n="step3Text">Browse actual venues from Google Maps — photos, ratings, hours and reviews. Swipe right to like, left to pass.</p></div></li>
+        <li class="step"><span class="step-num">4</span><div><h3 data-i18n="step4Title">Match, then lock it in</h3><p data-i18n="step4Text">PlanSwipe surfaces the place everyone's into. Set a date, RSVP, add it to your calendar, and get a reminder before you go.</p></div></li>
       </ol>
 
-      <h2>Frequently asked questions</h2>
+      <h2 data-i18n="faqTitle">Frequently asked questions</h2>
       <div class="faq">
-        <details><summary>What is PlanSwipe?</summary><p>PlanSwipe is a group planning app that helps friends decide where to go out. You pick an area and an activity together, swipe through real nearby places pulled from Google Maps, and vote to find the spot everyone agrees on.</p></details>
-        <details><summary>How does the voting work?</summary><p>Each member swipes right to like a place or left to pass. PlanSwipe combines everyone's votes and surfaces the places your whole group is into, so you reach a shared decision without a long group chat.</p></details>
-        <details><summary>Is PlanSwipe free?</summary><p>Yes — creating groups, discovering places, and voting together are free. An optional Pro plan is available for €1.99/month.</p></details>
-        <details><summary>How do friends join my group?</summary><p>Every group has a code and a shareable invite link. Send it to your friends and they join instantly.</p></details>
-        <details><summary>Where do the place suggestions come from?</summary><p>They're real venues from Google Maps, matched to your group's chosen area and activity, with photos, ratings, opening hours and reviews. You can add notes so suggestions fit what you're after.</p></details>
-        <details><summary>Can we set a date once we agree on a place?</summary><p>Yes. Once your group matches, you can lock in a date and time, RSVP so everyone sees who's coming, add it to your calendar, and get a reminder before the outing.</p></details>
-        <details><summary>What if the group can't agree?</summary><p>If the top places tie, PlanSwipe offers a quick runoff round so the group can settle on a single winner.</p></details>
-        <details><summary>Does PlanSwipe work in Athens?</summary><p>Yes — it's built for going out in Athens and the surrounding areas, with suggestions across neighbourhoods and the coast.</p></details>
+        <details><summary data-i18n="q1">What is PlanSwipe?</summary><p data-i18n="a1">PlanSwipe is a group planning app that helps friends decide where to go out. You pick an area and an activity together, swipe through real nearby places pulled from Google Maps, and vote to find the spot everyone agrees on.</p></details>
+        <details><summary data-i18n="q2">How does the voting work?</summary><p data-i18n="a2">Each member swipes right to like a place or left to pass. PlanSwipe combines everyone's votes and surfaces the places your whole group is into, so you reach a shared decision without a long group chat.</p></details>
+        <details><summary data-i18n="q3">Is PlanSwipe free?</summary><p data-i18n="a3">Yes — creating groups, discovering places, and voting together are free. An optional Pro plan is available for €1.99/month.</p></details>
+        <details><summary data-i18n="q4">How do friends join my group?</summary><p data-i18n="a4">Every group has a code and a shareable invite link. Send it to your friends and they join instantly.</p></details>
+        <details><summary data-i18n="q5">Where do the place suggestions come from?</summary><p data-i18n="a5">They're real venues from Google Maps, matched to your group's chosen area and activity, with photos, ratings, opening hours and reviews. You can add notes so suggestions fit what you're after.</p></details>
+        <details><summary data-i18n="q6">Can we set a date once we agree on a place?</summary><p data-i18n="a6">Yes. Once your group matches, you can lock in a date and time, RSVP so everyone sees who's coming, add it to your calendar, and get a reminder before the outing.</p></details>
+        <details><summary data-i18n="q7">What if the group can't agree?</summary><p data-i18n="a7">If the top places tie, PlanSwipe offers a quick runoff round so the group can settle on a single winner.</p></details>
+        <details><summary data-i18n="q8">Does PlanSwipe work in Athens?</summary><p data-i18n="a8">Yes — it's built for going out in Athens and the surrounding areas, with suggestions across neighbourhoods and the coast.</p></details>
       </div>
 
-      <div class="doc-cta"><a href="/">Start planning with your group →</a></div>
-      <p class="doc-foot"><a href="/">← Back to PlanSwipe</a></p>
+      <div class="doc-cta"><a href="/" data-i18n="cta">Start planning with your group →</a></div>
+      <p class="doc-foot"><a href="/" data-i18n="backLink">← Back to home page</a></p>
     </main>
+    <script>
+      (function () {
+        // Bilingual toggle. Shares the app's planswipe:language setting so the
+        // page opens in the language the app is already using. The JSON-LD
+        // structured data intentionally stays English for search engines.
+        var i18n = {
+          en: {
+            openApp: "Open app",
+            title: "How PlanSwipe works",
+            lede: "PlanSwipe turns \u201cso\u2026 where do we go?\u201d into a plan your whole group actually agrees on. Choose the basics together, swipe through real nearby places, and let everyone\u2019s votes decide \u2014 in minutes, not a hundred messages.",
+            stepsTitle: "Four steps to a plan",
+            step1Title: "Create a group and invite friends",
+            step1Text: "Start a group and share the code or invite link. Everyone joins in a tap \u2014 no accounts to hunt down.",
+            step2Title: "Agree on the basics",
+            step2Text: "The group picks an area and the type of outing together. Add a note like \u201coutdoor seating\u201d or \u201cbudget-friendly\u201d and the suggestions adapt.",
+            step3Title: "Swipe through real places",
+            step3Text: "Browse actual venues from Google Maps \u2014 photos, ratings, hours and reviews. Swipe right to like, left to pass.",
+            step4Title: "Match, then lock it in",
+            step4Text: "PlanSwipe surfaces the place everyone\u2019s into. Set a date, RSVP, add it to your calendar, and get a reminder before you go.",
+            faqTitle: "Frequently asked questions",
+            q1: "What is PlanSwipe?",
+            a1: "PlanSwipe is a group planning app that helps friends decide where to go out. You pick an area and an activity together, swipe through real nearby places pulled from Google Maps, and vote to find the spot everyone agrees on.",
+            q2: "How does the voting work?",
+            a2: "Each member swipes right to like a place or left to pass. PlanSwipe combines everyone\u2019s votes and surfaces the places your whole group is into, so you reach a shared decision without a long group chat.",
+            q3: "Is PlanSwipe free?",
+            a3: "Yes \u2014 creating groups, discovering places, and voting together are free. An optional Pro plan is available for \u20ac1.99/month.",
+            q4: "How do friends join my group?",
+            a4: "Every group has a code and a shareable invite link. Send it to your friends and they join instantly.",
+            q5: "Where do the place suggestions come from?",
+            a5: "They\u2019re real venues from Google Maps, matched to your group\u2019s chosen area and activity, with photos, ratings, opening hours and reviews. You can add notes so suggestions fit what you\u2019re after.",
+            q6: "Can we set a date once we agree on a place?",
+            a6: "Yes. Once your group matches, you can lock in a date and time, RSVP so everyone sees who\u2019s coming, add it to your calendar, and get a reminder before the outing.",
+            q7: "What if the group can\u2019t agree?",
+            a7: "If the top places tie, PlanSwipe offers a quick runoff round so the group can settle on a single winner.",
+            q8: "Does PlanSwipe work in Athens?",
+            a8: "Yes \u2014 it\u2019s built for going out in Athens and the surrounding areas, with suggestions across neighbourhoods and the coast.",
+            cta: "Start planning with your group \u2192",
+            backLink: "\u2190 Back to home page"
+          },
+          el: {
+            openApp: "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03b5\u03c6\u03b1\u03c1\u03bc\u03bf\u03b3\u03ae\u03c2",
+            title: "\u03a0\u03ce\u03c2 \u03bb\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03b5\u03af \u03c4\u03bf PlanSwipe",
+            lede: "\u03a4\u03bf PlanSwipe \u03bc\u03b5\u03c4\u03b1\u03c4\u03c1\u03ad\u03c0\u03b5\u03b9 \u03c4\u03bf \u00ab\u03bb\u03bf\u03b9\u03c0\u03cc\u03bd\u2026 \u03c0\u03bf\u03cd \u03c0\u03ac\u03bc\u03b5;\u00bb \u03c3\u03b5 \u03ad\u03bd\u03b1 \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf \u03c0\u03bf\u03c5 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03b5\u03af \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03cc\u03bb\u03b7 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1. \u0394\u03b9\u03b1\u03bb\u03ad\u03be\u03c4\u03b5 \u03bc\u03b1\u03b6\u03af \u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac, \u03ba\u03ac\u03bd\u03c4\u03b5 swipe \u03c3\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ac \u03bc\u03ad\u03c1\u03b7 \u03ba\u03b1\u03b9 \u03b1\u03c6\u03ae\u03c3\u03c4\u03b5 \u03c4\u03b9\u03c2 \u03c8\u03ae\u03c6\u03bf\u03c5\u03c2 \u03cc\u03bb\u03c9\u03bd \u03bd\u03b1 \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03c3\u03bf\u03c5\u03bd \u2014 \u03c3\u03b5 \u03bb\u03af\u03b3\u03b1 \u03bb\u03b5\u03c0\u03c4\u03ac, \u03cc\u03c7\u03b9 \u03c3\u03b5 \u03b5\u03ba\u03b1\u03c4\u03cc \u03bc\u03b7\u03bd\u03cd\u03bc\u03b1\u03c4\u03b1.",
+            stepsTitle: "\u03a4\u03ad\u03c3\u03c3\u03b5\u03c1\u03b1 \u03b2\u03ae\u03bc\u03b1\u03c4\u03b1 \u03b3\u03b9\u03b1 \u03ad\u03bd\u03b1 \u03c3\u03c7\u03ad\u03b4\u03b9\u03bf",
+            step1Title: "\u0394\u03b7\u03bc\u03b9\u03bf\u03cd\u03c1\u03b3\u03b7\u03c3\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ba\u03b1\u03b9 \u03ba\u03ac\u03bb\u03b5\u03c3\u03b5 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2",
+            step1Text: "\u039e\u03b5\u03ba\u03af\u03bd\u03b1 \u03bc\u03b9\u03b1 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ba\u03b1\u03b9 \u03bc\u03bf\u03b9\u03c1\u03ac\u03c3\u03bf\u03c5 \u03c4\u03bf\u03bd \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03ae \u03c4\u03bf\u03bd \u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03bc\u03bf \u03c0\u03c1\u03cc\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7\u03c2. \u038c\u03bb\u03bf\u03b9 \u03bc\u03c0\u03b1\u03af\u03bd\u03bf\u03c5\u03bd \u03bc\u03b5 \u03ad\u03bd\u03b1 \u03ac\u03b3\u03b3\u03b9\u03b3\u03bc\u03b1.",
+            step2Title: "\u03a3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03c4\u03b5 \u03c3\u03c4\u03b1 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ac",
+            step2Text: "\u0397 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03b4\u03b9\u03b1\u03bb\u03ad\u03b3\u03b5\u03b9 \u03bc\u03b1\u03b6\u03af \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b5\u03af\u03b4\u03bf\u03c2 \u03b5\u03be\u03cc\u03b4\u03bf\u03c5. \u03a0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03b5 \u03bc\u03b9\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7 \u03cc\u03c0\u03c9\u03c2 \u00ab\u03b5\u03be\u03c9\u03c4\u03b5\u03c1\u03b9\u03ba\u03ac \u03ba\u03b1\u03b8\u03af\u03c3\u03bc\u03b1\u03c4\u03b1\u00bb \u03ae \u00ab\u03bf\u03b9\u03ba\u03bf\u03bd\u03bf\u03bc\u03b9\u03ba\u03cc\u00bb \u03ba\u03b1\u03b9 \u03bf\u03b9 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03c0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03cc\u03b6\u03bf\u03bd\u03c4\u03b1\u03b9.",
+            step3Title: "\u039a\u03ac\u03bd\u03b5 swipe \u03c3\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03bc\u03ad\u03c1\u03b7",
+            step3Text: "\u0394\u03b5\u03c2 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03bc\u03b1\u03b3\u03b1\u03b6\u03b9\u03ac \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps \u2014 \u03c6\u03c9\u03c4\u03bf\u03b3\u03c1\u03b1\u03c6\u03af\u03b5\u03c2, \u03b2\u03b1\u03b8\u03bc\u03bf\u03bb\u03bf\u03b3\u03af\u03b5\u03c2, \u03c9\u03c1\u03ac\u03c1\u03b9\u03b1 \u03ba\u03b1\u03b9 \u03ba\u03c1\u03b9\u03c4\u03b9\u03ba\u03ad\u03c2. Swipe \u03b4\u03b5\u03be\u03b9\u03ac \u03b1\u03bd \u03c3\u03bf\u03c5 \u03b1\u03c1\u03ad\u03c3\u03b5\u03b9, \u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac \u03b3\u03b9\u03b1 \u03c0\u03b1\u03c1\u03ac\u03bb\u03b5\u03b9\u03c8\u03b7.",
+            step4Title: "\u03a4\u03b1\u03af\u03c1\u03b9\u03b1\u03c3\u03bc\u03b1 \u03ba\u03b1\u03b9 \u03ba\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf \u03c4\u03bf\u03c5 \u03c0\u03bb\u03ac\u03bd\u03bf\u03c5",
+            step4Text: "\u03a4\u03bf PlanSwipe \u03b1\u03bd\u03b1\u03b4\u03b5\u03b9\u03ba\u03bd\u03cd\u03b5\u03b9 \u03c4\u03bf \u03bc\u03ad\u03c1\u03bf\u03c2 \u03c0\u03bf\u03c5 \u03b8\u03ad\u03bb\u03bf\u03c5\u03bd \u03cc\u03bb\u03bf\u03b9. \u038c\u03c1\u03b9\u03c3\u03b5 \u03b7\u03bc\u03b5\u03c1\u03bf\u03bc\u03b7\u03bd\u03af\u03b1 \u03ba\u03b1\u03b9 \u03ce\u03c1\u03b1, \u03ba\u03ac\u03bd\u03b5 RSVP, \u03c0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c3\u03ad \u03c4\u03bf \u03c3\u03c4\u03bf \u03b7\u03bc\u03b5\u03c1\u03bf\u03bb\u03cc\u03b3\u03b9\u03cc \u03c3\u03bf\u03c5 \u03ba\u03b1\u03b9 \u03bb\u03ac\u03b2\u03b5 \u03c5\u03c0\u03b5\u03bd\u03b8\u03cd\u03bc\u03b9\u03c3\u03b7 \u03c0\u03c1\u03b9\u03bd \u03c4\u03b7\u03bd \u03ad\u03be\u03bf\u03b4\u03bf.",
+            faqTitle: "\u03a3\u03c5\u03c7\u03bd\u03ad\u03c2 \u03b5\u03c1\u03c9\u03c4\u03ae\u03c3\u03b5\u03b9\u03c2",
+            q1: "\u03a4\u03b9 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c4\u03bf PlanSwipe;",
+            a1: "\u03a4\u03bf PlanSwipe \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03b9\u03b1 \u03b5\u03c6\u03b1\u03c1\u03bc\u03bf\u03b3\u03ae \u03bf\u03bc\u03b1\u03b4\u03b9\u03ba\u03bf\u03cd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03bf\u03cd \u03c0\u03bf\u03c5 \u03b2\u03bf\u03b7\u03b8\u03ac \u03c4\u03b9\u03c2 \u03c0\u03b1\u03c1\u03ad\u03b5\u03c2 \u03bd\u03b1 \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03c3\u03bf\u03c5\u03bd \u03c0\u03bf\u03cd \u03b8\u03b1 \u03b2\u03b3\u03bf\u03c5\u03bd. \u0394\u03b9\u03b1\u03bb\u03ad\u03b3\u03b5\u03c4\u03b5 \u03bc\u03b1\u03b6\u03af \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1, \u03ba\u03ac\u03bd\u03b5\u03c4\u03b5 swipe \u03c3\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03ac \u03bc\u03ad\u03c1\u03b7 \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps \u03ba\u03b1\u03b9 \u03c8\u03b7\u03c6\u03af\u03b6\u03b5\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03b2\u03c1\u03b5\u03af\u03c4\u03b5 \u03c4\u03bf \u03bc\u03ad\u03c1\u03bf\u03c2 \u03c0\u03bf\u03c5 \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03bf\u03cd\u03bd \u03cc\u03bb\u03bf\u03b9.",
+            q2: "\u03a0\u03ce\u03c2 \u03bb\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03b5\u03af \u03b7 \u03c8\u03b7\u03c6\u03bf\u03c6\u03bf\u03c1\u03af\u03b1;",
+            a2: "\u039a\u03ac\u03b8\u03b5 \u03bc\u03ad\u03bb\u03bf\u03c2 \u03ba\u03ac\u03bd\u03b5\u03b9 swipe \u03b4\u03b5\u03be\u03b9\u03ac \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03c4\u03bf\u03c5 \u03b1\u03c1\u03ad\u03c3\u03b5\u03b9 \u03ad\u03bd\u03b1 \u03bc\u03ad\u03c1\u03bf\u03c2 \u03ae \u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03c4\u03bf \u03c0\u03c1\u03bf\u03c3\u03c0\u03b5\u03c1\u03ac\u03c3\u03b5\u03b9. \u03a4\u03bf PlanSwipe \u03c3\u03c5\u03bd\u03b4\u03c5\u03ac\u03b6\u03b5\u03b9 \u03c4\u03b9\u03c2 \u03c8\u03ae\u03c6\u03bf\u03c5\u03c2 \u03cc\u03bb\u03c9\u03bd \u03ba\u03b1\u03b9 \u03b1\u03bd\u03b1\u03b4\u03b5\u03b9\u03ba\u03bd\u03cd\u03b5\u03b9 \u03c4\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03c0\u03bf\u03c5 \u03b8\u03ad\u03bb\u03b5\u03b9 \u03cc\u03bb\u03b7 \u03b7 \u03c0\u03b1\u03c1\u03ad\u03b1, \u03ce\u03c3\u03c4\u03b5 \u03bd\u03b1 \u03b1\u03c0\u03bf\u03c6\u03b1\u03c3\u03af\u03b6\u03b5\u03c4\u03b5 \u03bc\u03b1\u03b6\u03af \u03c7\u03c9\u03c1\u03af\u03c2 \u03b1\u03c4\u03ad\u03bb\u03b5\u03b9\u03c9\u03c4\u03bf group chat.",
+            q3: "\u0395\u03af\u03bd\u03b1\u03b9 \u03b4\u03c9\u03c1\u03b5\u03ac\u03bd \u03c4\u03bf PlanSwipe;",
+            a3: "\u039d\u03b1\u03b9 \u2014 \u03b7 \u03b4\u03b7\u03bc\u03b9\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03bf\u03bc\u03ac\u03b4\u03c9\u03bd, \u03b7 \u03b1\u03bd\u03b1\u03ba\u03ac\u03bb\u03c5\u03c8\u03b7 \u03bc\u03b5\u03c1\u03ce\u03bd \u03ba\u03b1\u03b9 \u03b7 \u03c8\u03b7\u03c6\u03bf\u03c6\u03bf\u03c1\u03af\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03b4\u03c9\u03c1\u03b5\u03ac\u03bd. \u03a5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03c0\u03c1\u03bf\u03b1\u03b9\u03c1\u03b5\u03c4\u03b9\u03ba\u03cc \u03c0\u03bb\u03ac\u03bd\u03bf Pro \u03bc\u03b5 1,99\u20ac/\u03bc\u03ae\u03bd\u03b1.",
+            q4: "\u03a0\u03ce\u03c2 \u03bc\u03c0\u03b1\u03af\u03bd\u03bf\u03c5\u03bd \u03bf\u03b9 \u03c6\u03af\u03bb\u03bf\u03b9 \u03bc\u03bf\u03c5 \u03c3\u03c4\u03b7\u03bd \u03bf\u03bc\u03ac\u03b4\u03b1;",
+            a4: "\u039a\u03ac\u03b8\u03b5 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ad\u03c7\u03b5\u03b9 \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03ba\u03b1\u03b9 \u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03bc\u03bf \u03c0\u03c1\u03cc\u03c3\u03ba\u03bb\u03b7\u03c3\u03b7\u03c2. \u03a3\u03c4\u03b5\u03af\u03bb\u03b5 \u03c4\u03bf\u03bd \u03c3\u03c4\u03bf\u03c5\u03c2 \u03c6\u03af\u03bb\u03bf\u03c5\u03c2 \u03c3\u03bf\u03c5 \u03ba\u03b1\u03b9 \u03bc\u03c0\u03b1\u03af\u03bd\u03bf\u03c5\u03bd \u03b1\u03bc\u03ad\u03c3\u03c9\u03c2.",
+            q5: "\u0391\u03c0\u03cc \u03c0\u03bf\u03cd \u03c0\u03c1\u03bf\u03ad\u03c1\u03c7\u03bf\u03bd\u03c4\u03b1\u03b9 \u03bf\u03b9 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03bc\u03b5\u03c1\u03ce\u03bd;",
+            a5: "\u0395\u03af\u03bd\u03b1\u03b9 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03ac \u03bc\u03b1\u03b3\u03b1\u03b6\u03b9\u03ac \u03b1\u03c0\u03cc \u03c4\u03bf Google Maps, \u03c4\u03b1\u03b9\u03c1\u03b9\u03b1\u03c3\u03bc\u03ad\u03bd\u03b1 \u03bc\u03b5 \u03c4\u03b7\u03bd \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae \u03ba\u03b1\u03b9 \u03c4\u03b7 \u03b4\u03c1\u03b1\u03c3\u03c4\u03b7\u03c1\u03b9\u03cc\u03c4\u03b7\u03c4\u03b1 \u03c4\u03b7\u03c2 \u03bf\u03bc\u03ac\u03b4\u03b1\u03c2 \u03c3\u03bf\u03c5, \u03bc\u03b5 \u03c6\u03c9\u03c4\u03bf\u03b3\u03c1\u03b1\u03c6\u03af\u03b5\u03c2, \u03b2\u03b1\u03b8\u03bc\u03bf\u03bb\u03bf\u03b3\u03af\u03b5\u03c2, \u03c9\u03c1\u03ac\u03c1\u03b9\u03b1 \u03ba\u03b1\u03b9 \u03ba\u03c1\u03b9\u03c4\u03b9\u03ba\u03ad\u03c2. \u039c\u03c0\u03bf\u03c1\u03b5\u03af\u03c2 \u03bd\u03b1 \u03c0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03b5\u03b9\u03c2 \u03c3\u03b7\u03bc\u03b5\u03b9\u03ce\u03c3\u03b5\u03b9\u03c2 \u03ce\u03c3\u03c4\u03b5 \u03bf\u03b9 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03bd\u03b1 \u03c4\u03b1\u03b9\u03c1\u03b9\u03ac\u03b6\u03bf\u03c5\u03bd \u03c3\u03b5 \u03b1\u03c5\u03c4\u03cc \u03c0\u03bf\u03c5 \u03b8\u03ad\u03bb\u03b5\u03b9\u03c2.",
+            q6: "\u039c\u03c0\u03bf\u03c1\u03bf\u03cd\u03bc\u03b5 \u03bd\u03b1 \u03bf\u03c1\u03af\u03c3\u03bf\u03c5\u03bc\u03b5 \u03b7\u03bc\u03b5\u03c1\u03bf\u03bc\u03b7\u03bd\u03af\u03b1 \u03cc\u03c4\u03b1\u03bd \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03ae\u03c3\u03bf\u03c5\u03bc\u03b5 \u03c3\u03b5 \u03ad\u03bd\u03b1 \u03bc\u03ad\u03c1\u03bf\u03c2;",
+            a6: "\u039d\u03b1\u03b9. \u039c\u03cc\u03bb\u03b9\u03c2 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03ba\u03ac\u03bd\u03b5\u03b9 \u03c4\u03b1\u03af\u03c1\u03b9\u03b1\u03c3\u03bc\u03b1, \u03bc\u03c0\u03bf\u03c1\u03b5\u03af\u03c2 \u03bd\u03b1 \u03ba\u03bb\u03b5\u03b9\u03b4\u03ce\u03c3\u03b5\u03b9\u03c2 \u03b7\u03bc\u03b5\u03c1\u03bf\u03bc\u03b7\u03bd\u03af\u03b1 \u03ba\u03b1\u03b9 \u03ce\u03c1\u03b1, \u03bd\u03b1 \u03ba\u03ac\u03bd\u03b5\u03b9\u03c2 RSVP \u03b3\u03b9\u03b1 \u03bd\u03b1 \u03b2\u03bb\u03ad\u03c0\u03bf\u03c5\u03bd \u03cc\u03bb\u03bf\u03b9 \u03c0\u03bf\u03b9\u03bf\u03b9 \u03ad\u03c1\u03c7\u03bf\u03bd\u03c4\u03b1\u03b9, \u03bd\u03b1 \u03c4\u03bf \u03c0\u03c1\u03bf\u03c3\u03b8\u03ad\u03c3\u03b5\u03b9\u03c2 \u03c3\u03c4\u03bf \u03b7\u03bc\u03b5\u03c1\u03bf\u03bb\u03cc\u03b3\u03b9\u03cc \u03c3\u03bf\u03c5 \u03ba\u03b1\u03b9 \u03bd\u03b1 \u03bb\u03ac\u03b2\u03b5\u03b9\u03c2 \u03c5\u03c0\u03b5\u03bd\u03b8\u03cd\u03bc\u03b9\u03c3\u03b7 \u03c0\u03c1\u03b9\u03bd \u03c4\u03b7\u03bd \u03ad\u03be\u03bf\u03b4\u03bf.",
+            q7: "\u03a4\u03b9 \u03b3\u03af\u03bd\u03b5\u03c4\u03b1\u03b9 \u03b1\u03bd \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03b4\u03b5\u03bd \u03c3\u03c5\u03bc\u03c6\u03c9\u03bd\u03b5\u03af;",
+            a7: "\u0391\u03bd \u03c4\u03b1 \u03ba\u03bf\u03c1\u03c5\u03c6\u03b1\u03af\u03b1 \u03bc\u03ad\u03c1\u03b7 \u03b9\u03c3\u03bf\u03c8\u03b7\u03c6\u03ae\u03c3\u03bf\u03c5\u03bd, \u03c4\u03bf PlanSwipe \u03c0\u03c1\u03bf\u03c3\u03c6\u03ad\u03c1\u03b5\u03b9 \u03ad\u03bd\u03b1\u03bd \u03b3\u03c1\u03ae\u03b3\u03bf\u03c1\u03bf \u03b4\u03b5\u03cd\u03c4\u03b5\u03c1\u03bf \u03b3\u03cd\u03c1\u03bf \u03ce\u03c3\u03c4\u03b5 \u03b7 \u03bf\u03bc\u03ac\u03b4\u03b1 \u03bd\u03b1 \u03ba\u03b1\u03c4\u03b1\u03bb\u03ae\u03be\u03b5\u03b9 \u03c3\u03b5 \u03ad\u03bd\u03b1\u03bd \u03bd\u03b9\u03ba\u03b7\u03c4\u03ae.",
+            q8: "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03b5\u03af \u03c4\u03bf PlanSwipe \u03c3\u03c4\u03b7\u03bd \u0391\u03b8\u03ae\u03bd\u03b1;",
+            a8: "\u039d\u03b1\u03b9 \u2014 \u03b5\u03af\u03bd\u03b1\u03b9 \u03c6\u03c4\u03b9\u03b1\u03b3\u03bc\u03ad\u03bd\u03bf \u03b3\u03b9\u03b1 \u03b5\u03be\u03cc\u03b4\u03bf\u03c5\u03c2 \u03c3\u03c4\u03b7\u03bd \u0391\u03b8\u03ae\u03bd\u03b1 \u03ba\u03b1\u03b9 \u03c4\u03b9\u03c2 \u03b3\u03cd\u03c1\u03c9 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2, \u03bc\u03b5 \u03c0\u03c1\u03bf\u03c4\u03ac\u03c3\u03b5\u03b9\u03c2 \u03c3\u03b5 \u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ad\u03c2 \u03ba\u03b1\u03b9 \u03c3\u03c4\u03b7\u03bd \u03c0\u03b1\u03c1\u03b1\u03bb\u03b9\u03b1\u03ba\u03ae.",
+            cta: "\u039e\u03b5\u03ba\u03af\u03bd\u03b1 \u03c4\u03bf\u03bd \u03c0\u03c1\u03bf\u03b3\u03c1\u03b1\u03bc\u03bc\u03b1\u03c4\u03b9\u03c3\u03bc\u03cc \u03bc\u03b5 \u03c4\u03b7\u03bd \u03c0\u03b1\u03c1\u03ad\u03b1 \u03c3\u03bf\u03c5 \u2192",
+            backLink: "\u2190 \u03a0\u03af\u03c3\u03c9 \u03c3\u03c4\u03b7\u03bd \u03b1\u03c1\u03c7\u03b9\u03ba\u03ae \u03c3\u03b5\u03bb\u03af\u03b4\u03b1"
+          }
+        };
+        var lang = "en";
+        try { if (localStorage.getItem("planswipe:language") === "el") lang = "el"; } catch (e) {}
+        var toggle = document.getElementById("docLangToggle");
+        function applyDocLanguage() {
+          var dict = i18n[lang] || i18n.en;
+          var nodes = document.querySelectorAll("[data-i18n]");
+          for (var i = 0; i < nodes.length; i++) {
+            var key = nodes[i].getAttribute("data-i18n");
+            if (dict[key]) nodes[i].textContent = dict[key];
+          }
+          document.documentElement.lang = lang;
+          if (toggle) toggle.textContent = lang === "en" ? "EL" : "EN";
+        }
+        if (toggle) toggle.addEventListener("click", function () {
+          lang = lang === "en" ? "el" : "en";
+          try { localStorage.setItem("planswipe:language", lang); } catch (e) {}
+          applyDocLanguage();
+        });
+        applyDocLanguage();
+      })();
+    </script>
   </body>
 </html>

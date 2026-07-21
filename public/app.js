@@ -818,6 +818,43 @@ Object.assign(copy.el, {
   aiFilteredResults: "Φιλτράρισμα με AI: πρώτα περιοχή, μετά δραστηριότητα, μετά ηλικία."
 });
 
+// ====== Country box feature strings ======
+Object.assign(copy.en, {
+  country: "Country",
+  countryPlaceholder: "e.g. Greece, France",
+  usualAreas: "Your usual areas"
+});
+Object.assign(copy.el, {
+  country: "Χώρα",
+  countryPlaceholder: "π.χ. Ελλάδα, Γαλλία",
+  usualAreas: "Οι συνηθισμένες σου περιοχές"
+});
+
+// Default value for the editable Country field, per app language.
+function defaultCountryValue() {
+  return state.language === "el" ? "Ελλάδα" : "Greece";
+}
+
+// Top usual area+country pairs recorded by the server from your searches.
+function getUsualAreas(limit = 4) {
+  const list = state.account?.profile?.usualAreas;
+  return Array.isArray(list) ? list.slice(0, limit) : [];
+}
+
+// Chips markup shared by the standalone search and the group area picker.
+// One tap fills both the area and the country fields (via the click handler).
+function usualAreaChipsHtml() {
+  const list = getUsualAreas();
+  if (!list.length) return "";
+  const chips = list.map((u) => {
+    const area = String(u.area || "");
+    const country = String(u.country || "Greece");
+    const label = country === "Greece" ? area : `${area} · ${country}`;
+    return `<button type="button" class="pick-chip usual-area-chip" data-usual-area="${escapeHtml(area)}" data-usual-country="${escapeHtml(country)}">${escapeHtml(label)}</button>`;
+  }).join("");
+  return `<div class="usual-areas"><div class="pick-favs-label">${escapeHtml(t("usualAreas"))}</div><div class="pick-favs">${chips}</div></div>`;
+}
+
 // ====== LANGUAGE ======
 function applyLanguage() {
   document.documentElement.lang = state.language;
@@ -2351,8 +2388,8 @@ function redirectForAgeGroup() {
   navigate("/personal");
 }
 
-async function chooseOption(kind, optionId, customLabel = "") {
-  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, useAiSuggestions: state.useAiSuggestions, language: state.language } });
+async function chooseOption(kind, optionId, customLabel = "", customCountry = "") {
+  const data = await api(`/api/groups/${state.group.code}/choice`, { method: "POST", body: { userId: state.user.id, kind, optionId, customLabel, customCountry, useAiSuggestions: state.useAiSuggestions, language: state.language } });
   if (kind === "area") state.pendingAreaOption = null;
   state.groupMutationAt = Date.now();
   state.index = 0; state.group = data.group; state.groupSig = JSON.stringify(data.group); renderApp();
@@ -2610,7 +2647,7 @@ async function selectPlace(placeId) {
 
 // #2: a small picker that lets you add a value by typing OR by tapping one of
 // your saved favourites in that category (areas / activities / places).
-function pickWithFavourites({ title, favourites, placeholder, onPick }) {
+function pickWithFavourites({ title, favourites, placeholder, onPick, withCountry = false }) {
   document.querySelector("#pickModal")?.remove();
   const overlay = document.createElement("div");
   overlay.id = "pickModal";
@@ -2620,11 +2657,19 @@ function pickWithFavourites({ title, favourites, placeholder, onPick }) {
     ? `<div class="pick-favs-label">${escapeHtml(t("fromYourFavourites") || "From your favourites")}</div>
        <div class="pick-favs">${favs.map((f) => `<button type="button" class="pick-chip" data-fav="${escapeHtml(f)}">${escapeHtml(f)}</button>`).join("")}</div>`
     : "";
+  const usualBlock = withCountry ? usualAreaChipsHtml() : "";
+  const countryBlock = withCountry
+    ? `<label class="pick-country-label">${escapeHtml(t("country"))}
+         <input type="text" id="pickCountry" class="pick-input" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off">
+       </label>`
+    : "";
   overlay.innerHTML = `
     <div class="modal-panel" role="dialog" aria-modal="true">
       <h3>${escapeHtml(title)}</h3>
+      ${usualBlock}
       ${favBlock}
       <input type="text" id="pickInput" class="pick-input" placeholder="${escapeHtml(placeholder || t("orTypeNew") || "Or type a new one")}" autocomplete="off">
+      ${countryBlock}
       <div class="modal-actions">
         <button class="btn-ghost" type="button" id="pickCancel">${escapeHtml(t("cancel"))}</button>
         <button class="btn-primary" type="button" id="pickAdd">${escapeHtml(t("add") || "Add")}</button>
@@ -2632,10 +2677,13 @@ function pickWithFavourites({ title, favourites, placeholder, onPick }) {
     </div>`;
   document.body.appendChild(overlay);
   const close = () => overlay.remove();
-  const choose = (val) => { const v = String(val || "").trim(); if (!v) return; close(); onPick(v); };
-  overlay.querySelectorAll(".pick-chip").forEach((c) => c.addEventListener("click", () => choose(c.dataset.fav)));
+  const pickedCountry = () => (withCountry ? (overlay.querySelector("#pickCountry")?.value.trim() || "") : "");
+  const choose = (val, country) => { const v = String(val || "").trim(); if (!v) return; const c = country !== undefined ? country : pickedCountry(); close(); onPick(v, c); };
+  overlay.querySelectorAll(".usual-area-chip").forEach((c) => c.addEventListener("click", () => choose(c.dataset.usualArea, c.dataset.usualCountry || "")));
+  overlay.querySelectorAll(".pick-chip:not(.usual-area-chip)").forEach((c) => c.addEventListener("click", () => choose(c.dataset.fav)));
   overlay.querySelector("#pickAdd").addEventListener("click", () => choose(overlay.querySelector("#pickInput").value));
   overlay.querySelector("#pickInput").addEventListener("keydown", (e) => { if (e.key === "Enter") choose(e.target.value); });
+  overlay.querySelector("#pickCountry")?.addEventListener("keydown", (e) => { if (e.key === "Enter") choose(overlay.querySelector("#pickInput").value); });
   overlay.querySelector("#pickCancel").addEventListener("click", close);
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
   setTimeout(() => overlay.querySelector("#pickInput")?.focus(), 30);
@@ -2740,15 +2788,18 @@ function openPlacesSearch() {
     if (mode === "name") {
       fields.innerHTML = `
         <input type="text" id="searchQueryInput" class="search-query" placeholder="${escapeHtml(t("searchByNamePlaceholder"))}" autocomplete="off">
+        ${usualAreaChipsHtml()}
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
+          <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
         </div>
-        <label class="search-comments-label">${escapeHtml(t("commentsOptional"))}<textarea id="searchComments" rows="2" placeholder="${escapeHtml(t("commentsPlaceholder"))}"></textarea></label>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     } else {
       fields.innerHTML = `
+        ${usualAreaChipsHtml()}
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
+          <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
@@ -2759,6 +2810,13 @@ function openPlacesSearch() {
     overlay.querySelectorAll("input").forEach((input) => {
       input.addEventListener("keydown", (e) => { if (e.key === "Enter") runPlacesSearch(overlay, mode); });
     });
+    // Usual-areas chips: one tap fills BOTH the area and the country fields.
+    overlay.querySelectorAll(".usual-area-chip").forEach((chip) => chip.addEventListener("click", () => {
+      const areaInput = overlay.querySelector("#searchArea");
+      const countryInput = overlay.querySelector("#searchCountry");
+      if (areaInput) areaInput.value = chip.dataset.usualArea || "";
+      if (countryInput) countryInput.value = chip.dataset.usualCountry || defaultCountryValue();
+    }));
   };
   renderFields();
   overlay.querySelectorAll(".search-mode-btn").forEach((b) => b.addEventListener("click", () => {
@@ -2775,6 +2833,7 @@ function openPlacesSearch() {
 async function runPlacesSearch(overlay, mode) {
   const resultsEl = overlay.querySelector("#searchResults");
   const areaId = overlay.querySelector("#searchArea")?.value || "";
+  const country = overlay.querySelector("#searchCountry")?.value.trim() || "";
   const query = overlay.querySelector("#searchQueryInput")?.value.trim() || "";
   const category = overlay.querySelector("#searchCategory")?.value || "";
   const ageGroup = overlay.querySelector("#searchAge")?.value || "";
@@ -2783,7 +2842,7 @@ async function runPlacesSearch(overlay, mode) {
   if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
   resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
   try {
-    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, comments, language: state.language } });
+    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, country, category, ageGroup, comments, language: state.language } });
     renderPlaceSearchResults(resultsEl, data);
   } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
 }
@@ -4217,7 +4276,8 @@ optionGrid.addEventListener("click", (e) => {
       title: kind === "area" ? (t("addAnArea") || "Add an area") : (t("addAnActivity") || "Add an activity"),
       favourites: favs,
       placeholder: kind === "area" ? t("addAnotherArea") : t("addAnotherActivity"),
-      onPick: (label) => chooseOption(kind, "", label).catch((err) => showError(err.message))
+      withCountry: kind === "area",
+      onPick: (label, country) => chooseOption(kind, "", label, country || "").catch((err) => showError(err.message))
     });
     return;
   }
