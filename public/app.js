@@ -201,10 +201,10 @@ const copy = {
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
     messages: "Messages",
     message: "Message",
-    heroEyebrow: "Group plans, minus the group-chat chaos",
-    heroTitle: "The plan your whole group actually agrees on.",
-    heroDescription: "PlanSwipe helps your group decide where to go — together. Pick an area and an activity, browse real nearby venues, and vote as a group. Everyone's preferences are weighed automatically, so you land on a place you're all happy with in minutes, not messages.",
-    heroNote: "Made for the group chats that can never pick a place.",
+    heroEyebrow: "Plan your next outing, together",
+    heroTitle: "The plan your whole group agrees on.",
+    heroDescription: "Deciding where to go shouldn't take a hundred messages. With PlanSwipe, your group picks an area and an activity, swipes through real nearby venues, and votes — and everyone's choices come together into one place you're all happy with. It takes minutes.",
+    heroNote: "Built for the group chats that can never agree on a place.",
     whatPlanswipeIs: "What PlanSwipe is",
     sharedDecisionTool: "One shared way to decide where to go",
     offerText: "Create a group with your friends, agree on the basics, swipe through real options, and watch the winners rise to the top. No polls, no pressure, no 200-message thread that ends in \"idk, you pick\".",
@@ -478,9 +478,9 @@ const copy = {
     settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
     messages: "Μηνύματα",
     message: "Μήνυμα",
-    heroEyebrow: "Ομαδικά σχέδια, χωρίς το χάος της ομαδικής συνομιλίας",
-    heroTitle: "Το σχέδιο που όλη η παρέα σας πραγματικά συμφωνεί.",
-    heroDescription: "Το PlanSwipe βοηθά την παρέα σου να αποφασίσει πού θα πάτε — μαζί. Διάλεξε περιοχή και δραστηριότητα, δες πραγματικά κοντινά μέρη και ψηφίστε ομαδικά. Οι προτιμήσεις όλων συνυπολογίζονται αυτόματα, ώστε να καταλήξετε σε ένα μέρος που αρέσει σε όλους μέσα σε λεπτά, όχι σε μηνύματα.",
+    heroEyebrow: "Σχεδιάστε την επόμενη έξοδό σας, μαζί",
+    heroTitle: "Το σχέδιο που όλη η παρέα συμφωνεί.",
+    heroDescription: "Το να αποφασίσετε πού θα πάτε δεν χρειάζεται εκατό μηνύματα. Με το PlanSwipe, η παρέα σας διαλέγει περιοχή και δραστηριότητα, κάνει swipe σε πραγματικά κοντινά μέρη και ψηφίζει — και οι επιλογές όλων ενώνονται σε ένα μέρος που αρέσει σε όλους. Παίρνει λεπτά.",
     heroNote: "Φτιαγμένο για τις παρέες που ποτέ δεν καταλήγουν πού να πάνε.",
     whatPlanswipeIs: "Τι είναι το PlanSwipe",
     sharedDecisionTool: "Ένας κοινός τρόπος να αποφασίζετε πού θα πάτε",
@@ -818,34 +818,6 @@ Object.assign(copy.el, {
   aiFilteredResults: "Φιλτράρισμα με AI: πρώτα περιοχή, μετά δραστηριότητα, μετά ηλικία."
 });
 
-// ====== Country box feature strings ======
-Object.assign(copy.en, {
-  country: "Country",
-  countryPlaceholder: "e.g. Greece, France",
-  groupCountryHint: "Where will this group be going out?",
-  countryRequired: "Please enter the group's country.",
-  wholeCityText: "Anywhere in the city"
-});
-Object.assign(copy.el, {
-  country: "Χώρα",
-  countryPlaceholder: "π.χ. Ελλάδα, Γαλλία",
-  groupCountryHint: "Σε ποια χώρα θα βγαίνει αυτή η ομάδα;",
-  countryRequired: "Συμπλήρωσε τη χώρα της ομάδας.",
-  wholeCityText: "Οπουδήποτε στην πόλη"
-});
-
-// Default value for the editable Country field, per app language.
-function defaultCountryValue() {
-  return state.language === "el" ? "Ελλάδα" : "Greece";
-}
-
-// Mirrors the server's Greece detection so the UI can adapt (e.g. hide Athens quick-picks).
-function isGreeceCountry(input) {
-  const clean = String(input || "").trim().toLowerCase();
-  if (!clean) return true;
-  return ["greece", "gr", "hellas", "ελλάδα", "ελλαδα", "ελλάς", "ελλας"].includes(clean);
-}
-
 // ====== LANGUAGE ======
 function applyLanguage() {
   document.documentElement.lang = state.language;
@@ -918,9 +890,6 @@ function applyLanguage() {
 
   const cfs = createForm.querySelector(".field span"); if (cfs) cfs.textContent = t("groupName");
   groupInput.placeholder = t("fridayCrew");
-  const gcl = document.querySelector("#groupCountryLabel"); if (gcl) gcl.textContent = t("country");
-  const gci = document.querySelector("#groupCountryInput");
-  if (gci && ["", "greece", "ελλάδα"].includes(gci.value.trim().toLowerCase())) gci.value = defaultCountryValue();
   const jfs = joinForm.querySelector(".field span");   if (jfs) jfs.textContent = t("groupCodeLabel");
   createButton.textContent       = t("createGroup");
   joinButton.textContent         = t("joinGroup");
@@ -1156,15 +1125,7 @@ async function registerUser() {
 function selected(kind)        { return state.group?.choices?.[kind]?.[state.user?.id] || null; }
 function consensus(kind)       { return state.group?.consensus?.[kind] || null; }
 function memberCount()         { return state.group?.members?.length || 1; }
-function optionsFor(kind) {
-  const base = state.group?.options?.[kind] || (kind === "area" ? state.areas : state.types);
-  // Non-Greece groups: the built-in Athens quick-picks don't apply — members add
-  // their own areas instead (searched in the group's country).
-  if (kind === "area" && state.group && !isGreeceCountry(state.group.country)) {
-    return (base || []).filter((o) => !["north_suburbs", "athens_center", "south_suburbs"].includes(o.id));
-  }
-  return base;
-}
+function optionsFor(kind)      { return state.group?.options?.[kind] || (kind === "area" ? state.areas : state.types); }
 function optionScore(kind, id) { return state.group?.counts?.[kind]?.[id] || 0; }
 
 // ====== RENDER ======
@@ -1187,22 +1148,9 @@ function renderSetup() {
 function renderDecisionStep(kind) {
   const isAreaStep = kind === "area";
   const broadArea  = isAreaStep && state.pendingAreaOption ? state.pendingAreaOption : null;
-  const greekGroup = isGreeceCountry(state.group?.country);
-  let options;
-  if (broadArea) {
-    // Drill-down inside a broad pick. Greek Athens areas keep their exact current
-    // behavior; foreign cities offer "entire city" plus districts, and each pick
-    // carries "district, city" so Google/OpenAI target the right place worldwide.
-    const cityLabel = broadArea.label || "";
-    options = broadArea.subareas.map((label) => greekGroup
-      ? { id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, Athens`, queryArea: `${label}, Athens` }
-      : { id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, ${cityLabel}`, customLabel: `${label}, ${cityLabel}` });
-    if (!greekGroup) {
-      options = [{ id: `city_all_${cityLabel.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label: cityLabel, description: t("wholeCityText"), customLabel: cityLabel }, ...options];
-    }
-  } else {
-    options = optionsFor(kind) || [];
-  }
+  const options    = broadArea
+    ? broadArea.subareas.map((label) => ({ id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, Athens`, queryArea: `${label}, Athens` }))
+    : optionsFor(kind);
   const chosen     = selected(kind);
   const total      = memberCount();
   const votedCount = Object.keys(state.group?.choices?.[kind] || {}).length;
@@ -1221,13 +1169,10 @@ function renderDecisionStep(kind) {
     backChoiceButton.textContent = t("back") || "Back";
   }
 
-  if ((!options || options.length === 0) && !isAreaStep) {
+  if (!options || options.length === 0) {
     optionGrid.innerHTML = `<p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>`;
     return;
   }
-  // Area step continues even with no quick-picks (e.g. a country without a curated
-  // city list) — members can still use favourites or add their own area below.
-  if (!options) options = [];
 
   const optionCards = options.map((option) => {
     const score = optionScore(kind, option.id);
@@ -1236,7 +1181,7 @@ function renderDecisionStep(kind) {
     const label = translated?.label ?? option.label ?? option.id;
     const description = translated?.description ?? option.description ?? "";
     const broadAttr = isAreaStep && !broadArea && option.subareas?.length ? ` data-broad-area="true"` : "";
-    const customLabelAttr = broadArea ? ` data-custom-label="${escapeHtml(option.customLabel || option.label)}"` : "";
+    const customLabelAttr = broadArea ? ` data-custom-label="${escapeHtml(option.label)}"` : "";
     return `<button class="option-card${isSelected ? " is-selected" : ""}" type="button" data-kind="${escapeHtml(kind)}" data-id="${escapeHtml(option.id)}"${broadAttr}${customLabelAttr}>
       <span class="option-score">${score}/${total} ${t("liveChoices")}</span>
       <span><h3>${escapeHtml(label)}</h3><p>${escapeHtml(description)}</p></span>
@@ -2386,10 +2331,7 @@ function saveSession(user, group) {
 async function createGroup() {
   const username = currentUsername() || "Friend";
   if (!state.account?.profile?.ageGroup) { redirectForAgeGroup(); return; }
-  const countryInput = document.querySelector("#groupCountryInput");
-  const country = countryInput?.value.trim() || "";
-  if (!country) { showError(t("countryRequired")); countryInput?.focus(); return; }
-  const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim(), country } });
+  const data = await api("/api/groups", { method: "POST", body: { username, profile: state.account?.profile, groupName: groupInput.value.trim() } });
   saveSession(data.user, data.group);
 }
 
@@ -2801,19 +2743,11 @@ function openPlacesSearch() {
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
-        <div class="search-filter-row">
-          <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
-        </div>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
     } else {
       fields.innerHTML = `
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
-        </div>
-        <div class="search-filter-row">
-          <label>${escapeHtml(t("country"))}<input id="searchCountry" type="text" value="${escapeHtml(defaultCountryValue())}" placeholder="${escapeHtml(t("countryPlaceholder"))}" autocomplete="off"></label>
-        </div>
-        <div class="search-filter-row">
           <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
@@ -2840,7 +2774,6 @@ function openPlacesSearch() {
 async function runPlacesSearch(overlay, mode) {
   const resultsEl = overlay.querySelector("#searchResults");
   const areaId = overlay.querySelector("#searchArea")?.value || "";
-  const country = overlay.querySelector("#searchCountry")?.value.trim() || "";
   const query = overlay.querySelector("#searchQueryInput")?.value.trim() || "";
   const category = overlay.querySelector("#searchCategory")?.value || "";
   const ageGroup = overlay.querySelector("#searchAge")?.value || "";
@@ -2849,7 +2782,7 @@ async function runPlacesSearch(overlay, mode) {
   if (mode === "browse" && !category) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(t("chooseCategory"))}</p>`; return; }
   resultsEl.innerHTML = `<div class="chat-loading">\u2026</div>`;
   try {
-    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, country, category, ageGroup, comments, language: state.language } });
+    const data = await api("/api/places/search", { method: "POST", body: { mode, query, areaId, category, ageGroup, comments, language: state.language } });
     renderPlaceSearchResults(resultsEl, data);
   } catch (e) { resultsEl.innerHTML = `<p class="muted-note">${escapeHtml(e.message)}</p>`; }
 }
