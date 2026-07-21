@@ -377,6 +377,7 @@ function summarizeGroup(group) {
   return {
     name: group.name,
     code: group.code,
+    country: normalizeCountry(group.country),
     members: (group.members || []).map((m) => ({ id: m.id, name: m.name, username: m.username, profile: m.profile || {} })),
     choices:   group.choices  || { area: {}, type: {} },
     consensus: group.consensus || {},
@@ -572,35 +573,6 @@ function normalizeCountry(input) {
   const clean = String(input || "").trim().slice(0, 60);
   if (!clean) return "Greece";
   return greeceAliases.has(clean.toLowerCase()) ? "Greece" : clean;
-}
-
-// Fire-and-forget: remember which area+country pairs this user actually searches,
-// so the client can offer "usual areas" chips. Never awaited on the hot path.
-async function recordUsualArea(request, area, country) {
-  try {
-    const cleanArea = String(area || "").trim().slice(0, 80);
-    if (!cleanArea) return;
-    const cleanCountry = normalizeCountry(country);
-    const username = await getAuthUsername(request);
-    if (!username) return;
-    const row = await getProfileByUsername(username);
-    if (!row) return;
-    const profile = row.profile || {};
-    const list = Array.isArray(profile.usualAreas) ? profile.usualAreas : [];
-    const key = `${cleanArea.toLowerCase()}|${cleanCountry.toLowerCase()}`;
-    const existing = list.find((e) => `${String(e.area || "").toLowerCase()}|${normalizeCountry(e.country).toLowerCase()}` === key);
-    if (existing) {
-      existing.count = (existing.count || 0) + 1;
-      existing.lastUsed = new Date().toISOString();
-    } else {
-      list.push({ area: cleanArea, country: cleanCountry, count: 1, lastUsed: new Date().toISOString() });
-    }
-    list.sort((a, b) => (b.count || 0) - (a.count || 0) || String(b.lastUsed || "").localeCompare(String(a.lastUsed || "")));
-    profile.usualAreas = list.slice(0, 12);
-    await upsertProfile({ username, email: row.email || "", profile });
-  } catch (e) {
-    console.warn("recordUsualArea error:", e.message);
-  }
 }
 
 // ====== AREA GEOCODING (for custom, user-typed areas) ======
@@ -1425,6 +1397,7 @@ async function handleApi(request, response) {
     const user    = { id: userId, name: body.username, username: body.username, profile };
     const group   = {
       name: body.groupName || `${body.username}'s Group`, code,
+      country: normalizeCountry(body.country),
       members: [user], choices: { area: {}, type: {} }, consensus: {},
       options: { area: areaOptions, type: typeOptions },
       places: [], matches: [], votes: {}, placeSelections: {}, search: null, createdAt: Date.now()
@@ -1512,23 +1485,23 @@ async function handleApi(request, response) {
       if (!group.options[kind]) group.options[kind] = [];
       const cleanLabel = String(body.customLabel).trim();
       if (!cleanLabel) { sendJson(response, 400, { error: "Custom option required" }); return; }
-      const customCountry = normalizeCountry(body.customCountry);
+      // Custom areas inherit the group's country (chosen at creation; legacy groups → Greece).
+      const groupCountry = normalizeCountry(group.country);
       let customOption = group.options[kind].find((option) =>
         String(option.label || "").toLowerCase() === cleanLabel.toLowerCase()
-        && (kind !== "area" || normalizeCountry(option.country) === customCountry));
+        && (kind !== "area" || normalizeCountry(option.country) === groupCountry));
       if (!customOption) {
-        const hashInput = kind === "area" ? `${kind}:${cleanLabel.toLowerCase()}:${customCountry.toLowerCase()}` : `${kind}:${cleanLabel.toLowerCase()}`;
+        const hashInput = kind === "area" ? `${kind}:${cleanLabel.toLowerCase()}:${groupCountry.toLowerCase()}` : `${kind}:${cleanLabel.toLowerCase()}`;
         customOption = { id: `custom_${crypto.createHash("sha1").update(hashInput).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
         if (kind === "area") {
-          customOption.country = customCountry;
+          customOption.country = groupCountry;
           // Greek custom areas keep today's ", Athens" hint; abroad, the plain label +
           // country (added by the query builder / geocoder) is the right search text.
-          customOption.queryArea = customCountry === "Greece" ? `${cleanLabel}, Athens` : cleanLabel;
+          customOption.queryArea = groupCountry === "Greece" ? `${cleanLabel}, Athens` : cleanLabel;
         }
         else customOption.queryType = cleanLabel;
         group.options[kind].push(customOption);
       }
-      if (kind === "area") recordUsualArea(request, cleanLabel, customCountry);
       if (!group.choices[kind]) group.choices[kind] = {};
       group.choices[kind][body.userId] = customOption.id;
     } else {
@@ -2157,7 +2130,6 @@ async function handleApi(request, response) {
 
     const countryText = normalizeCountry(body.country);
     const inGreece = countryText === "Greece";
-    if (areaText) recordUsualArea(request, areaText, countryText);
 
     const builtIn = inGreece ? areaOptions.find((a) => a.id === areaText) : null;
     // Country is stored on the option, never concatenated into the area text —
