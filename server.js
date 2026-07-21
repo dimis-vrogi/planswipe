@@ -2097,7 +2097,8 @@ async function handleApi(request, response) {
     const areaText = String(body.areaId || body.area || "").trim().slice(0, 120);
     const categoryText = String(body.category || "").trim().slice(0, 120);
     const ageGroup = String(body.ageGroup || "").trim();
-    const comments = String(body.comments || "").trim().slice(0, 500);
+    // Comments only apply to browse mode; by-name search ignores them entirely.
+    const comments = mode === "browse" ? String(body.comments || "").trim().slice(0, 500) : "";
     const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
