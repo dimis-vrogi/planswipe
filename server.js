@@ -377,7 +377,6 @@ function summarizeGroup(group) {
   return {
     name: group.name,
     code: group.code,
-    country: normalizeCountry(group.country),
     members: (group.members || []).map((m) => ({ id: m.id, name: m.name, username: m.username, profile: m.profile || {} })),
     choices:   group.choices  || { area: {}, type: {} },
     consensus: group.consensus || {},
@@ -565,121 +564,8 @@ const areaBounds = {
   south_suburbs: { low: { lat: 37.82, lng: 23.68 }, high: { lat: 37.95, lng: 23.78 } }
 };
 
-// ====== COUNTRY SUPPORT (country box feature) ======
-// The country is stored separately from the area text so it is appended exactly
-// once by whichever query builder uses it (never "Paris, France, Greece").
-// Aliases (including Greek names) canonicalize to one English name so Google
-// queries stay consistent and the city lists below can match user input.
-const countryAliases = {
-  "Greece":         ["greece", "gr", "hellas", "ελλάδα", "ελλαδα", "ελλάς", "ελλας"],
-  "Cyprus":         ["cyprus", "cy", "κύπρος", "κυπρος"],
-  "France":         ["france", "fr", "γαλλία", "γαλλια"],
-  "Italy":          ["italy", "it", "italia", "ιταλία", "ιταλια"],
-  "Spain":          ["spain", "es", "españa", "espana", "ισπανία", "ισπανια"],
-  "United Kingdom": ["united kingdom", "uk", "great britain", "britain", "england", "ηνωμένο βασίλειο", "ηνωμενο βασιλειο", "αγγλία", "αγγλια"],
-  "Germany":        ["germany", "de", "deutschland", "γερμανία", "γερμανια"],
-  "Netherlands":    ["netherlands", "nl", "holland", "ολλανδία", "ολλανδια", "κάτω χώρες", "κατω χωρες"],
-  "Portugal":       ["portugal", "pt", "πορτογαλία", "πορτογαλια"],
-  "Turkey":         ["turkey", "türkiye", "turkiye", "tr", "τουρκία", "τουρκια"],
-  "United States":  ["united states", "usa", "us", "america", "united states of america", "ηπα", "η.π.α.", "αμερική", "αμερικη"]
-};
-const countryAliasLookup = new Map();
-Object.entries(countryAliases).forEach(([canonical, aliases]) => {
-  countryAliasLookup.set(canonical.toLowerCase(), canonical);
-  aliases.forEach((a) => countryAliasLookup.set(a, canonical));
-});
-function normalizeCountry(input) {
-  const clean = String(input || "").trim().slice(0, 60);
-  if (!clean) return "Greece";
-  return countryAliasLookup.get(clean.toLowerCase()) || clean;
-}
-
-// Top cities per country for the group area step (country → city → area).
-// Cities with `subareas` drill into popular districts; others are picked directly.
-// The whole-city and district picks become custom options that carry the group's
-// country, so Google geocodes/searches the right place worldwide.
-const countryCities = {
-  "Cyprus": [
-    { name: "Nicosia", districts: [] }, { name: "Limassol", districts: [] },
-    { name: "Larnaca", districts: [] }, { name: "Paphos", districts: [] },
-    { name: "Ayia Napa", districts: [] }, { name: "Protaras", districts: [] }
-  ],
-  "France": [
-    { name: "Paris", districts: ["Le Marais", "Saint-Germain-des-Prés", "Montmartre", "Latin Quarter", "Bastille", "Champs-Élysées"] },
-    { name: "Lyon", districts: [] }, { name: "Marseille", districts: [] },
-    { name: "Nice", districts: [] }, { name: "Bordeaux", districts: [] }, { name: "Toulouse", districts: [] }
-  ],
-  "Italy": [
-    { name: "Rome", districts: ["Trastevere", "Monti", "Centro Storico", "Testaccio", "San Lorenzo"] },
-    { name: "Milan", districts: ["Navigli", "Brera", "Porta Romana", "Isola"] },
-    { name: "Florence", districts: [] }, { name: "Naples", districts: [] },
-    { name: "Venice", districts: [] }, { name: "Bologna", districts: [] }
-  ],
-  "Spain": [
-    { name: "Madrid", districts: ["Malasaña", "Chueca", "La Latina", "Salamanca", "Lavapiés"] },
-    { name: "Barcelona", districts: ["El Born", "Gràcia", "Gothic Quarter", "Eixample", "Barceloneta"] },
-    { name: "Valencia", districts: [] }, { name: "Seville", districts: [] },
-    { name: "Malaga", districts: [] }, { name: "Bilbao", districts: [] }
-  ],
-  "United Kingdom": [
-    { name: "London", districts: ["Soho", "Shoreditch", "Camden", "Notting Hill", "South Bank", "Covent Garden"] },
-    { name: "Manchester", districts: [] }, { name: "Edinburgh", districts: [] },
-    { name: "Birmingham", districts: [] }, { name: "Liverpool", districts: [] }, { name: "Bristol", districts: [] }
-  ],
-  "Germany": [
-    { name: "Berlin", districts: ["Kreuzberg", "Mitte", "Prenzlauer Berg", "Friedrichshain", "Neukölln"] },
-    { name: "Munich", districts: [] }, { name: "Hamburg", districts: [] },
-    { name: "Cologne", districts: [] }, { name: "Frankfurt", districts: [] }, { name: "Düsseldorf", districts: [] }
-  ],
-  "Netherlands": [
-    { name: "Amsterdam", districts: ["Jordaan", "De Pijp", "Oud-West", "Centrum", "Oost"] },
-    { name: "Rotterdam", districts: [] }, { name: "Utrecht", districts: [] },
-    { name: "The Hague", districts: [] }, { name: "Eindhoven", districts: [] }
-  ],
-  "Portugal": [
-    { name: "Lisbon", districts: ["Bairro Alto", "Alfama", "Chiado", "Baixa", "Cais do Sodré"] },
-    { name: "Porto", districts: [] }, { name: "Faro", districts: [] },
-    { name: "Coimbra", districts: [] }, { name: "Braga", districts: [] }
-  ],
-  "Turkey": [
-    { name: "Istanbul", districts: ["Kadıköy", "Beyoğlu", "Beşiktaş", "Karaköy", "Sultanahmet"] },
-    { name: "Ankara", districts: [] }, { name: "Izmir", districts: [] },
-    { name: "Antalya", districts: [] }, { name: "Bodrum", districts: [] }
-  ],
-  "United States": [
-    { name: "New York", districts: ["Manhattan", "Brooklyn", "Williamsburg", "SoHo", "East Village"] },
-    { name: "Los Angeles", districts: [] }, { name: "Chicago", districts: [] },
-    { name: "Miami", districts: [] }, { name: "San Francisco", districts: [] }, { name: "Boston", districts: [] }
-  ]
-};
-
-function citySlug(name) {
-  return String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-
-// Area options for a group's country. Greece keeps the existing Athens quick-picks
-// untouched; curated countries get their top cities (with district drill-down where
-// available); anything else gets no quick-picks — members type their own areas.
-function areaOptionsForCountry(country) {
-  const canonical = normalizeCountry(country);
-  if (canonical === "Greece") return areaOptions;
-  const cities = countryCities[canonical];
-  if (!cities) return [];
-  return cities.map((c) => {
-    const option = {
-      id: `city_${citySlug(c.name)}`,
-      label: c.name,
-      description: c.districts.length ? c.districts.slice(0, 5).join(", ") : canonical,
-      queryArea: c.name,
-      country: canonical
-    };
-    if (c.districts.length) option.subareas = c.districts;
-    return option;
-  });
-}
-
 // ====== AREA GEOCODING (for custom, user-typed areas) ======
-const geocodeCache = new Map(); // normalized "query|country" -> rectangle | null
+const geocodeCache = new Map(); // normalized query -> rectangle | null
 
 // Build a rectangle roughly radiusKm to each side of a point.
 function boxAround(lat, lng, radiusKm = 3) {
@@ -692,15 +578,13 @@ function boxAround(lat, lng, radiusKm = 3) {
 }
 
 // Geocode a free-text area into a bounding rectangle (cached).
-async function geocodeAreaRectangle(queryText, country = "Greece") {
+async function geocodeAreaRectangle(queryText) {
   if (!googleApiKey || !queryText) return null;
-  const cleanCountry = normalizeCountry(country);
-  // Country is part of the cache key so "Kifisia, Greece" and "Kifisia, France" never collide.
-  const key = `${String(queryText).toLowerCase().trim()}|${cleanCountry.toLowerCase()}`;
+  const key = String(queryText).toLowerCase().trim();
   if (geocodeCache.has(key)) return geocodeCache.get(key);
   let rectangle = null;
   try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", " + cleanCountry)}&key=${googleApiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", Greece")}&key=${googleApiKey}`;
     const resp = await fetch(url);
     if (resp.ok) {
       const data = await resp.json();
@@ -736,7 +620,7 @@ async function resolveAreaRectangle(areaOption) {
       high: { latitude: fixed.high.lat, longitude: fixed.high.lng }
     };
   }
-  return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "", areaOption.country);
+  return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "");
 }
 
 // True if a place's coordinates fall inside the rectangle.
@@ -764,9 +648,7 @@ function buildPlaceSearchQuery(areaOption, typeOption) {
   const area = areaOption.queryArea || areaOption.label || "Athens";
   const typeId = typeOption.id || "";
   const activity = activitySearchTerms[typeId] || typeOption.queryType || typeOption.label || "places";
-  // Country lives on the area option (defaults to Greece for all built-in and legacy options),
-  // and is appended exactly once here — never baked into the area text itself.
-  return `${activity} in ${area}, ${normalizeCountry(areaOption.country)}`;
+  return `${activity} in ${area}, Greece`;
 }
 
 function googlePhotoUrl(photo, maxWidth = 1000) {
@@ -1065,9 +947,6 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
 async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles = [], options = {}) {
   const { areaOption, typeOption } = normalizePlaceOptions(areaInput, typeInput);
   const areaLabel = areaOption.label || areaOption.id || "Athens";
-  // The AI filter judges "does this place fit the area" — give it the full
-  // geographic context (area + country) so global searches are filtered correctly.
-  const aiAreaLabel = `${areaLabel}, ${normalizeCountry(areaOption.country)}`;
   const typeLabel = typeOption.label || typeOption.id || "Activity";
   const typeId = typeOption.id || "";
   let query = buildPlaceSearchQuery(areaOption, typeOption);
@@ -1082,7 +961,7 @@ async function loadPlacesForGroup(areaInput, typeInput, count = 5, excludeTitles
     if (googlePlaces && googlePlaces.length > 0) {
       const refined = options.useAi === false
         ? googlePlaces.slice(0, count)
-        : await refinePlacesWithOpenAI(googlePlaces, aiAreaLabel, typeLabel, count, options.ageGroups || [], options.pastActivities || [], options.likedPlaces || [], options.comments || "");
+        : await refinePlacesWithOpenAI(googlePlaces, areaLabel, typeLabel, count, options.ageGroups || [], options.pastActivities || [], options.likedPlaces || [], options.comments || "");
       console.log(`[places] google=${tAi - tGoogle}ms openai=${Date.now() - tAi}ms candidates=${googlePlaces.length}`);
       return { places: refined, source: options.useAi === false ? "google" : "google-ai", query, exhausted: false };
     }
@@ -1501,12 +1380,10 @@ async function handleApi(request, response) {
     const userId  = crypto.randomUUID();
     const profile = body.profile || {};
     const user    = { id: userId, name: body.username, username: body.username, profile };
-    const groupCountry = normalizeCountry(body.country);
     const group   = {
       name: body.groupName || `${body.username}'s Group`, code,
-      country: groupCountry,
       members: [user], choices: { area: {}, type: {} }, consensus: {},
-      options: { area: areaOptionsForCountry(groupCountry), type: typeOptions },
+      options: { area: areaOptions, type: typeOptions },
       places: [], matches: [], votes: {}, placeSelections: {}, search: null, createdAt: Date.now()
     };
     await saveGroup(group);
@@ -1592,20 +1469,10 @@ async function handleApi(request, response) {
       if (!group.options[kind]) group.options[kind] = [];
       const cleanLabel = String(body.customLabel).trim();
       if (!cleanLabel) { sendJson(response, 400, { error: "Custom option required" }); return; }
-      // Custom areas inherit the group's country (chosen at creation; legacy groups → Greece).
-      const groupCountry = normalizeCountry(group.country);
-      let customOption = group.options[kind].find((option) =>
-        String(option.label || "").toLowerCase() === cleanLabel.toLowerCase()
-        && (kind !== "area" || normalizeCountry(option.country) === groupCountry));
+      let customOption = group.options[kind].find((option) => String(option.label || "").toLowerCase() === cleanLabel.toLowerCase());
       if (!customOption) {
-        const hashInput = kind === "area" ? `${kind}:${cleanLabel.toLowerCase()}:${groupCountry.toLowerCase()}` : `${kind}:${cleanLabel.toLowerCase()}`;
-        customOption = { id: `custom_${crypto.createHash("sha1").update(hashInput).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
-        if (kind === "area") {
-          customOption.country = groupCountry;
-          // Greek custom areas keep today's ", Athens" hint; abroad, the plain label +
-          // country (added by the query builder / geocoder) is the right search text.
-          customOption.queryArea = groupCountry === "Greece" ? `${cleanLabel}, Athens` : cleanLabel;
-        }
+        customOption = { id: `custom_${crypto.createHash("sha1").update(`${kind}:${cleanLabel.toLowerCase()}`).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
+        if (kind === "area") customOption.queryArea = `${cleanLabel}, Athens`;
         else customOption.queryType = cleanLabel;
         group.options[kind].push(customOption);
       }
@@ -2212,8 +2079,7 @@ async function handleApi(request, response) {
     const activity = body.activity || "";
     if (!area || !activity) { sendJson(response, 200, { suggestions: [], places: [] }); return; }
 
-    const suggestionArea = { id: String(area), label: String(area), country: normalizeCountry(body.country) };
-    const loaded = await loadPlacesForGroup(suggestionArea, activity, 5, body.excludeTitles || [], { language: body.language || "en" });
+    const loaded = await loadPlacesForGroup(area, activity, 5, body.excludeTitles || [], { language: body.language || "en" });
     sendJson(response, 200, {
       suggestions: loaded.places.map((p) => ({ place: p.title, reason: p.description })),
       places: loaded.places,
@@ -2235,29 +2101,21 @@ async function handleApi(request, response) {
     const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
-    const countryText = normalizeCountry(body.country);
-    const inGreece = countryText === "Greece";
-
-    const builtIn = inGreece ? areaOptions.find((a) => a.id === areaText) : null;
-    // Country is stored on the option, never concatenated into the area text —
-    // downstream query builders append it exactly once.
+    const builtIn = areaOptions.find((a) => a.id === areaText);
     const areaOption = builtIn
       ? builtIn
-      : (areaText ? { id: areaText, label: areaText, queryArea: inGreece ? `${areaText}, Athens` : areaText, country: countryText } : null);
-    const countryWide = inGreece
-      ? { id: "athens_all", label: "Athens", queryArea: "Athens", country: "Greece" }
-      : { id: "country_all", label: countryText, queryArea: countryText, country: countryText };
-    const searchArea = areaOption || countryWide;
-    const searchCountry = normalizeCountry(searchArea.country);
+      : (areaText ? { id: areaText, label: areaText, queryArea: `${areaText}, Athens, Greece` } : null);
+    const athensWide = { id: "athens_all", label: "Athens", queryArea: "Athens, Greece" };
+    const searchArea = areaOption || athensWide;
     const ageHint = ageGroup ? ` suitable for ${ageGroup}` : "";
 
     if (mode === "browse") {
       const typeOpt = typeOptions.find((tp) => tp.id === categoryText);
       const catLabel = typeOpt?.label || categoryText;
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
-      const qText = `${catLabel} in ${searchArea.queryArea}, ${searchCountry}${ageHint}`;
+      const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
       const candidates = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 20, [], language) || [];
-      const results = await refineSearchPlacesWithOpenAI(candidates, `${searchArea.label}, ${searchCountry}`, catLabel, ageGroup, 12, comments);
+      const results = await refineSearchPlacesWithOpenAI(candidates, searchArea.label, catLabel, ageGroup, 12, comments);
       sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label, aiFiltered: Boolean(openAiApiKey) });
       return;
     }
@@ -2270,8 +2128,8 @@ async function handleApi(request, response) {
     const matchTitles = match.map((p) => p.title);
     const matchIds = new Set(match.map((p) => p.googlePlaceId));
 
-    // 2) same name in other areas (country-wide, minus the selected-area matches)
-    let elsewhere = (await googleTextSearch(`${query} ${countryWide.label}`, countryWide, countryWide.label, "", "", 12, matchTitles, language) || []);
+    // 2) same name in other areas (Athens-wide, minus the selected-area matches)
+    let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles, language) || []);
     const areaRect = await resolveAreaRectangle(areaOption);
     if (areaRect) elsewhere = elsewhere.filter((p) => !placeInRectangle(p, areaRect));
     elsewhere = elsewhere.filter((p) => !matchIds.has(p.googlePlaceId)).slice(0, 6);
@@ -2282,10 +2140,10 @@ async function handleApi(request, response) {
     if (primaryType) {
       const seen = new Set([...match, ...elsewhere].map((p) => p.googlePlaceId));
       const exclude = [...matchTitles, ...elsewhere.map((p) => p.title)];
-      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}, ${searchCountry}`, searchArea, searchArea.label, primaryType, "", 10, exclude, language) || []);
+      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 10, exclude, language) || []);
       similar = similar.filter((p) => !seen.has(p.googlePlaceId));
       // #1: let the AI filter the by-name search's discovery results too.
-      similar = await refineSearchPlacesWithOpenAI(similar, `${searchArea.label}, ${searchCountry}`, primaryType, "", 6);
+      similar = await refineSearchPlacesWithOpenAI(similar, searchArea.label, primaryType, "", 6);
       similar = similar.slice(0, 6);
     }
 
