@@ -519,8 +519,8 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 }
 
 .topbar-logo {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
 }
 
@@ -2791,8 +2791,8 @@ img, video, .search-card-photo, .detail-photo { max-width: 100%; }
     gap: 8px;
   }
   .topbar-logo {
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
   }
   .topbar .topbar-name {
     font-size: 1rem;
@@ -3849,7 +3849,7 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
   }
   .topbar-brand { flex: 0 0 auto; gap: 8px; }
   .topbar-brand > div { display: none; }          /* logo only, drop the wordmark */
-  .topbar-logo { width: 30px; height: 30px; }
+  .topbar-logo { width: 40px; height: 40px; }
   .topbar-actions { flex: 1 1 auto; gap: 6px; justify-content: flex-end; min-width: 0; flex-wrap: nowrap; }
   /* generic: text buttons stay compact and content-sized */
   .topbar-actions > .btn-ghost {

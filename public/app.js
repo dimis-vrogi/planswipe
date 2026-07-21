@@ -823,13 +823,15 @@ Object.assign(copy.en, {
   country: "Country",
   countryPlaceholder: "e.g. Greece, France",
   groupCountryHint: "Where will this group be going out?",
-  countryRequired: "Please enter the group's country."
+  countryRequired: "Please enter the group's country.",
+  wholeCityText: "Anywhere in the city"
 });
 Object.assign(copy.el, {
   country: "Χώρα",
   countryPlaceholder: "π.χ. Ελλάδα, Γαλλία",
   groupCountryHint: "Σε ποια χώρα θα βγαίνει αυτή η ομάδα;",
-  countryRequired: "Συμπλήρωσε τη χώρα της ομάδας."
+  countryRequired: "Συμπλήρωσε τη χώρα της ομάδας.",
+  wholeCityText: "Οπουδήποτε στην πόλη"
 });
 
 // Default value for the editable Country field, per app language.
@@ -1185,9 +1187,22 @@ function renderSetup() {
 function renderDecisionStep(kind) {
   const isAreaStep = kind === "area";
   const broadArea  = isAreaStep && state.pendingAreaOption ? state.pendingAreaOption : null;
-  const options    = broadArea
-    ? broadArea.subareas.map((label) => ({ id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, Athens`, queryArea: `${label}, Athens` }))
-    : optionsFor(kind);
+  const greekGroup = isGreeceCountry(state.group?.country);
+  let options;
+  if (broadArea) {
+    // Drill-down inside a broad pick. Greek Athens areas keep their exact current
+    // behavior; foreign cities offer "entire city" plus districts, and each pick
+    // carries "district, city" so Google/OpenAI target the right place worldwide.
+    const cityLabel = broadArea.label || "";
+    options = broadArea.subareas.map((label) => greekGroup
+      ? { id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, Athens`, queryArea: `${label}, Athens` }
+      : { id: `subarea_${label.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label, description: `${label}, ${cityLabel}`, customLabel: `${label}, ${cityLabel}` });
+    if (!greekGroup) {
+      options = [{ id: `city_all_${cityLabel.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`, label: cityLabel, description: t("wholeCityText"), customLabel: cityLabel }, ...options];
+    }
+  } else {
+    options = optionsFor(kind) || [];
+  }
   const chosen     = selected(kind);
   const total      = memberCount();
   const votedCount = Object.keys(state.group?.choices?.[kind] || {}).length;
@@ -1206,10 +1221,13 @@ function renderDecisionStep(kind) {
     backChoiceButton.textContent = t("back") || "Back";
   }
 
-  if (!options || options.length === 0) {
+  if ((!options || options.length === 0) && !isAreaStep) {
     optionGrid.innerHTML = `<p style="color:var(--muted);padding:12px;">${t("decisionHint")}</p>`;
     return;
   }
+  // Area step continues even with no quick-picks (e.g. a country without a curated
+  // city list) — members can still use favourites or add their own area below.
+  if (!options) options = [];
 
   const optionCards = options.map((option) => {
     const score = optionScore(kind, option.id);
@@ -1218,7 +1236,7 @@ function renderDecisionStep(kind) {
     const label = translated?.label ?? option.label ?? option.id;
     const description = translated?.description ?? option.description ?? "";
     const broadAttr = isAreaStep && !broadArea && option.subareas?.length ? ` data-broad-area="true"` : "";
-    const customLabelAttr = broadArea ? ` data-custom-label="${escapeHtml(option.label)}"` : "";
+    const customLabelAttr = broadArea ? ` data-custom-label="${escapeHtml(option.customLabel || option.label)}"` : "";
     return `<button class="option-card${isSelected ? " is-selected" : ""}" type="button" data-kind="${escapeHtml(kind)}" data-id="${escapeHtml(option.id)}"${broadAttr}${customLabelAttr}>
       <span class="option-score">${score}/${total} ${t("liveChoices")}</span>
       <span><h3>${escapeHtml(label)}</h3><p>${escapeHtml(description)}</p></span>
