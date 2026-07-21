@@ -564,8 +564,47 @@ const areaBounds = {
   south_suburbs: { low: { lat: 37.82, lng: 23.68 }, high: { lat: 37.95, lng: 23.78 } }
 };
 
+// ====== COUNTRY SUPPORT (country box feature) ======
+// The country is stored separately from the area text so it is appended exactly
+// once by whichever query builder uses it (never "Paris, France, Greece").
+const greeceAliases = new Set(["greece", "gr", "hellas", "ελλάδα", "ελλαδα", "ελλάς", "ελλας"]);
+function normalizeCountry(input) {
+  const clean = String(input || "").trim().slice(0, 60);
+  if (!clean) return "Greece";
+  return greeceAliases.has(clean.toLowerCase()) ? "Greece" : clean;
+}
+
+// Fire-and-forget: remember which area+country pairs this user actually searches,
+// so the client can offer "usual areas" chips. Never awaited on the hot path.
+async function recordUsualArea(request, area, country) {
+  try {
+    const cleanArea = String(area || "").trim().slice(0, 80);
+    if (!cleanArea) return;
+    const cleanCountry = normalizeCountry(country);
+    const username = await getAuthUsername(request);
+    if (!username) return;
+    const row = await getProfileByUsername(username);
+    if (!row) return;
+    const profile = row.profile || {};
+    const list = Array.isArray(profile.usualAreas) ? profile.usualAreas : [];
+    const key = `${cleanArea.toLowerCase()}|${cleanCountry.toLowerCase()}`;
+    const existing = list.find((e) => `${String(e.area || "").toLowerCase()}|${normalizeCountry(e.country).toLowerCase()}` === key);
+    if (existing) {
+      existing.count = (existing.count || 0) + 1;
+      existing.lastUsed = new Date().toISOString();
+    } else {
+      list.push({ area: cleanArea, country: cleanCountry, count: 1, lastUsed: new Date().toISOString() });
+    }
+    list.sort((a, b) => (b.count || 0) - (a.count || 0) || String(b.lastUsed || "").localeCompare(String(a.lastUsed || "")));
+    profile.usualAreas = list.slice(0, 12);
+    await upsertProfile({ username, email: row.email || "", profile });
+  } catch (e) {
+    console.warn("recordUsualArea error:", e.message);
+  }
+}
+
 // ====== AREA GEOCODING (for custom, user-typed areas) ======
-const geocodeCache = new Map(); // normalized query -> rectangle | null
+const geocodeCache = new Map(); // normalized "query|country" -> rectangle | null
 
 // Build a rectangle roughly radiusKm to each side of a point.
 function boxAround(lat, lng, radiusKm = 3) {
@@ -578,13 +617,15 @@ function boxAround(lat, lng, radiusKm = 3) {
 }
 
 // Geocode a free-text area into a bounding rectangle (cached).
-async function geocodeAreaRectangle(queryText) {
+async function geocodeAreaRectangle(queryText, country = "Greece") {
   if (!googleApiKey || !queryText) return null;
-  const key = String(queryText).toLowerCase().trim();
+  const cleanCountry = normalizeCountry(country);
+  // Country is part of the cache key so "Kifisia, Greece" and "Kifisia, France" never collide.
+  const key = `${String(queryText).toLowerCase().trim()}|${cleanCountry.toLowerCase()}`;
   if (geocodeCache.has(key)) return geocodeCache.get(key);
   let rectangle = null;
   try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", Greece")}&key=${googleApiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", " + cleanCountry)}&key=${googleApiKey}`;
     const resp = await fetch(url);
     if (resp.ok) {
       const data = await resp.json();
@@ -620,7 +661,7 @@ async function resolveAreaRectangle(areaOption) {
       high: { latitude: fixed.high.lat, longitude: fixed.high.lng }
     };
   }
-  return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "");
+  return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "", areaOption.country);
 }
 
 // True if a place's coordinates fall inside the rectangle.
@@ -648,7 +689,9 @@ function buildPlaceSearchQuery(areaOption, typeOption) {
   const area = areaOption.queryArea || areaOption.label || "Athens";
   const typeId = typeOption.id || "";
   const activity = activitySearchTerms[typeId] || typeOption.queryType || typeOption.label || "places";
-  return `${activity} in ${area}, Greece`;
+  // Country lives on the area option (defaults to Greece for all built-in and legacy options),
+  // and is appended exactly once here — never baked into the area text itself.
+  return `${activity} in ${area}, ${normalizeCountry(areaOption.country)}`;
 }
 
 function googlePhotoUrl(photo, maxWidth = 1000) {
@@ -1469,13 +1512,23 @@ async function handleApi(request, response) {
       if (!group.options[kind]) group.options[kind] = [];
       const cleanLabel = String(body.customLabel).trim();
       if (!cleanLabel) { sendJson(response, 400, { error: "Custom option required" }); return; }
-      let customOption = group.options[kind].find((option) => String(option.label || "").toLowerCase() === cleanLabel.toLowerCase());
+      const customCountry = normalizeCountry(body.customCountry);
+      let customOption = group.options[kind].find((option) =>
+        String(option.label || "").toLowerCase() === cleanLabel.toLowerCase()
+        && (kind !== "area" || normalizeCountry(option.country) === customCountry));
       if (!customOption) {
-        customOption = { id: `custom_${crypto.createHash("sha1").update(`${kind}:${cleanLabel.toLowerCase()}`).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
-        if (kind === "area") customOption.queryArea = `${cleanLabel}, Athens`;
+        const hashInput = kind === "area" ? `${kind}:${cleanLabel.toLowerCase()}:${customCountry.toLowerCase()}` : `${kind}:${cleanLabel.toLowerCase()}`;
+        customOption = { id: `custom_${crypto.createHash("sha1").update(hashInput).digest("hex").slice(0, 12)}`, label: cleanLabel, description: "" };
+        if (kind === "area") {
+          customOption.country = customCountry;
+          // Greek custom areas keep today's ", Athens" hint; abroad, the plain label +
+          // country (added by the query builder / geocoder) is the right search text.
+          customOption.queryArea = customCountry === "Greece" ? `${cleanLabel}, Athens` : cleanLabel;
+        }
         else customOption.queryType = cleanLabel;
         group.options[kind].push(customOption);
       }
+      if (kind === "area") recordUsualArea(request, cleanLabel, customCountry);
       if (!group.choices[kind]) group.choices[kind] = {};
       group.choices[kind][body.userId] = customOption.id;
     } else {
@@ -2079,7 +2132,8 @@ async function handleApi(request, response) {
     const activity = body.activity || "";
     if (!area || !activity) { sendJson(response, 200, { suggestions: [], places: [] }); return; }
 
-    const loaded = await loadPlacesForGroup(area, activity, 5, body.excludeTitles || [], { language: body.language || "en" });
+    const suggestionArea = { id: String(area), label: String(area), country: normalizeCountry(body.country) };
+    const loaded = await loadPlacesForGroup(suggestionArea, activity, 5, body.excludeTitles || [], { language: body.language || "en" });
     sendJson(response, 200, {
       suggestions: loaded.places.map((p) => ({ place: p.title, reason: p.description })),
       places: loaded.places,
@@ -2101,19 +2155,28 @@ async function handleApi(request, response) {
     const language = body.language || "en";
     if (!googleApiKey) { sendJson(response, 200, { mode, sections: {} }); return; }
 
-    const builtIn = areaOptions.find((a) => a.id === areaText);
+    const countryText = normalizeCountry(body.country);
+    const inGreece = countryText === "Greece";
+    if (areaText) recordUsualArea(request, areaText, countryText);
+
+    const builtIn = inGreece ? areaOptions.find((a) => a.id === areaText) : null;
+    // Country is stored on the option, never concatenated into the area text —
+    // downstream query builders append it exactly once.
     const areaOption = builtIn
       ? builtIn
-      : (areaText ? { id: areaText, label: areaText, queryArea: `${areaText}, Athens, Greece` } : null);
-    const athensWide = { id: "athens_all", label: "Athens", queryArea: "Athens, Greece" };
-    const searchArea = areaOption || athensWide;
+      : (areaText ? { id: areaText, label: areaText, queryArea: inGreece ? `${areaText}, Athens` : areaText, country: countryText } : null);
+    const countryWide = inGreece
+      ? { id: "athens_all", label: "Athens", queryArea: "Athens", country: "Greece" }
+      : { id: "country_all", label: countryText, queryArea: countryText, country: countryText };
+    const searchArea = areaOption || countryWide;
+    const searchCountry = normalizeCountry(searchArea.country);
     const ageHint = ageGroup ? ` suitable for ${ageGroup}` : "";
 
     if (mode === "browse") {
       const typeOpt = typeOptions.find((tp) => tp.id === categoryText);
       const catLabel = typeOpt?.label || categoryText;
       if (!catLabel) { sendJson(response, 200, { mode, sections: { results: [] } }); return; }
-      const qText = `${catLabel} in ${searchArea.queryArea}${ageHint}`;
+      const qText = `${catLabel} in ${searchArea.queryArea}, ${searchCountry}${ageHint}`;
       const candidates = await googleTextSearch(qText, searchArea, searchArea.label, catLabel, typeOpt?.id || "", 20, [], language) || [];
       const results = await refineSearchPlacesWithOpenAI(candidates, searchArea.label, catLabel, ageGroup, 12, comments);
       sendJson(response, 200, { mode, sections: { results }, areaLabel: searchArea.label, aiFiltered: Boolean(openAiApiKey) });
@@ -2128,8 +2191,8 @@ async function handleApi(request, response) {
     const matchTitles = match.map((p) => p.title);
     const matchIds = new Set(match.map((p) => p.googlePlaceId));
 
-    // 2) same name in other areas (Athens-wide, minus the selected-area matches)
-    let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles, language) || []);
+    // 2) same name in other areas (country-wide, minus the selected-area matches)
+    let elsewhere = (await googleTextSearch(`${query} ${countryWide.label}`, countryWide, countryWide.label, "", "", 12, matchTitles, language) || []);
     const areaRect = await resolveAreaRectangle(areaOption);
     if (areaRect) elsewhere = elsewhere.filter((p) => !placeInRectangle(p, areaRect));
     elsewhere = elsewhere.filter((p) => !matchIds.has(p.googlePlaceId)).slice(0, 6);
@@ -2140,7 +2203,7 @@ async function handleApi(request, response) {
     if (primaryType) {
       const seen = new Set([...match, ...elsewhere].map((p) => p.googlePlaceId));
       const exclude = [...matchTitles, ...elsewhere.map((p) => p.title)];
-      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}`, searchArea, searchArea.label, primaryType, "", 10, exclude, language) || []);
+      similar = (await googleTextSearch(`${primaryType} in ${searchArea.queryArea}, ${searchCountry}`, searchArea, searchArea.label, primaryType, "", 10, exclude, language) || []);
       similar = similar.filter((p) => !seen.has(p.googlePlaceId));
       // #1: let the AI filter the by-name search's discovery results too.
       similar = await refineSearchPlacesWithOpenAI(similar, searchArea.label, primaryType, "", 6);
