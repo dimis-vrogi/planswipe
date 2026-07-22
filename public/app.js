@@ -201,9 +201,9 @@ const copy = {
     past: "Past Activities", personal: "Personal Information", settings: "Settings", logout: "Logout",
     messages: "Messages",
     message: "Message",
-    heroEyebrow: "Plan your next outing, together",
+    heroEyebrow: "Going out with friends?",
     heroTitle: "The plan your whole group agrees on.",
-    heroDescription: "Deciding where to go shouldn't take a hundred messages. With PlanSwipe, your group picks an area and an activity, swipes through real nearby venues, and votes — and everyone's choices come together into one place you're all happy with. It takes minutes.",
+    heroDescription: "Pick an area, swipe through real places, vote — and land on a spot everyone loves, in minutes.",
     heroNote: "Built for the group chats that can never agree on a place.",
     whatPlanswipeIs: "What PlanSwipe is",
     sharedDecisionTool: "One shared way to decide where to go",
@@ -229,6 +229,7 @@ const copy = {
     tieTitle: "It's a tie!",
     tieBody: "A few places are neck and neck. Start a quick runoff to settle it.",
     startRunoff: "Start runoff",
+    runoffNeedAgreement: "Everyone has voted, but you haven't agreed yet — switch your votes until you all pick the same place.",
     runoffTitle: "Runoff — pick one",
     runoffWinner: "Winner",
     cancelRunoff: "Cancel runoff",
@@ -247,7 +248,11 @@ const copy = {
     yourPlace: "your place",
     moreButton: "More",
     voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
-    dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna",
+    dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna", fourFriendsIn: "4 friends in",
+    navHow: "How it works", navFaq: "FAQ",
+    stepsEyebrow: "How it works", faqEyebrow: "Questions", faqTitle: "Frequently asked questions",
+    ctaTitle: "Ready to plan your next night out?", ctaText: "Create a group, invite your friends, and agree on a place in minutes.", ctaButton: "Create your group",
+    footTag: "The plan your whole group agrees on.", footProduct: "Product", footContact: "Contact", footFollow: "Follow", footDemo: "Demo contact details — to be updated.",
     seeWhatFriendsThink: "See what your friends think about this.", findSimilar: "Find similar places",
     startPlanning: "Start planning with your group",
     startPlanningText: "Choose whether you are creating a new group or joining one that already exists.",
@@ -478,9 +483,9 @@ const copy = {
     settings: "Ρυθμίσεις", logout: "Αποσύνδεση",
     messages: "Μηνύματα",
     message: "Μήνυμα",
-    heroEyebrow: "Σχεδιάστε την επόμενη έξοδό σας, μαζί",
+    heroEyebrow: "Βγαίνετε έξω με την παρέα;",
     heroTitle: "Το σχέδιο που όλη η παρέα συμφωνεί.",
-    heroDescription: "Το να αποφασίσετε πού θα πάτε δεν χρειάζεται εκατό μηνύματα. Με το PlanSwipe, η παρέα σας διαλέγει περιοχή και δραστηριότητα, κάνει swipe σε πραγματικά κοντινά μέρη και ψηφίζει — και οι επιλογές όλων ενώνονται σε ένα μέρος που αρέσει σε όλους. Παίρνει λεπτά.",
+    heroDescription: "Διαλέξτε περιοχή, κάντε swipe σε πραγματικά μέρη, ψηφίστε — και βρείτε το μέρος που αρέσει σε όλους, μέσα σε λίγα λεπτά.",
     heroNote: "Φτιαγμένο για τις παρέες που ποτέ δεν καταλήγουν πού να πάνε.",
     whatPlanswipeIs: "Τι είναι το PlanSwipe",
     sharedDecisionTool: "Ένας κοινός τρόπος να αποφασίζετε πού θα πάτε",
@@ -509,6 +514,7 @@ const copy = {
     tieBody: "Κάποια μέρη είναι ισόπαλα. Ξεκίνα έναν γρήγορο β’ γύρο για να λυθεί.",
     startRunoff: "Έναρξη β’ γύρου",
     runoffTitle: "Β’ γύρος — διάλεξε ένα",
+    runoffNeedAgreement: "Όλοι ψήφισαν, αλλά δεν έχετε συμφωνήσει ακόμη — αλλάξτε ψήφο μέχρι να διαλέξετε όλοι το ίδιο μέρος.",
     runoffWinner: "Νικητής",
     cancelRunoff: "Ακύρωση β’ γύρου",
     dismiss: "Κλείσιμο",
@@ -527,7 +533,11 @@ const copy = {
     moreButton: "Περισσότερα",
     voteAsGroup: "Ψηφίστε και ταιριάξτε μαζί",
     voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
-    dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας",
+    dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας", fourFriendsIn: "4 φίλοι μέσα",
+    navHow: "Πώς λειτουργεί", navFaq: "Συχνές ερωτήσεις",
+    stepsEyebrow: "Πώς λειτουργεί", faqEyebrow: "Ερωτήσεις", faqTitle: "Συχνές ερωτήσεις",
+    ctaTitle: "Έτοιμοι να σχεδιάσετε την επόμενη έξοδό σας;", ctaText: "Φτιάξτε μια ομάδα, καλέστε τους φίλους σας και συμφωνήστε σε ένα μέρος μέσα σε λίγα λεπτά.", ctaButton: "Φτιάξτε την ομάδα σας",
+    footTag: "Το σχέδιο που όλη η παρέα συμφωνεί.", footProduct: "Προϊόν", footContact: "Επικοινωνία", footFollow: "Ακολουθήστε", footDemo: "Δοκιμαστικά στοιχεία επικοινωνίας — θα ενημερωθούν.",
     seeWhatFriendsThink: "Δείτε τι πιστεύουν οι φίλοι σας.", findSimilar: "Βρείτε παρόμοια μέρη",
     startPlanning: "Ξεκινήστε τον προγραμματισμό με την ομάδα σας",
     startPlanningText: "Διαλέξτε αν θέλετε να δημιουργήσετε μια νέα ομάδα ή να μπείτε σε μια υπάρχουσα.",
@@ -823,6 +833,13 @@ function applyLanguage() {
   document.documentElement.lang = state.language;
   if (languageButton) languageButton.textContent = state.language === "en" ? "EL" : "EN";
   if (appLanguageButton) appLanguageButton.textContent = state.language === "en" ? "EL" : "EN";
+  // Translate any element tagged with data-i18n (landing sections: nav links,
+  // how-it-works steps, FAQ, CTA, footer). Only overwrites when a key exists.
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    const val = t(key);
+    if (val && val !== key) el.textContent = val;
+  });
   heroLoginButton.textContent   = t("login");
   if (heroSignupButton) heroSignupButton.textContent = t("createAccount");
   heroEnterButton.textContent   = t("enterPlanswipe");
@@ -842,14 +859,11 @@ function applyLanguage() {
     const span = heroCopy.querySelector(".hero-actions span"); if (span) span.textContent = t("heroNote");
   }
 
-  const previewDiv = document.querySelector(".preview-card div");
-  if (previewDiv) {
-    const p  = previewDiv.querySelector("p");    if (p)  p.textContent  = t("dinnerNearSea");
-    const h2 = previewDiv.querySelector("h2");   if (h2) h2.textContent = t("glyfadaTaverna");
-    const sp = previewDiv.querySelector("span"); if (sp) sp.textContent = t("seeWhatFriendsThink");
+  // Localize the front (pick) card of the hero cover flow.
+  const frontCard = document.querySelector(".cf-item:first-child .cf-cb");
+  if (frontCard) {
+    const h3 = frontCard.querySelector("h3"); if (h3) h3.textContent = t("glyfadaTaverna");
   }
-  const previewStack = document.querySelector(".preview-stack span");
-  if (previewStack) previewStack.textContent = t("findSimilar");
 
   const offerSection = document.querySelector(".offer-section");
   if (offerSection) {
@@ -1473,6 +1487,7 @@ function renderRunoff() {
   resultList.innerHTML = `
     <div class="runoff-panel">
       <div class="runoff-head"><h3>\u{1F5F3}\uFE0F ${escapeHtml(t("runoffTitle"))}</h3><p class="muted-note">${votedCount}/${total} ${escapeHtml(t("voted"))}</p></div>
+      ${votedCount >= total && total > 0 ? `<p class="runoff-agreement-note">${escapeHtml(t("runoffNeedAgreement"))}</p>` : ""}
       <div class="runoff-cands">
         ${cands.map((p) => `
           <button class="runoff-card ${myVote === p.id ? "is-picked" : ""}" type="button" data-runoff-vote="${escapeHtml(p.id)}">
@@ -1574,6 +1589,20 @@ function renderResults() {
   let topBanner = "";
   if (state.group.runoff && state.group.runoff.winner) {
     topBanner += runoffWinnerBanner(allPlaces.find((p) => p.id === state.group.runoff.winner));
+    // First time this member sees the winner: actively ask for date and time by
+    // scrolling the plan-setup card into view and focusing the date field.
+    if (state.lastRunoffWinnerSeen !== state.group.runoff.winner) {
+      state.lastRunoffWinnerSeen = state.group.runoff.winner;
+      setTimeout(() => {
+        const setup = document.querySelector(".plan-card.plan-setup");
+        if (setup) {
+          setup.scrollIntoView({ behavior: "smooth", block: "center" });
+          setup.classList.add("plan-attention");
+          document.querySelector("#planDateInput")?.focus();
+          setTimeout(() => setup.classList.remove("plan-attention"), 2400);
+        }
+      }, 120);
+    }
   }
   if (matchId) {
     topBanner += planCardHtml(allPlaces.find((p) => p.id === matchId));
@@ -2185,7 +2214,7 @@ function renderApp() {
     hideAppPanels(); removeChatButton();
     const heroActions = document.querySelector(".hero-actions");
     if (heroActions && !document.querySelector("#heroBackButton")) {
-      heroActions.innerHTML = `<button class="btn-primary" id="heroBackButton" type="button">${t("enterPlanswipe")}</button> <span>${t("heroNote")}</span>`;
+      heroActions.innerHTML = `<button class="btn-primary" id="heroBackButton" type="button">${t("enterPlanswipe")}</button>`;
       document.querySelector("#heroBackButton").addEventListener("click", () => navigate("/main"));
     }
     return;
@@ -4067,6 +4096,56 @@ forgotPasswordButton.addEventListener("click", () => {
 });
 
 homeButton.addEventListener("click", () => navigate(isLoggedIn() ? "/main" : "/home"));
+// Logo -> hero page. Logged-in visitors get the "Enter PlanSwipe" button there,
+// so returning to the app is one tap — no second login.
+document.querySelector(".topbar-brand")?.addEventListener("click", () => navigate("/home"));
+
+// Frame the sticky hero nav once the page scrolls past the top.
+(function initStickyHeroNav() {
+  const nav = document.querySelector(".hero-nav");
+  if (!nav) return;
+  const onScroll = () => nav.classList.toggle("is-stuck", window.scrollY > 8);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+})();
+
+// Landing page: smooth-scroll for nav anchors, reveal-on-scroll, CTA + demo links.
+(function initLandingPage() {
+  // Smooth scroll for in-page anchor links (nav + footer).
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = a.getAttribute("href").slice(1);
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Reveal sections as they scroll into view.
+  const reveals = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && reveals.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); } });
+    }, { threshold: 0.12 });
+    reveals.forEach((el) => io.observe(el));
+  } else {
+    reveals.forEach((el) => el.classList.add("is-visible"));
+  }
+
+  // CTA button → open signup (or straight into the app if already logged in).
+  document.querySelector("#ctaSignupButton")?.addEventListener("click", () => {
+    if (isLoggedIn()) { navigate("/main"); return; }
+    state.authMode = "signup";
+    openLogin();
+  });
+
+  // Demo social links are placeholders until real URLs are set.
+  document.querySelectorAll("[data-demo]").forEach((a) => {
+    a.addEventListener("click", (e) => { e.preventDefault(); });
+  });
+})();
 logoutButton.addEventListener("click", logout);
 
 profileButton.addEventListener("click", (e) => { e.stopPropagation(); profileMenu.classList.toggle("is-hidden"); });

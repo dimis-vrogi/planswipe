@@ -94,6 +94,8 @@
         <div class="hero-nav">
           <img src="logo.png" alt="PlanSwipe logo" class="hero-logo-img" width="200" height="200">
           <div class="nav-actions">
+            <a href="#how-it-works" class="nav-link" data-i18n="navHow">How it works</a>
+            <a href="#faq" class="nav-link" data-i18n="navFaq">FAQ</a>
             <button class="language-button" id="languageButton" type="button">EL</button>
             <button id="heroLoginButton" type="button" class="btn-primary">Login</button>
             <button id="heroSignupButton" type="button" class="btn-primary">Create Account</button>
@@ -104,30 +106,21 @@
         <div class="hero-layout">
           <section class="hero-section">
             <div class="hero-copy">
-              <p class="eyebrow">Plan your next outing, together</p>
+              <p class="eyebrow">Going out with friends?</p>
               <h1>The plan your whole group agrees on.</h1>
               <p class="hero-description">
-                Deciding where to go shouldn't take a hundred messages. With PlanSwipe, your group picks an area and an activity, swipes through real nearby venues, and votes — and everyone's choices come together into one place you're all happy with. It takes minutes.
+                Pick an area, swipe through real places, vote — and land on a spot everyone loves, in minutes.
               </p>
-              <div class="hero-actions">
-                <span>Built for the group chats that can never agree on a place.</span>
-              </div>
+              <div class="hero-actions"></div>
             </div>
 
-            <div class="hero-preview" aria-hidden="true">
-              <div class="preview-card preview-main">
-                <img 
-                  src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80" 
-                  alt="Friends choosing a restaurant together with PlanSwipe"
-                >
-                <div>
-                  <p>Dinner near the sea</p>
-                  <h2>Glyfada seafood taverna</h2>
-                  <span>See what your friends think about this.</span>
-                </div>
-              </div>
-              <div class="preview-stack">
-                <span>Find similar places</span>
+            <div class="hero-coverflow" aria-hidden="true">
+              <div class="cf-track" id="cfTrack">
+                <article class="cf-item"><div class="cf-ph cf-g1">🍽️</div><span class="cf-pick">✓ pick</span><div class="cf-cb"><h3>Seafood taverna</h3><p>Glyfada · 4.7 ★</p></div></article>
+                <article class="cf-item"><div class="cf-ph cf-g2">🍸</div><div class="cf-cb"><h3>Rooftop bar</h3><p>Monastiraki · 4.5 ★</p></div></article>
+                <article class="cf-item"><div class="cf-ph cf-g3">☕</div><div class="cf-cb"><h3>Brunch café</h3><p>Kolonaki · 4.6 ★</p></div></article>
+                <article class="cf-item"><div class="cf-ph cf-g4">🎳</div><div class="cf-cb"><h3>Bowling night</h3><p>Marousi · 4.4 ★</p></div></article>
+                <article class="cf-item"><div class="cf-ph cf-g5">🍷</div><div class="cf-cb"><h3>Wine bar</h3><p>Psyrri · 4.8 ★</p></div></article>
               </div>
             </div>
           </section>
@@ -170,8 +163,75 @@
               <p>Swipe through each spot — right to like, left to pass — and instantly see which places your group agrees on. When everyone's in, you've got your plan.</p>
             </article>
           </div>
-          <p class="offer-more-link"><a href="/how-it-works">How PlanSwipe works &amp; FAQ →</a></p>
         </section>
+
+        <!-- How it works -->
+        <section class="land-section reveal" id="how-it-works" aria-label="How PlanSwipe works">
+          <p class="eyebrow" data-i18n="stepsEyebrow">How it works</p>
+          <h2 class="land-title" data-i18n="stepsTitle">Four steps to a plan</h2>
+          <ol class="land-steps">
+            <li class="land-step"><span class="land-step-num">1</span><div><h3 data-i18n="step1Title">Create a group and invite friends</h3><p data-i18n="step1Text">Start a group and share the code or invite link. Everyone joins in a tap — no accounts to hunt down.</p></div></li>
+            <li class="land-step"><span class="land-step-num">2</span><div><h3 data-i18n="step2Title">Agree on the basics</h3><p data-i18n="step2Text">The group picks an area and the type of outing together. Add a note like "outdoor seating" or "budget-friendly" and the suggestions adapt.</p></div></li>
+            <li class="land-step"><span class="land-step-num">3</span><div><h3 data-i18n="step3Title">Swipe through real places</h3><p data-i18n="step3Text">Browse actual venues from Google Maps — photos, ratings, hours and reviews. Swipe right to like, left to pass.</p></div></li>
+            <li class="land-step"><span class="land-step-num">4</span><div><h3 data-i18n="step4Title">Match, then lock it in</h3><p data-i18n="step4Text">PlanSwipe surfaces the place everyone's into. Set a date, RSVP, add it to your calendar, and get a reminder before you go.</p></div></li>
+          </ol>
+        </section>
+
+        <!-- FAQ -->
+        <section class="land-section reveal" id="faq" aria-label="Frequently asked questions">
+          <p class="eyebrow" data-i18n="faqEyebrow">Questions</p>
+          <h2 class="land-title" data-i18n="faqTitle">Frequently asked questions</h2>
+          <div class="land-faq">
+            <details><summary data-i18n="q1">What is PlanSwipe?</summary><p data-i18n="a1">PlanSwipe is a group planning app that helps friends decide where to go out. You pick an area and an activity together, swipe through real nearby places pulled from Google Maps, and vote to find the spot everyone agrees on.</p></details>
+            <details><summary data-i18n="q2">How does the voting work?</summary><p data-i18n="a2">Each member swipes right to like a place or left to pass. PlanSwipe combines everyone's votes and surfaces the places your whole group is into, so you reach a shared decision without a long group chat.</p></details>
+            <details><summary data-i18n="q3">Is PlanSwipe free?</summary><p data-i18n="a3">Yes — creating groups, discovering places, and voting together are free. An optional Pro plan is available for €1.99/month.</p></details>
+            <details><summary data-i18n="q4">How do friends join my group?</summary><p data-i18n="a4">Every group has a code and a shareable invite link. Send it to your friends and they join instantly.</p></details>
+            <details><summary data-i18n="q5">Where do the place suggestions come from?</summary><p data-i18n="a5">They're real venues from Google Maps, matched to your group's chosen area and activity, with photos, ratings, opening hours and reviews. You can add notes so suggestions fit what you're after.</p></details>
+            <details><summary data-i18n="q6">Can we set a date once we agree on a place?</summary><p data-i18n="a6">Yes. Once your group matches, you can lock in a date and time, RSVP so everyone sees who's coming, add it to your calendar, and get a reminder before the outing.</p></details>
+            <details><summary data-i18n="q7">What if the group can't agree?</summary><p data-i18n="a7">If the top places tie, PlanSwipe offers a quick runoff round so the group can settle on a single winner.</p></details>
+            <details><summary data-i18n="q8">Does PlanSwipe work in Athens?</summary><p data-i18n="a8">Yes — it's built for going out in Athens and the surrounding areas, with suggestions across neighbourhoods and the coast.</p></details>
+          </div>
+        </section>
+
+        <!-- CTA + Contact footer -->
+        <section class="land-cta reveal" aria-label="Get started">
+          <h2 data-i18n="ctaTitle">Ready to plan your next night out?</h2>
+          <p data-i18n="ctaText">Create a group, invite your friends, and agree on a place in minutes.</p>
+          <button class="btn-primary land-cta-btn" id="ctaSignupButton" type="button" data-i18n="ctaButton">Create your group</button>
+        </section>
+
+        <footer class="land-footer" id="contact" aria-label="Contact">
+          <div class="land-footer-grid">
+            <div class="land-foot-brand">
+              <img src="logo.png" alt="PlanSwipe" width="52" height="52">
+              <div>
+                <span class="land-foot-name">PlanSwipe</span>
+                <p class="land-foot-tag" data-i18n="footTag">The plan your whole group agrees on.</p>
+              </div>
+            </div>
+            <div class="land-foot-col">
+              <h4 data-i18n="footProduct">Product</h4>
+              <a href="#how-it-works" data-i18n="navHow">How it works</a>
+              <a href="#faq" data-i18n="navFaq">FAQ</a>
+            </div>
+            <div class="land-foot-col">
+              <h4 data-i18n="footContact">Contact</h4>
+              <a href="mailto:hello@planswipe.gr">hello@planswipe.gr</a>
+              <a href="tel:+302100000000">+30 210 000 0000</a>
+              <span class="land-foot-muted">Athens, Greece</span>
+            </div>
+            <div class="land-foot-col">
+              <h4 data-i18n="footFollow">Follow</h4>
+              <a href="#" data-demo="instagram">Instagram</a>
+              <a href="#" data-demo="tiktok">TikTok</a>
+              <a href="#" data-demo="x">X / Twitter</a>
+            </div>
+          </div>
+          <div class="land-foot-bottom">
+            <span>© 2026 PlanSwipe</span>
+            <span class="land-foot-muted" data-i18n="footDemo">Demo contact details — to be updated.</span>
+          </div>
+        </footer>
       </section>
 
       <!-- Top bar -->

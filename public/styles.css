@@ -207,11 +207,25 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 }
 
 .hero-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 8px 16px;
+  margin: 0 -16px;
+  background: var(--page);
+  background: color-mix(in srgb, var(--page) 82%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-nav.is-stuck {
+  border-bottom-color: var(--line);
+  box-shadow: 0 4px 18px rgba(23, 24, 29, 0.06);
 }
 
 .hero-nav .nav-actions {
@@ -393,56 +407,72 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   font-size: 0.9rem;
 }
 
-.hero-preview {
+/* ── Hero Cover Flow (CSS 3D, no library) ──
+   Place cards glide through a rotating cover-flow; the group's pick rests
+   front-and-centre. Self-animating; pauses gracefully for reduced motion. */
+.hero-coverflow {
+  perspective: 1100px;
   display: grid;
-  gap: 14px;
+  place-items: center;
+  min-height: 340px;
+  width: 100%;
 }
-
-.preview-card {
+.cf-track {
+  position: relative;
+  width: 220px;
+  height: 270px;
+  transform-style: preserve-3d;
+}
+.cf-item {
+  position: absolute;
+  inset: 0;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--panel);
-  box-shadow: var(--shadow-lg);
-}
-
-.preview-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  display: block;
-}
-
-.preview-card div {
-  padding: 16px 18px;
-}
-
-.preview-card p {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 4px;
-}
-
-.preview-card h2 {
-  font-size: 1.15rem;
-  margin-bottom: 4px;
-}
-
-.preview-card span {
-  color: var(--green);
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.preview-stack {
-  padding: 14px 18px;
-  background: var(--glass);
-  backdrop-filter: blur(8px);
-  border-radius: var(--radius-md);
   border: 1px solid var(--line);
-  text-align: center;
-  font-weight: 700;
-  color: var(--muted);
-  font-size: 0.9rem;
+  box-shadow: var(--shadow-lg);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+.cf-ph { height: 64%; display: grid; place-items: center; font-size: 3rem; }
+.cf-cb { padding: 12px 14px; }
+.cf-cb h3 { margin: 0 0 3px; font-size: 1.02rem; line-height: 1.15; }
+.cf-cb p { margin: 0; color: var(--muted); font-size: 0.74rem; }
+.cf-g1 { background: linear-gradient(140deg, #0b6047, #18a374); }
+.cf-g2 { background: linear-gradient(140deg, #2a1a5e, #5a3fb0); }
+.cf-g3 { background: linear-gradient(140deg, #b0483f, #e08a4f); }
+.cf-g4 { background: linear-gradient(140deg, #1b4b6b, #45d7c7); }
+.cf-g5 { background: linear-gradient(140deg, #6b3b1b, #c79a45); }
+.cf-item:nth-child(1) { animation: cfFlow 15s linear infinite; }
+.cf-item:nth-child(2) { animation: cfFlow 15s linear infinite -3s; }
+.cf-item:nth-child(3) { animation: cfFlow 15s linear infinite -6s; }
+.cf-item:nth-child(4) { animation: cfFlow 15s linear infinite -9s; }
+.cf-item:nth-child(5) { animation: cfFlow 15s linear infinite -12s; }
+@keyframes cfFlow {
+  0%   { transform: translateX(-260px) translateZ(-140px) rotateY(45deg); opacity: 0.4; z-index: 1; }
+  25%  { transform: translateX(-130px) translateZ(-40px) rotateY(35deg); opacity: 0.7; z-index: 2; }
+  50%  { transform: translateX(0) translateZ(60px) rotateY(0); opacity: 1; z-index: 5; }
+  75%  { transform: translateX(130px) translateZ(-40px) rotateY(-35deg); opacity: 0.7; z-index: 2; }
+  100% { transform: translateX(260px) translateZ(-140px) rotateY(-45deg); opacity: 0.4; z-index: 1; }
+}
+.cf-pick {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(140deg, var(--green-bright), var(--green));
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  z-index: 6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-item { animation: none; }
+  .cf-item:nth-child(1) { transform: translateX(0) translateZ(60px); }
+  .cf-item:nth-child(2) { transform: translateX(-150px) translateZ(-30px) rotateY(35deg); opacity: 0.7; }
+  .cf-item:nth-child(3) { transform: translateX(150px) translateZ(-30px) rotateY(-35deg); opacity: 0.7; }
+  .cf-item:nth-child(4), .cf-item:nth-child(5) { opacity: 0; }
 }
 
 /* ====== OFFER SECTION ====== */
@@ -1678,6 +1708,10 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 
   .hero-copy h1 { max-width: 100%; }
 
+  /* Smaller 3D deck on mobile; keep the depth, trim the footprint */
+  .hero-coverflow { min-height: 300px; perspective: 900px; }
+  .cf-track { width: 180px; height: 230px; }
+
   .offer-section,
   .offer-grid { grid-template-columns: 1fr; }
 
@@ -2448,10 +2482,6 @@ input:focus, textarea:focus, select:focus,
 
 /* ---- Hero: inviting, generous ---- */
 .hero-copy h1 { line-height: 0.98; }
-.hero-preview .preview-card, .hero-preview .demo-card {
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-}
 
 /* ---- Modals ---- */
 .modal-panel { border-radius: var(--radius-xl); }
@@ -4040,3 +4070,218 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
 /* Swipe card image: neutral while the new photo loads (prevents stale/wrong image flash) */
 .activity-photo { transition: opacity 0.2s ease; background: var(--panel-2); }
 .activity-photo.is-loading { opacity: 0; }
+
+/* Runoff: convergence hint + brief highlight pulse on the plan-setup card when
+   the winner is decided and the app asks for date and time. */
+.runoff-agreement-note {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(246, 216, 137, 0.28);
+  color: #7a5a00;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.plan-card.plan-attention {
+  animation: planPulse 0.8s ease-in-out 3;
+}
+@keyframes planPulse {
+  0%, 100% { box-shadow: var(--shadow-md); }
+  50% { box-shadow: 0 0 0 4px var(--green-ring), var(--shadow-md); }
+}
+
+/* ============================================================
+   Hero + main-screen polish (token-driven; dark mode inherits)
+   Signature: the "swipe trail" — preview cards tilt like cards
+   mid-swipe, and the headline carries a green→purple swipe-bar.
+   ============================================================ */
+
+/* Hero: three quiet beats with one signature underline */
+.hero-copy .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.08em;
+}
+.hero-copy .eyebrow::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--green-bright), var(--purple));
+  flex: 0 0 auto;
+}
+.hero-copy h1 {
+  position: relative;
+  padding-bottom: 18px;
+  margin-bottom: 14px;
+}
+.hero-copy h1::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: 0;
+  width: 92px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green-bright), var(--purple));
+}
+.hero-description {
+  max-width: 46ch;
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+
+/* Main screen: quieter, consistent card behaviour */
+.option-card, .result-card, .demo-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.page-header .eyebrow, #decisionStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.page-header .eyebrow::before, #decisionStep::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--green-bright), var(--purple));
+  flex: 0 0 auto;
+}
+
+/* Clickable brand: logo returns to the hero page */
+.topbar-brand { cursor: pointer; border-radius: var(--radius-md); transition: opacity 0.15s ease; }
+.topbar-brand:hover { opacity: 0.85; }
+
+/* ============================================================
+   Scrollable landing sections: how-it-works, FAQ, CTA, footer
+   ============================================================ */
+.nav-link {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+  padding: 6px 4px;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.nav-link:hover { opacity: 1; color: var(--purple); }
+
+.land-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 64px 0 12px;
+  scroll-margin-top: 88px;
+}
+.land-title {
+  font-family: var(--font-display);
+  color: var(--purple);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.05;
+  margin: 6px 0 28px;
+}
+/* reveal-on-scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.land-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.land-step { display: flex; gap: 18px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px 22px; box-shadow: var(--shadow-md); }
+.land-step-num {
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--green-bright), var(--purple));
+  color: #fff; font-weight: 800; font-size: 1.1rem;
+}
+.land-step h3 { margin: 4px 0 6px; font-size: 1.12rem; }
+.land-step p { margin: 0; color: #33404a; line-height: 1.55; }
+
+.land-faq { display: grid; gap: 12px; }
+.land-faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-md);
+}
+.land-faq summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--purple);
+  list-style: none;
+  position: relative;
+  padding-right: 28px;
+}
+.land-faq summary::-webkit-details-marker { display: none; }
+.land-faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 0; top: -2px;
+  font-size: 1.4rem;
+  color: var(--green);
+  transition: transform 0.2s ease;
+}
+.land-faq details[open] summary::after { transform: rotate(45deg); }
+.land-faq p { margin: 12px 0 0; color: #33404a; line-height: 1.6; }
+
+.land-cta {
+  max-width: 860px;
+  margin: 56px auto 0;
+  text-align: center;
+  background: linear-gradient(140deg, var(--purple), #4a2fa0);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  padding: 48px 28px;
+  box-shadow: var(--shadow-lg);
+}
+.land-cta h2 { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0 0 10px; }
+.land-cta p { margin: 0 0 24px; opacity: 0.9; font-size: 1.08rem; }
+.land-cta-btn {
+  background: #fff !important;
+  color: var(--purple) !important;
+  font-weight: 800;
+  padding: 14px 30px;
+  border-radius: var(--radius-pill);
+}
+
+.land-footer {
+  max-width: 1120px;
+  margin: 64px auto 0;
+  padding: 40px 4px 28px;
+  border-top: 1px solid var(--line);
+}
+.land-footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 28px;
+}
+.land-foot-brand { display: flex; gap: 12px; align-items: flex-start; }
+.land-foot-name { font-family: var(--font-display); font-weight: 800; color: var(--purple); font-size: 1.2rem; }
+.land-foot-tag { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; max-width: 24ch; }
+.land-foot-col { display: flex; flex-direction: column; gap: 8px; }
+.land-foot-col h4 { margin: 0 0 4px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.land-foot-col a { color: var(--ink); text-decoration: none; font-size: 0.94rem; opacity: 0.85; }
+.land-foot-col a:hover { opacity: 1; color: var(--purple); }
+.land-foot-muted { color: var(--muted); font-size: 0.9rem; }
+.land-foot-bottom {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  margin-top: 28px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted); font-size: 0.85rem;
+}
+@media (max-width: 720px) {
+  .land-footer-grid { grid-template-columns: 1fr 1fr; }
+  .land-foot-brand { grid-column: 1 / -1; }
+  .nav-link { display: none; }
+}
