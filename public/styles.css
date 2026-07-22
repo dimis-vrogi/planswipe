@@ -3965,7 +3965,13 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
 
 /* Show/hide password toggle on login */
 .password-field { position: relative; display: block; }
-.password-field input { width: 100%; box-sizing: border-box; padding-right: 46px; }
+.password-field input,
+.field .password-field input,
+.login-inner .password-field input { width: 100%; box-sizing: border-box; padding-right: 46px; }
+/* Scoped under .login-inner so these beat `.login-inner button` (and its :hover),
+   which otherwise ties on specificity and renders the eye as a full-width purple
+   button. Keeps the toggle as a small, transparent icon pinned inside the field. */
+.login-inner .password-field .password-toggle,
 .password-field .password-toggle {
   position: absolute;
   right: 8px;
@@ -3983,10 +3989,25 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
   line-height: 1;
   border-radius: 8px;
   opacity: 0.65;
+  box-shadow: none;
   -webkit-tap-highlight-color: transparent;
 }
-.password-field .password-toggle:hover { opacity: 1; background: transparent; }
+.login-inner .password-field .password-toggle:hover,
+.password-field .password-toggle:hover {
+  opacity: 1;
+  background: transparent;
+  color: var(--ink);
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+.login-inner .password-field .password-toggle.is-showing,
 .password-field .password-toggle.is-showing { opacity: 1; }
+/* Monochrome eye: open by default, eye-off when the password is visible.
+   The click handler toggles .is-showing, which swaps which SVG is shown. */
+.password-field .password-toggle svg { display: block; width: 20px; height: 20px; }
+.password-field .password-toggle .eye-closed { display: none; }
+.password-field .password-toggle.is-showing .eye-open { display: none; }
+.password-field .password-toggle.is-showing .eye-closed { display: block; }
 
 /* Multi-select delete in My Groups — floats top-right of the panel so the
    group list never shifts when the bar appears. */

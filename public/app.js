@@ -944,6 +944,18 @@ function escapeHtml(value) {
   return s;
 }
 
+// Renders a password input wrapped with a monochrome show/hide eye toggle.
+// Used by every password field so they behave and look identical. The toggle
+// is handled by one delegated click listener (see wirePasswordToggles), so no
+// per-field wiring is needed. `attrs` lets callers add extra input attributes
+// (e.g. autocomplete="new-password").
+function passwordFieldHtml(id, placeholder, attrs = "") {
+  return `<div class="password-field">
+    <input id="${id}" type="password" placeholder="${escapeHtml(placeholder)}"${attrs ? " " + attrs : ""}>
+    <button type="button" class="password-toggle" aria-label="${escapeHtml(t("showPassword") || "Show password")}" tabindex="-1"><svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="m2 2 20 20"/></svg></button>
+  </div>`;
+}
+
 function localizePlaceDescription(value) {
   let text = String(value || "");
   text = text.replace(/β€”|Ξ²β‚¬β€/g, "\u2014").replace(/Β·|Ξ’Β·/g, "\u00b7");
@@ -2000,8 +2012,8 @@ function renderRecoverPage() {
     <div class="login-panel" style="animation:none;">
       <div class="login-inner">
         <h2>${escapeHtml(t("recoverPassword"))}</h2>
-        <input id="recoverNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
-        <input id="recoverConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+        ${passwordFieldHtml("recoverNewPassword", t("newPasswordPlaceholder"), 'autocomplete="new-password"')}
+        ${passwordFieldHtml("recoverConfirmPassword", t("confirmPasswordPlaceholder"), 'autocomplete="new-password"')}
         <button id="recoverConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
         <button id="recoverCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
       </div>
@@ -2078,8 +2090,8 @@ function renderApp() {
         form.style.marginTop = "10px";
         form.innerHTML = `
           <h3 style="font-size:1.1rem;color:var(--purple);margin-bottom:4px;">${escapeHtml(t("resetPassword"))}</h3>
-          <input id="resetNewPassword" type="password" placeholder="${escapeHtml(t("newPasswordPlaceholder"))}" autocomplete="new-password">
-          <input id="resetConfirmPassword" type="password" placeholder="${escapeHtml(t("confirmPasswordPlaceholder"))}" autocomplete="new-password">
+          ${passwordFieldHtml("resetNewPassword", t("newPasswordPlaceholder"), 'autocomplete="new-password"')}
+          ${passwordFieldHtml("resetConfirmPassword", t("confirmPasswordPlaceholder"), 'autocomplete="new-password"')}
           <button id="resetPasswordConfirmBtn" type="button" class="btn-primary">${escapeHtml(t("resetPassword"))}</button>
           <button id="resetPasswordCancelBtn" type="button" class="btn-ghost" style="background:transparent;color:var(--muted);">${escapeHtml(t("cancel"))}</button>
         `;
@@ -3030,9 +3042,9 @@ async function renderPersonalInformation() {
         ${ageGroups.map((group) => `<option value="${escapeHtml(group)}" ${profile.ageGroup === group ? "selected" : ""}>${escapeHtml(group)}</option>`).join("")}
       </select></label>
       <label class="field"><span>${t("password")}</span>
-        <input id="profileOldPassword" type="password" placeholder="${t("oldPassword")}">
-        <input id="profileNewPassword" type="password" placeholder="${t("newPassword")}">
-        <input id="profileVerifyPassword" type="password" placeholder="${t("verifyPassword")}">
+        ${passwordFieldHtml("profileOldPassword", t("oldPassword"))}
+        ${passwordFieldHtml("profileNewPassword", t("newPassword"))}
+        ${passwordFieldHtml("profileVerifyPassword", t("verifyPassword"))}
         <button class="btn-ghost" type="button" id="changePasswordButton">${t("changePassword")}</button>
         <button type="button" id="profileForgotPassword" class="hyperlink-button" style="background:none;border:none;color:var(--green);cursor:pointer;text-decoration:underline;font-size:0.85rem;padding:4px 0;text-align:left;">${escapeHtml(t("forgotPassword"))}</button>
       </label>
@@ -4029,9 +4041,12 @@ backFromJoinButton.addEventListener("click", () => { state.setupMode = ""; rende
 createButton.addEventListener("click", () => createGroup().catch((e) => showError(e.message)));
 joinButton.addEventListener("click", () => joinGroup().catch((e) => showError(e.message)));
 loginButton.addEventListener("click", () => login().catch((e) => showError(e.message)));
-document.querySelector("#loginPasswordToggle")?.addEventListener("click", () => {
-  const input = document.querySelector("#loginPassword");
-  const btn = document.querySelector("#loginPasswordToggle");
+// One delegated handler for every password eye toggle (login, recover, reset,
+// profile). Works for fields rendered dynamically, since it listens on document.
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".password-toggle");
+  if (!btn) return;
+  const input = btn.closest(".password-field")?.querySelector("input");
   if (!input) return;
   const show = input.type === "password";
   input.type = show ? "text" : "password";
