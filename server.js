@@ -676,7 +676,9 @@ const areaBounds = {
 };
 
 // ====== AREA GEOCODING (for custom, user-typed areas) ======
-const geocodeCache = new Map(); // normalized query -> rectangle | null
+const geocodeCache = new Map();   // normalized query -> rectangle (successful lookups only)
+const geocodeMissAt = new Map();  // normalized query -> timestamp of last failed lookup
+const GEOCODE_MISS_RETRY_MS = 60 * 1000; // failed lookups retry after a minute instead of poisoning the area
 
 // Build a rectangle roughly radiusKm to each side of a point.
 function boxAround(lat, lng, radiusKm = 3) {
@@ -693,30 +695,45 @@ async function geocodeAreaRectangle(queryText) {
   if (!googleApiKey || !queryText) return null;
   const key = String(queryText).toLowerCase().trim();
   if (geocodeCache.has(key)) return geocodeCache.get(key);
+  // A recent failure? Don't hammer the geocoder — but DO retry after the window.
+  // (Previously a single transient failure was cached forever, which silently
+  // removed the area restriction and made searches return Athens-wide results.)
+  const missAt = geocodeMissAt.get(key);
+  if (missAt && Date.now() - missAt < GEOCODE_MISS_RETRY_MS) return null;
   let rectangle = null;
-  try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", Greece")}&key=${googleApiKey}`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const data = await resp.json();
-      const result = data.results?.[0];
-      const vp = result?.geometry?.viewport;
-      const loc = result?.geometry?.location;
-      if (vp?.southwest && vp?.northeast) {
-        rectangle = {
-          low:  { latitude: vp.southwest.lat, longitude: vp.southwest.lng },
-          high: { latitude: vp.northeast.lat, longitude: vp.northeast.lng }
-        };
-      } else if (loc) {
-        rectangle = boxAround(loc.lat, loc.lng, 3);
+  for (let attempt = 0; attempt < 2 && !rectangle; attempt++) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryText + ", Greece")}&key=${googleApiKey}`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        const result = data.results?.[0];
+        const vp = result?.geometry?.viewport;
+        const loc = result?.geometry?.location;
+        if (vp?.southwest && vp?.northeast) {
+          rectangle = {
+            low:  { latitude: vp.southwest.lat, longitude: vp.southwest.lng },
+            high: { latitude: vp.northeast.lat, longitude: vp.northeast.lng }
+          };
+        } else if (loc) {
+          rectangle = boxAround(loc.lat, loc.lng, 3);
+        }
+        break; // got a valid response (even if no result) — no point retrying
+      } else {
+        console.warn("Geocoding failed:", resp.status, attempt === 0 ? "(retrying once)" : "");
       }
-    } else {
-      console.warn("Geocoding failed:", resp.status);
+    } catch (e) {
+      console.warn("Geocoding error:", e.message, attempt === 0 ? "(retrying once)" : "");
     }
-  } catch (e) {
-    console.warn("Geocoding error:", e.message);
   }
-  geocodeCache.set(key, rectangle);
+  if (rectangle) {
+    geocodeCache.set(key, rectangle);
+    geocodeMissAt.delete(key);
+  } else {
+    geocodeMissAt.set(key, Date.now());
+    if (geocodeMissAt.size > 1000) geocodeMissAt.clear();
+    console.warn(`[geo] no rectangle for "${queryText}" — this search will not be area-restricted (retry in 60s)`);
+  }
   return rectangle;
 }
 
@@ -1881,20 +1898,14 @@ async function handleApi(request, response) {
     const body = await readBody(request);
     if (!group.runoff.candidates.includes(body.placeId)) { sendJson(response, 400, { error: "Not a runoff candidate" }); return; }
     group.runoff.votes[authUsername] = body.placeId;
-    // If everyone has voted, decide the winner (ties broken by rating, then order).
+    // The runoff finishes only when EVERY member has voted for the SAME place.
+    // If everyone has voted but the votes are split, the runoff stays open and
+    // members can switch their vote (tallies are visible) until they converge —
+    // same philosophy as the area/activity consensus step.
     const memberCount = group.members?.length || 0;
-    if (Object.keys(group.runoff.votes).length >= memberCount && memberCount > 0) {
-      const tally = {};
-      Object.values(group.runoff.votes).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
-      let best = null, bestCount = -1;
-      group.runoff.candidates.forEach((id) => {
-        const c = tally[id] || 0;
-        const place = group.places.find((p) => p.id === id);
-        const rating = place?.rating || 0;
-        if (c > bestCount || (c === bestCount && best && rating > (group.places.find((p) => p.id === best)?.rating || 0))) {
-          best = id; bestCount = c;
-        }
-      });
+    const voteValues = Object.values(group.runoff.votes);
+    if (memberCount > 0 && voteValues.length >= memberCount && voteValues.every((id) => id === voteValues[0])) {
+      const best = voteValues[0];
       group.runoff.winner = best;
       group.consensus = group.consensus || {};
       group.consensus.place = best;
