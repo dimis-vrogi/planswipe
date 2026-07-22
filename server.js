@@ -152,13 +152,39 @@ function isValidPassword(password) {
 }
 
 // ====== JWT VERIFICATION ======
+// Verified tokens are cached briefly so polling (every ~1.5s per member) does
+// not pay a Supabase Auth round trip per request. Trade-off: a revoked session
+// stays usable for up to TOKEN_TTL_MS on this server; acceptable at 5 minutes.
+
+// Per-group chat message cache (write-through; all inserts go through this server).
+const messageCache = new Map(); // groupCode -> { messages, at }
+const MESSAGE_TTL_MS = 2 * 60 * 1000;
+function getCachedMessages(code) {
+  const hit = messageCache.get(code);
+  if (hit && Date.now() - hit.at < MESSAGE_TTL_MS) return hit.messages;
+  return null;
+}
+function setCachedMessages(code, messages) {
+  if (messageCache.size > 300) messageCache.clear();
+  messageCache.set(code, { messages: JSON.parse(JSON.stringify(messages)), at: Date.now() });
+}
+function appendCachedMessage(code, message) {
+  const hit = messageCache.get(code);
+  if (hit && message) { hit.messages.push(JSON.parse(JSON.stringify(message))); hit.at = Date.now(); }
+}
+const tokenCache = new Map(); // token -> { user, at }
+const TOKEN_TTL_MS = 5 * 60 * 1000;
 async function verifyToken(request) {
   const auth = request.headers["authorization"] || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) return null;
+  const hit = tokenCache.get(token);
+  if (hit && Date.now() - hit.at < TOKEN_TTL_MS) return hit.user;
   try {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data?.user) return null;
+    if (tokenCache.size > 2000) tokenCache.clear();
+    tokenCache.set(token, { user: data.user, at: Date.now() });
     return data.user;
   } catch (_) { return null; }
 }
@@ -269,39 +295,111 @@ function serveStatic(request, response) {
 }
 
 // ====== SUPABASE DATA LAYER ======
+// In-memory write-through cache for the groups table. All reads AND writes go
+// through this single server instance, so the cache is authoritative between
+// restarts: reads are served from memory, and Supabase is only touched on
+// mutations, cold starts, and TTL refreshes. This cuts Supabase egress by ~95%+
+// (polling previously re-downloaded each full group blob on every request, and
+// list/unread endpoints re-downloaded the entire table).
+// Rows are cloned on every read/write so callers can never mutate the cache
+// without an explicit saveGroup(), preserving today's read-fresh semantics.
+const groupRows = new Map();          // code -> { row, at }
+let allGroupsLoadedAt = 0;            // when the full table was last fetched
+const GROUP_TTL_MS = 5 * 60 * 1000;   // single-group freshness window
+const ALL_GROUPS_TTL_MS = 2 * 60 * 1000; // full-list freshness window
+const GROUP_CACHE_MAX = 500;          // safety cap for memory
+
+function cloneRow(row) { return row ? JSON.parse(JSON.stringify(row)) : null; }
+
+function cacheGroupRow(row) {
+  if (!row || !row.code) return;
+  if (groupRows.size >= GROUP_CACHE_MAX && !groupRows.has(row.code)) {
+    // Evict the stalest entry to stay under the cap.
+    let oldestKey = null, oldestAt = Infinity;
+    for (const [k, v] of groupRows) { if (v.at < oldestAt) { oldestAt = v.at; oldestKey = k; } }
+    if (oldestKey) groupRows.delete(oldestKey);
+  }
+  groupRows.set(row.code, { row: cloneRow(row), at: Date.now() });
+}
+
 async function getAllGroups() {
+  const now = Date.now();
+  if (allGroupsLoadedAt && now - allGroupsLoadedAt < ALL_GROUPS_TTL_MS) {
+    return Array.from(groupRows.values()).map((e) => cloneRow(e.row))
+      .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  }
   const { data, error } = await supabase.from("groups").select("*").order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return data || [];
+  groupRows.clear();
+  (data || []).forEach((row) => groupRows.set(row.code, { row: cloneRow(row), at: now }));
+  allGroupsLoadedAt = now;
+  console.log(`[cache] refreshed groups table: ${groupRows.size} groups`);
+  return (data || []).map((row) => cloneRow(row));
 }
+
 async function getGroup(code) {
+  const entry = groupRows.get(code);
+  const now = Date.now();
+  const fresh = entry && (now - entry.at < GROUP_TTL_MS || now - allGroupsLoadedAt < ALL_GROUPS_TTL_MS);
+  if (fresh) return cloneRow(entry.row);
   const { data, error } = await supabase.from("groups").select("*").eq("code", code).single();
-  if (error && error.code === "PGRST116") return null;
+  if (error && error.code === "PGRST116") { groupRows.delete(code); return null; }
   if (error) throw new Error(error.message);
+  if (data) cacheGroupRow(data);
   return data || null;
 }
+
 async function saveGroup(group) {
-  const { error } = await supabase.from("groups").upsert(
-    { code: group.code, data: JSON.parse(JSON.stringify(group)) },
-    { onConflict: "code" }
-  );
+  const payload = { code: group.code, data: JSON.parse(JSON.stringify(group)) };
+  const { error } = await supabase.from("groups").upsert(payload, { onConflict: "code" });
   if (error) throw new Error(error.message);
+  // Write-through: the cache row mirrors what we just persisted. Preserve the
+  // original created_at (used for list ordering); fall back to now for new groups.
+  const existing = groupRows.get(group.code);
+  cacheGroupRow({ ...payload, created_at: existing?.row?.created_at || new Date().toISOString() });
 }
 async function loadGroup(code) {
   const data = await getGroup(code);
   return data ? data.data : null;
 }
+// Profile rows (which include the liked-places archive) were fetched on every
+// authenticated request. Short write-through cache; upserts merge into the
+// cached row so unknown columns (billing fields etc.) are never clobbered.
+const profileCache = new Map();      // username -> { row, at }
+const profileEmailIndex = new Map(); // email -> username
+const profileMissCache = new Map();  // "u:name" / "e:email" -> at (negative lookups)
+const PROFILE_TTL_MS = 2 * 60 * 1000;
+const PROFILE_MISS_TTL_MS = 60 * 1000;
+function profileMissFresh(key) { const at = profileMissCache.get(key); return at && Date.now() - at < PROFILE_MISS_TTL_MS; }
+function recordProfileMiss(key) { if (profileMissCache.size > 5000) profileMissCache.clear(); profileMissCache.set(key, Date.now()); }
+function cacheProfileRow(row) {
+  if (!row || !row.username) return;
+  if (profileCache.size > 2000) { profileCache.clear(); profileEmailIndex.clear(); }
+  profileCache.set(row.username, { row: JSON.parse(JSON.stringify(row)), at: Date.now() });
+  if (row.email) profileEmailIndex.set(row.email, row.username);
+}
 async function getProfileByUsername(username) {
+  const hit = profileCache.get(username);
+  if (hit && Date.now() - hit.at < PROFILE_TTL_MS) return JSON.parse(JSON.stringify(hit.row));
+  if (profileMissFresh("u:" + username)) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("username", username).single();
-  if (error && error.code === "PGRST116") return null;
+  if (error && error.code === "PGRST116") { profileCache.delete(username); recordProfileMiss("u:" + username); return null; }
   if (error) throw new Error(error.message);
+  if (data) cacheProfileRow(data);
   return data || null;
 }
 async function getProfileByEmail(email) {
   if (!email) return null;
+  const idxUsername = profileEmailIndex.get(email);
+  if (idxUsername) {
+    const hit = profileCache.get(idxUsername);
+    if (hit && Date.now() - hit.at < PROFILE_TTL_MS) return JSON.parse(JSON.stringify(hit.row));
+  }
+  if (profileMissFresh("e:" + email)) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("email", email).single();
-  if (error && error.code === "PGRST116") return null;
+  if (error && error.code === "PGRST116") { recordProfileMiss("e:" + email); return null; }
   if (error) throw new Error(error.message);
+  if (data) cacheProfileRow(data);
   return data || null;
 }
 async function upsertProfile(user) {
@@ -310,6 +408,18 @@ async function upsertProfile(user) {
     { onConflict: "username" }
   );
   if (error) throw new Error(error.message);
+  // Merge into the cached row if we have one (preserves columns we did not send);
+  // otherwise drop the entry so the next read fetches fresh.
+  profileMissCache.delete("u:" + user.username);
+  if (user.email && user.email.trim()) profileMissCache.delete("e:" + user.email);
+  const cached = profileCache.get(user.username);
+  if (cached) {
+    cached.row.profile = JSON.parse(JSON.stringify(user.profile || {}));
+    if (user.email && user.email.trim()) { cached.row.email = user.email; profileEmailIndex.set(user.email, user.username); }
+    cached.at = Date.now();
+  } else {
+    profileCache.delete(user.username);
+  }
 }
 async function getAllProfiles() {
   const { data, error } = await supabase.from("profiles").select("*");
@@ -352,14 +462,15 @@ async function getGroupUnreadCounts(username) {
     const group = groupRow.data;
     if (!group || !group.members?.some((m) => m.username === username)) continue;
     const since = lastReadTimestamps[group.code] || "1970-01-01T00:00:00Z";
-    const { data: messages, error } = await supabase
+    // head:true returns only the count header — zero rows transferred.
+    const { count, error } = await supabase
       .from("group_messages")
-      .select("id", { count: "exact" })
+      .select("id", { count: "exact", head: true })
       .eq("group_code", group.code)
       .neq("username", username)
       .gt("created_at", since);
-    if (!error && messages) {
-      counts[group.code] = messages.length;
+    if (!error && typeof count === "number") {
+      counts[group.code] = count;
     }
   }
   return counts;
@@ -1320,6 +1431,7 @@ async function handleApi(request, response) {
     const profileRow = await getProfileByUsername(username);
     const userEmail  = profileRow?.email || "";
     await supabase.from("profiles").delete().eq("username", username);
+    profileCache.delete(username);
     if (userEmail) {
       try {
         const { data: authUsers } = await supabase.auth.admin.listUsers();
@@ -1812,8 +1924,9 @@ async function handleApi(request, response) {
     if (!process.env.REMINDER_SECRET || key !== process.env.REMINDER_SECRET) {
       sendJson(response, 403, { error: "Forbidden" }); return;
     }
-    const { data, error } = await supabase.from("groups").select("*");
-    if (error) { sendJson(response, 500, { error: error.message }); return; }
+    let data;
+    try { data = await getAllGroups(); }
+    catch (e) { sendJson(response, 500, { error: e.message }); return; }
     const now = Date.now();
     const horizon = now + 24 * 60 * 60 * 1000;
     let sent = 0, errors = 0;
@@ -1889,11 +2002,17 @@ async function handleApi(request, response) {
     if (!msgGroup) { sendJson(response, 404, { error: "Group not found" }); return; }
     if (!(await requireGroupMember(request, response, msgGroup))) return;
     const since     = url.searchParams.get("since") || null;
-    let query = supabase.from("group_messages").select("id, username, message, created_at").eq("group_code", groupCode).order("created_at", { ascending: true }).limit(100);
-    if (since) query = query.gt("created_at", since);
-    const { data, error } = await query;
-    if (error) throw new Error(error.message);
-    sendJson(response, 200, { messages: data || [] });
+    // Chat polls every 3s while open; serve from the per-group message cache and
+    // only hit Supabase on cold start / TTL expiry. Inserts append write-through.
+    let msgs = getCachedMessages(groupCode);
+    if (!msgs) {
+      const { data, error } = await supabase.from("group_messages").select("id, username, message, created_at").eq("group_code", groupCode).order("created_at", { ascending: true }).limit(100);
+      if (error) throw new Error(error.message);
+      msgs = data || [];
+      setCachedMessages(groupCode, msgs);
+    }
+    const outMsgs = since ? msgs.filter((m) => String(m.created_at) > String(since)) : msgs;
+    sendJson(response, 200, { messages: outMsgs });
     return;
   }
 
@@ -1909,6 +2028,7 @@ async function handleApi(request, response) {
     if (!group.members.some((m) => m.username === username)) { sendJson(response, 403, { error: "Not a member of this group" }); return; }
     const { data, error } = await supabase.from("group_messages").insert({ group_code: groupCode, username, message }).select().single();
     if (error) throw new Error(error.message);
+    appendCachedMessage(groupCode, data);
     sendJson(response, 200, { message: data });
     return;
   }
