@@ -1648,7 +1648,7 @@ async function refreshChatUnreadCount() {
 
 function startChatUnreadPolling() {
   if (state.chatTimer) clearInterval(state.chatTimer);
-  state.chatTimer = setInterval(refreshChatUnreadCount, 5000);
+  state.chatTimer = setInterval(() => { if (document.hidden) return; refreshChatUnreadCount(); }, 5000);
   refreshChatUnreadCount();
 }
 
@@ -1728,7 +1728,7 @@ function openChatPanel() {
 
   loadChatMessages(true);
   clearInterval(state.chatLoadTimer);
-  state.chatLoadTimer = setInterval(() => { if (state.chatOpen) loadChatMessages(false); }, 3000);
+  state.chatLoadTimer = setInterval(() => { if (document.hidden || !state.chatOpen) return; loadChatMessages(false); }, 3000);
 }
 
 async function loadChatMessages(scrollToBottom) {
@@ -2067,7 +2067,7 @@ function renderApp() {
   updateBottomNav();
   if (state.activePage === "recover") { renderRecoverPage(); return; }
   if (!isLoggedIn()) {
-    setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen && !state.showResetPasswordForm);
+    setVisible(loginPanel, true); setVisible(loginForm, state.loginOpen && !state.showResetPasswordForm && !state.forgotPasswordMode);
     setVisible(topbar, false); setVisible(pagePanel, false);
     setVisible(heroEnterButton, false); setVisible(heroLoginButton, true); setVisible(heroSignupButton, true);
     loginForm.querySelector("h2").textContent = state.authMode === "signup" ? t("createAccount") : t("enterPlanswipe");
@@ -2129,10 +2129,8 @@ function renderApp() {
     if (state.forgotPasswordMode) {
       const existingForm = document.querySelector("#forgotPasswordForm");
       if (!existingForm) {
-        setVisible(loginUsername, false);
-        setVisible(loginPassword, false);
-        setVisible(loginButton, false);
-        setVisible(registerButton, false);
+        // The login form (username, password field + its eye toggle, buttons) is
+        // hidden via setVisible(loginForm, ...) above when forgotPasswordMode is on.
         const form = document.createElement("div");
         form.id = "forgotPasswordForm";
         form.className = "login-inner";
@@ -2324,11 +2322,17 @@ async function refreshGroup() {
   }
 }
 
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.group) { refreshGroup(); refreshNotifications(); }
+});
+
 function startPolling() {
   clearInterval(state.pollTimer);
   clearInterval(state.notifTimer);
-  state.pollTimer  = setInterval(refreshGroup,          1500);
-  state.notifTimer = setInterval(refreshNotifications,  5000);
+  // Hidden tabs stop polling entirely (people leave tabs open for hours); a
+  // fresh refresh fires the moment the tab becomes visible again.
+  state.pollTimer  = setInterval(() => { if (document.hidden) return; refreshGroup(); },         1500);
+  state.notifTimer = setInterval(() => { if (document.hidden) return; refreshNotifications(); }, 5000);
 }
 
 function saveSession(user, group) {
