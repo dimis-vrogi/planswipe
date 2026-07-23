@@ -188,14 +188,58 @@ async function verifyToken(request) {
     return data.user;
   } catch (_) { return null; }
 }
+// ====== PRESENCE (in-memory, zero database cost) ======
+// Every authenticated request stamps the caller as seen. Nothing is persisted:
+// writing a heartbeat per request would generate constant database traffic,
+// which is exactly what the caching work was undertaken to avoid. Presence
+// simply resets on deploy, which is acceptable for an "online now" indicator.
+const lastSeenAt = new Map();          // username -> ms
+const ONLINE_WINDOW_MS = 3 * 60 * 1000;
+function markSeen(username) {
+  if (!username) return;
+  if (lastSeenAt.size > 5000) lastSeenAt.clear();
+  lastSeenAt.set(username, Date.now());
+}
+function isOnline(username) {
+  const at = lastSeenAt.get(username);
+  return Boolean(at && Date.now() - at < ONLINE_WINDOW_MS);
+}
+
+// Visibility levels shared by both privacy settings.
+// "friends" (default) < "friends_groups" < "everyone".
+function canSee(level, viewerUsername, targetProfileRow, ctx) {
+  const setting = String(level || "friends");
+  if (setting === "everyone") return true;
+  const targetName = targetProfileRow.username;
+  const friends = targetProfileRow.profile?.friends || [];
+  if (friends.includes(viewerUsername)) return true;      // friends always can
+  if (setting === "friends_groups") {
+    return Boolean(ctx?.sharedGroupMembers?.has(targetName));
+  }
+  return false;
+}
+
+// Usernames who share at least one group with the viewer.
+function groupMatesOf(viewerUsername, allGroups) {
+  const mates = new Set();
+  for (const row of allGroups || []) {
+    const g = row?.data;
+    if (!g || !(g.members || []).some((m) => m.username === viewerUsername)) continue;
+    for (const m of g.members || []) {
+      if (m.username && m.username !== viewerUsername) mates.add(m.username);
+    }
+  }
+  return mates;
+}
+
 async function requireAuth(request, response, expectedUsername) {
   const supabaseUser = await verifyToken(request);
   if (supabaseUser) {
     const email = supabaseUser.email || "";
     const profile = await getProfileByEmail(email);
-    if (profile && profile.username === expectedUsername) return true;
+    if (profile && profile.username === expectedUsername) { markSeen(expectedUsername); return true; }
     const metaUsername = supabaseUser.user_metadata?.username || "";
-    if (metaUsername === expectedUsername) return true;
+    if (metaUsername === expectedUsername) { markSeen(expectedUsername); return true; }
     sendJson(response, 403, { error: "Forbidden: token does not match user" });
     return false;
   }
@@ -658,14 +702,19 @@ function collectDigest(profileRow, allGroups, ctx) {
 
   // --- Friend requests: plain usernames with no timestamp, so remember the set
   //     we have already mentioned; a name we have never mentioned is new. ---
-  const reqs = Array.isArray(p.friendRequests) ? p.friendRequests : [];
+  const settings = p.settings || {};
+  const reqs = settings.friendRequestNotif === false
+    ? []                                                    // alerts off for this user
+    : (Array.isArray(p.friendRequests) ? p.friendRequests : []);
   const notified = Array.isArray(mark.friendReqs) ? mark.friendReqs : [];
   items.friendRequests = reqs;
   if (reqs.some((r) => !notified.includes(r))) hasNew = true;
   next.friendReqs = reqs;   // shrinks when handled, so a later re-request counts again
 
   // --- Group invites: objects carrying invitedAt (ms) ---
-  const invites = Array.isArray(p.groupInvites) ? p.groupInvites : [];
+  const invites = settings.groupInviteNotif === false
+    ? []                                                    // alerts off for this user
+    : (Array.isArray(p.groupInvites) ? p.groupInvites : []);
   items.invites = invites.map((i) => i.groupName || i.groupCode).filter(Boolean);
   const newestInvite = invites.reduce((m, i) => Math.max(m, Number(i.invitedAt) || 0), 0);
   if (newestInvite > Number(mark.inviteAt || 0)) hasNew = true;
@@ -877,6 +926,7 @@ async function geocodeAreaRectangle(queryText) {
     }
   }
   if (rectangle) {
+    if (geocodeCache.size > 500) geocodeCache.clear();   // bound it like the other caches
     geocodeCache.set(key, rectangle);
     geocodeMissAt.delete(key);
   } else {
@@ -1599,6 +1649,9 @@ async function handleApi(request, response) {
     const userEmail  = profileRow?.email || "";
     await supabase.from("profiles").delete().eq("username", username);
     profileCache.delete(username);
+    if (userEmail) profileEmailIndex.delete(userEmail);
+    profileMissCache.delete("u:" + username);
+    if (userEmail) profileMissCache.delete("e:" + userEmail);
     if (userEmail) {
       try {
         const { data: authUsers } = await supabase.auth.admin.listUsers();
@@ -2109,10 +2162,16 @@ async function handleApi(request, response) {
           if (!result) { skipped++; continue; }   // nothing NEW since last digest
           const ok = await sendEmail(row.email, digestSubject(result.items), digestEmailHtml(row.username, result.items));
           if (!ok) { errors++; continue; }        // do not advance markers on failure
+          // Re-read immediately before writing. The row we scanned may be many
+          // seconds old by now, and writing it back wholesale would silently undo
+          // anything the user changed in the meantime (accepting a friend request,
+          // editing preferences...). The profile cache is write-through, so this
+          // read reflects the latest app-side state.
+          const fresh = await getProfileByUsername(row.username);
           await upsertProfile({
             username: row.username,
-            email: row.email || "",
-            profile: { ...(row.profile || {}), digest: result.next }
+            email: fresh?.email || row.email || "",
+            profile: { ...((fresh || row).profile || {}), digest: result.next }
           });
           sent++;
         } catch (e) {
@@ -2316,6 +2375,12 @@ async function handleApi(request, response) {
     const viewerProfile = await getProfileByUsername(username);
     const viewerFriends  = viewerProfile?.profile?.friends        || [];
     const viewerOutgoing = viewerProfile?.profile?.friendRequests || [];
+    // Shared-group membership is needed for the "Friends & group members" level.
+    // getAllGroups() is cached, so this costs nothing on a warm server.
+    let ctx = { sharedGroupMembers: new Set() };
+    try { ctx.sharedGroupMembers = groupMatesOf(username, await getAllGroups()); }
+    catch (e) { console.warn("[search] group-mate lookup failed -", e.message); }
+
     const results = (data || []).filter((p) => p.username !== username).map((p) => {
       let friendStatus = "";
       if (viewerFriends.includes(p.username)) {
@@ -2325,14 +2390,21 @@ async function handleApi(request, response) {
       } else if (viewerOutgoing.includes(p.username)) {
         friendStatus = "incoming";
       }
-      // Only friends see bio/preferences; everyone else gets a minimal card.
-      if (friendStatus === "friends") {
-        return { username: p.username, profile: p.profile || {}, friendStatus };
+      const settings = p.profile?.settings || {};
+      // Each setting is independent: profile detail and online status are
+      // gated separately by their own visibility level.
+      const showDetail = canSee(settings.profileVisibility, username, p, ctx);
+      const showOnline = canSee(settings.onlineVisibility, username, p, ctx);
+      const online = showOnline ? isOnline(p.username) : null;
+
+      if (showDetail) {
+        return { username: p.username, profile: p.profile || {}, friendStatus, online };
       }
       return {
         username: p.username,
         profile: { picture: p.profile?.picture || "" },
         friendStatus,
+        online,
         restricted: true
       };
     });
@@ -2578,8 +2650,12 @@ async function handleApi(request, response) {
     if (!(await requireAuth(request, response, username))) return;
     const profile  = await getProfileByUsername(username);
     if (!profile) { sendJson(response, 200, { total: 0, friendRequests: 0, groupInvites: 0, messages: 0, dmMessages: 0 }); return; }
-    const friendRequests = profile.profile?.friendRequests?.length || 0;
-    const groupInvites = profile.profile?.groupInvites?.length || 0;
+    // Honour the user's alert toggles from Settings -> Notifications. Turning an
+    // alert off suppresses the badge/count only; the underlying requests and
+    // invites are still visible on the Friends and Groups pages.
+    const alerts = profile.profile?.settings || {};
+    const friendRequests = alerts.friendRequestNotif === false ? 0 : (profile.profile?.friendRequests?.length || 0);
+    const groupInvites = alerts.groupInviteNotif === false ? 0 : (profile.profile?.groupInvites?.length || 0);
     const unreadMessages = await getUnreadMessageCount(username);
     // One notification per unread CONVERSATION, not per message: pull just the
     // sender column for unread DMs and count the distinct senders.
