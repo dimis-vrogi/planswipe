@@ -421,6 +421,14 @@ async function upsertProfile(user) {
     profileCache.delete(user.username);
   }
 }
+async function getProfilePage(from, to) {
+  // An explicit, unique sort is required: PostgREST/Postgres does not guarantee
+  // row order without ORDER BY, so an unsorted .range() can skip or repeat rows
+  // between pages.
+  const { data, error } = await supabase.from("profiles").select("*").order("username", { ascending: true }).range(from, to);
+  if (error) throw new Error(error.message);
+  return data || [];
+}
 async function getAllProfiles() {
   const { data, error } = await supabase.from("profiles").select("*");
   if (error) throw new Error(error.message);
@@ -438,14 +446,16 @@ async function getUnreadMessageCount(username) {
     const group = groupRow.data;
     if (!group || !group.members?.some((m) => m.username === username)) continue;
     const since = lastReadTimestamps[group.code] || "1970-01-01T00:00:00Z";
-    const { data: messages, error } = await supabase
+    // head:true -> only the count header, zero rows transferred. We add 1 per
+    // group that has ANY unread message: one notification per chat, not per message.
+    const { count, error } = await supabase
       .from("group_messages")
-      .select("id", { count: "exact" })
+      .select("id", { count: "exact", head: true })
       .eq("group_code", group.code)
       .neq("username", username)
       .gt("created_at", since);
-    if (!error && messages) {
-      totalUnread += messages.length;
+    if (!error && (count || 0) > 0) {
+      totalUnread += 1;
     }
   }
   return totalUnread;
@@ -560,6 +570,146 @@ function formatWhen(dt) {
     catch (__) { return String(dt || ""); }
   }
 }
+
+// ====== HOURLY EMAIL DIGEST ======
+// Sends at most one summary email per user per run, and ONLY when something new
+// has arrived since the last digest. Reading/dismissing items never triggers a
+// send: we compare against per-category high-water marks (newest timestamp we
+// have already told this user about), not against unread counts. So a count
+// going down (they read something) produces no email, while a count going up
+// because a genuinely new item arrived does.
+// Prefetch everything the digest needs in a fixed number of queries, so cost
+// scales with the number of GROUPS rather than users x groups. Previously each
+// user triggered one DM query plus one query per group they belong to, which
+// would grow quadratically as the user base grows.
+async function buildDigestContext(allGroups) {
+  const ctx = { dmByRecipient: new Map(), msgsByGroup: new Map() };
+
+  // 1 query: every unread direct message, bucketed by recipient in memory.
+  try {
+    const { data: dmRows } = await supabase
+      .from("direct_messages")
+      .select("sender, recipient, created_at")
+      .is("read_at", null)
+      .limit(5000);
+    for (const r of dmRows || []) {
+      if (!r?.recipient) continue;
+      if (!ctx.dmByRecipient.has(r.recipient)) ctx.dmByRecipient.set(r.recipient, []);
+      ctx.dmByRecipient.get(r.recipient).push(r);
+    }
+  } catch (e) { console.warn("[digest] bulk DM prefetch failed -", e.message); }
+
+  // 1 query per group (not per user per group): the most recent message headers.
+  // 50 is plenty to determine "is there anything newer than this member's last
+  // read that they did not write themselves".
+  for (const row of allGroups || []) {
+    const code = row?.data?.code || row?.code;
+    if (!code) continue;
+    try {
+      const { data: rows } = await supabase
+        .from("group_messages")
+        .select("username, created_at")
+        .eq("group_code", code)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      ctx.msgsByGroup.set(code, rows || []);   // newest first
+    } catch (e) { console.warn("[digest] group prefetch failed for", code, "-", e.message); }
+  }
+  return ctx;
+}
+
+// Pure in-memory: decides whether this user has anything NEW since their last
+// digest. Performs no database queries of its own.
+function collectDigest(profileRow, allGroups, ctx) {
+  const username = profileRow?.username;
+  if (!username || !profileRow.email) return null;          // nowhere to send
+  const p = profileRow.profile || {};
+  if ((p.settings || {}).emailDigest === false) return null; // opted out
+  const mark = p.digest || {};
+  const items = { dmSenders: [], groupChats: [], friendRequests: [], invites: [] };
+  const next = { ...mark };
+  let hasNew = false;
+
+  // --- Unread direct messages ---
+  const dms = ctx.dmByRecipient.get(username) || [];
+  items.dmSenders = [...new Set(dms.map((r) => r.sender))];
+  const dmNewest = dms.reduce((m, r) => (String(r.created_at) > m ? String(r.created_at) : m), "");
+  if (dmNewest) {
+    next.dmAt = dmNewest;
+    if (dmNewest > String(mark.dmAt || "")) hasNew = true;
+  }
+
+  // --- Unread group chats: one entry per group, never counting your own posts ---
+  const lastRead = p.lastReadTimestamps || {};
+  let groupNewest = String(mark.groupAt || "");
+  for (const row of allGroups || []) {
+    const g = row?.data;
+    if (!g || !(g.members || []).some((m) => m.username === username)) continue;
+    const since = String(lastRead[g.code] || "1970-01-01T00:00:00Z");
+    const recent = ctx.msgsByGroup.get(g.code) || [];   // newest first
+    const newestOther = recent.find((m) => m.username !== username && String(m.created_at) > since);
+    if (!newestOther) continue;
+    const newest = String(newestOther.created_at);
+    items.groupChats.push(g.name || g.code);
+    if (newest > groupNewest) groupNewest = newest;
+    if (newest > String(mark.groupAt || "")) hasNew = true;
+  }
+  if (groupNewest) next.groupAt = groupNewest;
+
+  // --- Friend requests: plain usernames with no timestamp, so remember the set
+  //     we have already mentioned; a name we have never mentioned is new. ---
+  const reqs = Array.isArray(p.friendRequests) ? p.friendRequests : [];
+  const notified = Array.isArray(mark.friendReqs) ? mark.friendReqs : [];
+  items.friendRequests = reqs;
+  if (reqs.some((r) => !notified.includes(r))) hasNew = true;
+  next.friendReqs = reqs;   // shrinks when handled, so a later re-request counts again
+
+  // --- Group invites: objects carrying invitedAt (ms) ---
+  const invites = Array.isArray(p.groupInvites) ? p.groupInvites : [];
+  items.invites = invites.map((i) => i.groupName || i.groupCode).filter(Boolean);
+  const newestInvite = invites.reduce((m, i) => Math.max(m, Number(i.invitedAt) || 0), 0);
+  if (newestInvite > Number(mark.inviteAt || 0)) hasNew = true;
+  next.inviteAt = Math.max(newestInvite, Number(mark.inviteAt || 0));
+
+  if (!hasNew) return null;
+  next.lastSentAt = Date.now();
+  return { items, next };
+}
+
+function digestLine(label, names) {
+  if (!names.length) return "";
+  const shown = names.slice(0, 5).map((n) => escapeHtmlServer(n)).join(", ");
+  const extra = names.length > 5 ? ` +${names.length - 5} more` : "";
+  return `<li style="margin:6px 0"><strong>${escapeHtmlServer(label)}</strong>: ${shown}${extra}</li>`;
+}
+
+function digestEmailHtml(username, items) {
+  const rows = [
+    digestLine(items.dmSenders.length === 1 ? "New message from" : "New messages from", items.dmSenders),
+    digestLine(items.groupChats.length === 1 ? "Unread in group" : "Unread in groups", items.groupChats),
+    digestLine(items.friendRequests.length === 1 ? "Friend request" : "Friend requests", items.friendRequests),
+    digestLine(items.invites.length === 1 ? "Group invite" : "Group invites", items.invites)
+  ].filter(Boolean).join("");
+  return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+    <h2 style="color:#12805e">What's new on PlanSwipe</h2>
+    <p>Hi ${escapeHtmlServer(username)}, here's what came in since we last emailed you:</p>
+    <div style="background:#f4f3ef;border-radius:12px;padding:16px;margin:12px 0">
+      <ul style="margin:0;padding-left:18px;color:#222">${rows}</ul>
+    </div>
+    <p><a href="https://www.planswipe.gr" style="background:#12805e;color:#fff;text-decoration:none;padding:10px 18px;border-radius:999px;display:inline-block;font-weight:bold">Open PlanSwipe</a></p>
+    <p style="color:#777;font-size:12px">You get this summary at most once an hour, and only when something new arrives. Turn it off any time in Settings &rarr; Notifications.</p>
+  </div>`;
+}
+
+function digestSubject(items) {
+  const parts = [];
+  if (items.dmSenders.length) parts.push(`${items.dmSenders.length} new message${items.dmSenders.length === 1 ? "" : "s"}`);
+  if (items.groupChats.length) parts.push(`${items.groupChats.length} group chat${items.groupChats.length === 1 ? "" : "s"}`);
+  if (items.friendRequests.length) parts.push(`${items.friendRequests.length} friend request${items.friendRequests.length === 1 ? "" : "s"}`);
+  if (items.invites.length) parts.push(`${items.invites.length} group invite${items.invites.length === 1 ? "" : "s"}`);
+  return parts.length ? `PlanSwipe: ${parts.join(", ")}` : "PlanSwipe: what's new";
+}
+
 function planEmailHtml(group, place, whenText) {
   return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
     <h2 style="color:#12805e">Your PlanSwipe plan is set \u{1F389}</h2>
@@ -1929,6 +2079,54 @@ async function handleApi(request, response) {
     return;
   }
 
+  // ===== Scheduled task: hourly "what's new" digest (external cron, e.g. cron-job.org) =====
+  if (request.method === "POST" && parts[1] === "tasks" && parts[2] === "send-digests") {
+    const key = url.searchParams.get("key") || request.headers["x-cron-key"];
+    const secret = process.env.DIGEST_SECRET || process.env.REMINDER_SECRET;
+    if (!secret || key !== secret) { sendJson(response, 403, { error: "Forbidden" }); return; }
+    let allGroups, ctx;
+    try {
+      allGroups = await getAllGroups();
+      // One bulk prefetch for the whole run: queries scale with groups, not users.
+      ctx = await buildDigestContext(allGroups);
+    } catch (e) { sendJson(response, 500, { error: e.message }); return; }
+
+    const PAGE = 200;              // profiles held in memory at a time
+    const MAX_MS = 50 * 1000;      // stay well inside any platform request timeout
+    const startedAt = Date.now();
+    let sent = 0, skipped = 0, errors = 0, scanned = 0, truncated = false;
+
+    for (let from = 0; ; from += PAGE) {
+      let page;
+      try { page = await getProfilePage(from, from + PAGE - 1); }
+      catch (e) { console.warn("[digest] profile page failed at", from, "-", e.message); errors++; break; }
+      if (!page.length) break;
+      for (const row of page) {
+        if (Date.now() - startedAt > MAX_MS) { truncated = true; break; }
+        scanned++;
+        try {
+          const result = collectDigest(row, allGroups, ctx);
+          if (!result) { skipped++; continue; }   // nothing NEW since last digest
+          const ok = await sendEmail(row.email, digestSubject(result.items), digestEmailHtml(row.username, result.items));
+          if (!ok) { errors++; continue; }        // do not advance markers on failure
+          await upsertProfile({
+            username: row.username,
+            email: row.email || "",
+            profile: { ...(row.profile || {}), digest: result.next }
+          });
+          sent++;
+        } catch (e) {
+          errors++;
+          console.warn("[digest] failed for", row?.username || "(unknown)", "-", e.message);
+        }
+      }
+      if (truncated || page.length < PAGE) break;
+    }
+    console.log(`[digest] scanned:${scanned} sent:${sent} skipped:${skipped} errors:${errors}${truncated ? " (time-capped)" : ""}`);
+    sendJson(response, 200, { ok: true, scanned, sent, skipped, errors, truncated });
+    return;
+  }
+
   // ===== Scheduled task: send day-before reminders (call from an external cron) =====
   if (request.method === "POST" && parts[1] === "tasks" && parts[2] === "send-reminders") {
     const key = url.searchParams.get("key") || request.headers["x-cron-key"];
@@ -2383,13 +2581,15 @@ async function handleApi(request, response) {
     const friendRequests = profile.profile?.friendRequests?.length || 0;
     const groupInvites = profile.profile?.groupInvites?.length || 0;
     const unreadMessages = await getUnreadMessageCount(username);
-    // Count unread DM messages
-    const { count: dmCount, error: dmErr } = await supabase
+    // One notification per unread CONVERSATION, not per message: pull just the
+    // sender column for unread DMs and count the distinct senders.
+    const { data: dmRows, error: dmErr } = await supabase
       .from("direct_messages")
-      .select("id", { count: "exact", head: true })
+      .select("sender")
       .eq("recipient", username)
-      .is("read_at", null);
-    const dmMessages = dmErr ? 0 : (dmCount || 0);
+      .is("read_at", null)
+      .limit(500);
+    const dmMessages = dmErr ? 0 : new Set((dmRows || []).map((r) => r.sender)).size;
     sendJson(response, 200, { total: friendRequests + groupInvites + unreadMessages + dmMessages, friendRequests, groupInvites, messages: unreadMessages, dmMessages });
     return;
   }
