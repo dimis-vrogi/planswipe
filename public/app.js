@@ -212,7 +212,7 @@ const copy = {
     discoverOptions: "Discover real places", discoverOptionsText: "Get live suggestions from Google Maps matched to your group's area and activity, with photos, ratings, hours and reviews — not generic ideas.",
     swipeTip: "Swipe right to like, left to pass",
     place: "Place",
-    navHome: "Home", navGroups: "Groups", navSearch: "Search", navFriends: "Friends", navProfile: "Settings",
+    navHome: "Home", navGroups: "Groups", navSearch: "Find places", navFriends: "Friends", navProfile: "Settings",
     appearance: "Appearance", darkMode: "Dark mode", language: "Language",
     lockInPrompt: "You're all agreed! Set a date and time to lock it in.",
     lockPlan: "Lock in plan",
@@ -250,6 +250,7 @@ const copy = {
     voteAsGroup: "Vote and match together", voteAsGroupText: "Swipe through each spot — right to like, left to pass — and instantly see which places your group agrees on. When everyone's in, you've got your plan.",
     dinnerNearSea: "Dinner near the sea", glyfadaTaverna: "Glyfada seafood taverna", fourFriendsIn: "4 friends in",
     navHow: "How it works", navFaq: "FAQ",
+    stepsLede: "One shared way to decide where to go \u2014 no polls, no pressure, and no endless thread that never reaches a decision.",
     stepsEyebrow: "How it works", faqEyebrow: "Questions", faqTitle: "Frequently asked questions",
     ctaTitle: "Ready to plan your next night out?", ctaText: "Create a group, invite your friends, and agree on a place in minutes.", ctaButton: "Create your group",
     footTag: "The plan your whole group agrees on.", footProduct: "Product", footContact: "Contact", footFollow: "Follow", footDemo: "Demo contact details — to be updated.",
@@ -275,6 +276,8 @@ const copy = {
     area: "Area", activity: "Activity", place: "Place", saveActivity: "Save Activity",
     suggestedPlaces: "Suggested places", noLikedPlaces: "No liked places yet",
     notifications: "Notifications", friendRequestNotif: "Friend request alerts",
+    emailDigestNotif: "Hourly email summary",
+    emailDigestHint: "One email at most per hour, and only when something new arrives. Reading your messages never triggers an email.",
     groupInviteNotif: "Group invite alerts", privacy: "Privacy",
     showOnlineStatus: "Show online status", showProfilePublicly: "Show profile publicly",
     saveSettings: "Save Settings", settingsSaved: "Settings saved",
@@ -421,7 +424,7 @@ const copy = {
     profileAndSettings: "Profile & Settings",
     searchPlaces: "Search places",
     byName: "By name",
-    browse: "Browse",
+    browse: "By filters",
     allOfAthens: "All of Athens",
     anyCategory: "Any category",
     anyAge: "Any age",
@@ -431,6 +434,8 @@ const copy = {
     categoryFreeTextPlaceholder: "Type anything, e.g. sushi, cocktails, cinema",
     ageFreeTextPlaceholder: "type an age group, e.g. 18-24",
     commentsOptional: "Comments (optional)",
+    ageGroupOptional: "Age group (optional)",
+    unreadMessages: "Unread messages",
     commentsPlaceholder: "Anything else? e.g. vegan options, quiet, budget-friendly, outdoor seating",
     aiFilteredResults: "AI-filtered by area, activity, then age group.",
     enterPlaceName: "Enter a place name to search.",
@@ -496,7 +501,7 @@ const copy = {
     discoverOptionsText: "Ζωντανές προτάσεις από το Google Maps για την περιοχή και τη δραστηριότητά σας, με φωτογραφίες, βαθμολογίες, ώρες και κριτικές — όχι γενικές ιδέες.",
     swipeTip: "Σύρε δεξιά για “μου αρέσει”, αριστερά για προσπέραση",
     place: "Μέρος",
-    navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Αναζήτηση", navFriends: "Φίλοι", navProfile: "Ρυθμίσεις",
+    navHome: "Αρχική", navGroups: "Ομάδες", navSearch: "Βρες μέρη", navFriends: "Φίλοι", navProfile: "Ρυθμίσεις",
     appearance: "Εμφάνιση", darkMode: "Σκοτεινό θέμα", language: "Γλώσσα",
     lockInPrompt: "Συμφωνήσατε! Ορίστε ημερομηνία και ώρα για να το κλειδώσετε.",
     lockPlan: "Κλείδωμα σχεδίου",
@@ -535,6 +540,7 @@ const copy = {
     voteAsGroupText: "Κάντε swipe σε κάθε μέρος — δεξιά για να σας αρέσει, αριστερά για προσπέραση — και δείτε άμεσα ποια μέρη συμφωνεί η παρέα. Όταν συμφωνήσουν όλοι, το σχέδιο είναι έτοιμο.",
     dinnerNearSea: "Βραδινό δίπλα στη θάλασσα", glyfadaTaverna: "Ψαροταβέρνα Γλυφάδας", fourFriendsIn: "4 φίλοι μέσα",
     navHow: "Πώς λειτουργεί", navFaq: "Συχνές ερωτήσεις",
+    stepsLede: "Ένας κοινός τρόπος να αποφασίσετε πού θα πάτε — χωρίς ψηφοφορίες, χωρίς πίεση και χωρίς ατέλειωτες συζητήσεις που δεν καταλήγουν πουθενά.",
     stepsEyebrow: "Πώς λειτουργεί", faqEyebrow: "Ερωτήσεις", faqTitle: "Συχνές ερωτήσεις",
     ctaTitle: "Έτοιμοι να σχεδιάσετε την επόμενη έξοδό σας;", ctaText: "Φτιάξτε μια ομάδα, καλέστε τους φίλους σας και συμφωνήστε σε ένα μέρος μέσα σε λίγα λεπτά.", ctaButton: "Φτιάξτε την ομάδα σας",
     footTag: "Το σχέδιο που όλη η παρέα συμφωνεί.", footProduct: "Προϊόν", footContact: "Επικοινωνία", footFollow: "Ακολουθήστε", footDemo: "Δοκιμαστικά στοιχεία επικοινωνίας — θα ενημερωθούν.",
@@ -565,6 +571,8 @@ const copy = {
     saveActivity: "Αποθήκευση δραστηριότητας",
     suggestedPlaces: "Προτεινόμενα μέρη", noLikedPlaces: "Δεν υπάρχουν ακόμα αρεστά μέρη",
     notifications: "Ειδοποιήσεις", friendRequestNotif: "Ειδοποιήσεις αιτημάτων φιλίας",
+    emailDigestNotif: "Ωριαία σύνοψη με email",
+    emailDigestHint: "Το πολύ ένα email ανά ώρα, και μόνο όταν υπάρχει κάτι νέο. Η ανάγνωση των μηνυμάτων σας δεν στέλνει ποτέ email.",
     groupInviteNotif: "Ειδοποιήσεις προσκλήσεων", privacy: "Απόρρητο",
     showOnlineStatus: "Εμφάνιση online κατάστασης", showProfilePublicly: "Δημόσιο προφίλ",
     saveSettings: "Αποθήκευση ρυθμίσεων", settingsSaved: "Οι ρυθμίσεις αποθηκεύτηκαν",
@@ -689,6 +697,8 @@ const copy = {
     categoryFreeTextPlaceholder: "Γράψε οτιδήποτε, π.χ. sushi, cocktails, σινεμά",
     commentSubmitted: "Το σχόλιο καταχωρήθηκε",
     commentsOptional: "Σχόλια (προαιρετικά)",
+    ageGroupOptional: "Ηλικιακή ομάδα (προαιρετικά)",
+    unreadMessages: "Μη αναγνωσμένα μηνύματα",
     commentsStepHint: "Πρόσθεσε απαιτήσεις όπως budget, ένταση, διατροφικές ανάγκες, καθιστικό, ή τι να αποφύγουμε. Μπορείς και να το παραλείψεις.",
     commentsStepTitle: "Κάποιες σημειώσεις πριν βρούμε μέρη;",
     loadingPlaces: "Φόρτωση περισσότερων μερών\u2026",
@@ -725,7 +735,7 @@ const copy = {
     profileAndSettings: "Προφίλ & Ρυθμίσεις",
     searchPlaces: "Αναζήτηση μερών",
     byName: "Με όνομα",
-    browse: "Περιήγηση",
+    browse: "Με φίλτρα",
     allOfAthens: "Όλη η Αθήνα",
     anyCategory: "Οποιαδήποτε κατηγορία",
     anyAge: "Οποιαδήποτε ηλικία",
@@ -863,20 +873,6 @@ function applyLanguage() {
   const frontCard = document.querySelector(".cf-item:first-child .cf-cb");
   if (frontCard) {
     const h3 = frontCard.querySelector("h3"); if (h3) h3.textContent = t("glyfadaTaverna");
-  }
-
-  const offerSection = document.querySelector(".offer-section");
-  if (offerSection) {
-    const eyb = offerSection.querySelector(".eyebrow");  if (eyb) eyb.textContent = t("whatPlanswipeIs");
-    const h2  = offerSection.querySelector("h2");        if (h2)  h2.textContent  = t("sharedDecisionTool");
-    const p   = offerSection.querySelector("p");         if (p)   p.textContent   = t("offerText");
-    const arts = offerSection.querySelectorAll(".offer-grid article");
-    [["agreeFaster","agreeFasterText"],["discoverOptions","discoverOptionsText"],["voteAsGroup","voteAsGroupText"]]
-      .forEach(([hKey, pKey], i) => {
-        if (!arts[i]) return;
-        const h3 = arts[i].querySelector("h3"); if (h3) h3.textContent = t(hKey);
-        const pp = arts[i].querySelector("p");  if (pp) pp.textContent = t(pKey);
-      });
   }
 
   const topbarEyb = document.querySelector(".topbar .eyebrow");
@@ -1891,7 +1887,9 @@ async function refreshNotifications() {
       btn.classList.remove("has-notif");
       btn.querySelector(".notif-count")?.remove();
       let count = 0;
-      if (btn.dataset.page === "friends") count = data.friendRequests || 0;
+      // Friends is the entry point to Messages, so it surfaces both pending
+      // friend requests and unread conversations (one per chat, not per message).
+      if (btn.dataset.page === "friends") count = (data.friendRequests || 0) + (data.dmMessages || 0);
       if (btn.dataset.page === "messages") count = data.dmMessages || 0;
       if (btn.dataset.page === "groups") {
         const groupsTotal = (data.groupInvites || 0);
@@ -1918,6 +1916,10 @@ async function refreshNotifications() {
         btn.appendChild(sp);
       }
     });
+
+    // Keep the bottom-nav Friends badge live between full re-renders, otherwise
+    // a new message wouldn't show up until the page happened to re-render.
+    updateBottomNav();
 
     // #4: keep the currently-open list page live without disrupting the user.
     if (state.activePage === "groups" && state.pageShellRendered === "groups"
@@ -2640,7 +2642,7 @@ function updateBottomNav() {
   });
   const badge = document.querySelector("#bnFriendsBadge");
   if (badge) {
-    const n = state.notifications?.friendRequests || 0;
+    const n = (state.notifications?.friendRequests || 0) + (state.notifications?.dmMessages || 0);
     badge.textContent = n > 9 ? "9+" : String(n);
     badge.classList.toggle("is-hidden", n <= 0);
   }
@@ -2794,7 +2796,7 @@ function openPlacesSearch() {
         <div class="search-filter-row">
           <label>${escapeHtml(t("area"))}<input id="searchArea" type="text" placeholder="${escapeHtml(t("areaFreeTextPlaceholder"))}" autocomplete="off"></label>
           <label>${escapeHtml(t("category"))}<input id="searchCategory" type="text" placeholder="${escapeHtml(t("categoryFreeTextPlaceholder"))}" autocomplete="off"></label>
-          <label>${escapeHtml(t("ageGroup"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
+          <label>${escapeHtml(t("ageGroupOptional"))}<input id="searchAge" type="text" placeholder="${escapeHtml(t("ageFreeTextPlaceholder"))}" autocomplete="off"></label>
         </div>
         <label class="search-comments-label">${escapeHtml(t("commentsOptional"))}<textarea id="searchComments" rows="2" placeholder="${escapeHtml(t("commentsPlaceholder"))}"></textarea></label>
         <button class="btn-primary" id="runSearchBtn" type="button">${escapeHtml(t("search"))}</button>`;
@@ -3129,6 +3131,8 @@ function settingsSectionsHtml() {
       <section class="wide-panel personal-form"><h3>${t("settings")} \u00b7 ${t("notifications")}</h3>
         <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
         <div class="settings-toggle"><label for="notifGroupInvite">${t("groupInviteNotif")}</label><input type="checkbox" id="notifGroupInvite" ${settings.groupInviteNotif !== false ? "checked" : ""}></div>
+      <div class="settings-toggle"><label for="notifEmailDigest">${t("emailDigestNotif")}</label><input type="checkbox" id="notifEmailDigest" ${settings.emailDigest !== false ? "checked" : ""}></div>
+      <p class="muted-note">${t("emailDigestHint")}</p>
       </section>
       <section class="wide-panel personal-form"><h3>${t("privacy")}</h3>
         <div class="settings-toggle"><label for="privacyOnline">${t("showOnlineStatus")}</label><input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}></div>
@@ -3239,16 +3243,17 @@ async function refreshFriendsPage() {
     try {
       const conv = await api(`/api/messages/conversations?username=${encodeURIComponent(currentUsername())}`);
       const conversations = conv.conversations || [];
-      const totalUnread = conversations.reduce((sum, c) => sum + (c.unread || 0), 0);
+      // One notification per unread chat, not per message.
+      const unreadChats = conversations.filter((c) => (c.unread || 0) > 0).length;
       const mb = document.querySelector("#tabBadgeMessages");
-      if (mb) { mb.textContent = totalUnread > 99 ? "99+" : String(totalUnread); setVisible(mb, totalUnread > 0); }
+      if (mb) { mb.textContent = unreadChats > 99 ? "99+" : String(unreadChats); setVisible(mb, unreadChats > 0); }
       panel.innerHTML = conversations.length
         ? `<div class="people-list">${conversations.map((c) => `
             <article class="person-row conversation-row ${c.unread > 0 ? "has-unread" : ""}" data-open-dm="${escapeHtml(c.with)}">
               <div class="person-main">
                 ${profileImage({ username: c.with, profile: { picture: c.picture || "" } }, "person-avatar")}
                 <div class="person-text">
-                  <h3>${escapeHtml(c.with)}${c.unread > 0 ? `<span class="tab-badge">${c.unread > 99 ? "99+" : c.unread}</span>` : ""}</h3>
+                  <h3>${escapeHtml(c.with)}${c.unread > 0 ? `<span class="unread-dot" aria-label="${escapeHtml(t("unreadMessages") || "Unread messages")}"></span>` : ""}</h3>
                   <p class="${c.unread > 0 ? "unread-preview" : ""}">${escapeHtml(c.lastMessage ? c.lastMessage.slice(0, 70) : t("startMessaging"))}</p>
                 </div>
               </div>
@@ -3559,6 +3564,8 @@ async function renderSettingsPage() {
     <section class="wide-panel personal-form"><h3>${t("notifications")}</h3>
       <div class="settings-toggle"><label for="notifFriendReq">${t("friendRequestNotif")}</label><input type="checkbox" id="notifFriendReq" ${settings.friendRequestNotif !== false ? "checked" : ""}></div>
       <div class="settings-toggle"><label for="notifGroupInvite">${t("groupInviteNotif")}</label><input type="checkbox" id="notifGroupInvite" ${settings.groupInviteNotif !== false ? "checked" : ""}></div>
+      <div class="settings-toggle"><label for="notifEmailDigest">${t("emailDigestNotif")}</label><input type="checkbox" id="notifEmailDigest" ${settings.emailDigest !== false ? "checked" : ""}></div>
+      <p class="muted-note">${t("emailDigestHint")}</p>
     </section>
     <section class="wide-panel personal-form"><h3>${t("privacy")}</h3>
       <div class="settings-toggle"><label for="privacyOnline">${t("showOnlineStatus")}</label><input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}></div>
@@ -3570,7 +3577,7 @@ async function renderSettingsPage() {
 
 async function saveSettings() {
   const profile = state.account?.profile || {};
-  const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, settings: { friendRequestNotif: document.querySelector("#notifFriendReq")?.checked !== false, groupInviteNotif: document.querySelector("#notifGroupInvite")?.checked !== false, showOnlineStatus: document.querySelector("#privacyOnline")?.checked !== false, showProfilePublicly: document.querySelector("#privacyPublic")?.checked !== false } } } });
+  const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, settings: { friendRequestNotif: document.querySelector("#notifFriendReq")?.checked !== false, groupInviteNotif: document.querySelector("#notifGroupInvite")?.checked !== false, emailDigest: document.querySelector("#notifEmailDigest")?.checked !== false, showOnlineStatus: document.querySelector("#privacyOnline")?.checked !== false, showProfilePublicly: document.querySelector("#privacyPublic")?.checked !== false } } } });
   saveAccount(data.user);
   alert(t("settingsSaved"));
 }
@@ -4123,15 +4130,18 @@ document.querySelector(".topbar-brand")?.addEventListener("click", () => navigat
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  // Reveal sections as they scroll into view.
+  // Reveal sections as they scroll into view. Only opt into the hidden-by-default
+  // styling when we can actually reveal them, so content can never get stranded.
   const reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && reveals.length) {
+    document.documentElement.classList.add("js-reveal");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); } });
-    }, { threshold: 0.12 });
+    }, { threshold: 0.08 });
     reveals.forEach((el) => io.observe(el));
-  } else {
-    reveals.forEach((el) => el.classList.add("is-visible"));
+    // Safety net: if anything is still hidden after 3s (odd viewports, zoom,
+    // short pages), just show it.
+    setTimeout(() => reveals.forEach((el) => el.classList.add("is-visible")), 3000);
   }
 
   // CTA button → open signup (or straight into the app if already logged in).

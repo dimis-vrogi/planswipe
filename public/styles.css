@@ -416,6 +416,10 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   place-items: center;
   min-height: 340px;
   width: 100%;
+  /* Cards travel sideways; clip so narrow screens never scroll horizontally. */
+  overflow: hidden;
+  --cf-far: 260px;
+  --cf-near: 130px;
 }
 .cf-track {
   position: relative;
@@ -449,11 +453,11 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
 .cf-item:nth-child(4) { animation: cfFlow 15s linear infinite -9s; }
 .cf-item:nth-child(5) { animation: cfFlow 15s linear infinite -12s; }
 @keyframes cfFlow {
-  0%   { transform: translateX(-260px) translateZ(-140px) rotateY(45deg); opacity: 0.4; z-index: 1; }
-  25%  { transform: translateX(-130px) translateZ(-40px) rotateY(35deg); opacity: 0.7; z-index: 2; }
+  0%   { transform: translateX(calc(-1 * var(--cf-far))) translateZ(-140px) rotateY(45deg); opacity: 0.4; z-index: 1; }
+  25%  { transform: translateX(calc(-1 * var(--cf-near))) translateZ(-40px) rotateY(35deg); opacity: 0.7; z-index: 2; }
   50%  { transform: translateX(0) translateZ(60px) rotateY(0); opacity: 1; z-index: 5; }
-  75%  { transform: translateX(130px) translateZ(-40px) rotateY(-35deg); opacity: 0.7; z-index: 2; }
-  100% { transform: translateX(260px) translateZ(-140px) rotateY(-45deg); opacity: 0.4; z-index: 1; }
+  75%  { transform: translateX(var(--cf-near)) translateZ(-40px) rotateY(-35deg); opacity: 0.7; z-index: 2; }
+  100% { transform: translateX(var(--cf-far)) translateZ(-140px) rotateY(-45deg); opacity: 0.4; z-index: 1; }
 }
 .cf-pick {
   position: absolute;
@@ -1709,8 +1713,12 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   .hero-copy h1 { max-width: 100%; }
 
   /* Smaller 3D deck on mobile; keep the depth, trim the footprint */
-  .hero-coverflow { min-height: 300px; perspective: 900px; }
-  .cf-track { width: 180px; height: 230px; }
+  .hero-coverflow { min-height: 300px; perspective: 900px; --cf-far: 132px; --cf-near: 74px; }
+  .cf-track { width: 168px; height: 216px; }
+  .cf-ph { font-size: 2.2rem; }
+  .cf-cb { padding: 9px 11px; }
+  .cf-cb h3 { font-size: 0.9rem; }
+  .cf-cb p { font-size: 0.68rem; }
 
   .offer-section,
   .offer-grid { grid-template-columns: 1fr; }
@@ -2001,9 +2009,12 @@ button:not(.btn-primary):not(.btn-outline):not(.btn-ghost):not(.btn-secondary):a
   border-bottom-left-radius: 4px;
 }
 
+/* Three children — emoji, text field, send — must share one row in that order.
+   (Was 2 columns for 3 items, which pushed the send button onto its own line.) */
 .chat-input-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 8px;
   padding: 12px 14px;
   border-top: 1px solid var(--line);
@@ -3645,10 +3656,27 @@ html { scroll-behavior: smooth; }
   font-size: 0.6rem; font-weight: 800; display: grid; place-items: center;
 }
 
-@media (max-width: 640px) {
-  .bottom-nav:not(.is-hidden) { display: flex; }
-  body.has-bottom-nav .app-shell { padding-bottom: 84px; }
-  body.has-bottom-nav .chat-fab { bottom: 92px; }
+/* Visible on every device, not just phones. On wide screens it becomes a
+   centered floating bar rather than stretching edge-to-edge. */
+.bottom-nav:not(.is-hidden) { display: flex; }
+body.has-bottom-nav .app-shell { padding-bottom: 84px; }
+body.has-bottom-nav .chat-fab { bottom: 92px; }
+
+@media (min-width: 641px) {
+  .bottom-nav {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 40px));
+    bottom: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 6px 10px;
+    box-shadow: var(--shadow-lg);
+  }
+  .bottom-nav-btn { padding: 8px 2px; }
+  body.has-bottom-nav .app-shell { padding-bottom: 104px; }
+  body.has-bottom-nav .chat-fab { bottom: 112px; }
 }
 
 /* ============================================================
@@ -4185,13 +4213,18 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
   line-height: 1.05;
   margin: 6px 0 28px;
 }
-/* reveal-on-scroll */
-.reveal {
+/* Reveal-on-scroll. Scoped under .js-reveal (set by JS) so that if scripting
+   fails or IntersectionObserver is unavailable, the content is simply visible
+   rather than stuck at opacity:0. */
+.js-reveal .reveal {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.reveal.is-visible { opacity: 1; transform: none; }
+.js-reveal .reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal .reveal { opacity: 1; transform: none; transition: none; }
+}
 
 .land-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
 .land-step { display: flex; gap: 18px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px 22px; box-shadow: var(--shadow-md); }
@@ -4284,4 +4317,54 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
   .land-footer-grid { grid-template-columns: 1fr 1fr; }
   .land-foot-brand { grid-column: 1 / -1; }
   .nav-link { display: none; }
+}
+
+
+/* Lede under the "Four steps" title (merged from the old offer section). */
+.land-lede {
+  margin: -14px 0 26px;
+  color: #33404a;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+/* ---- Landing sections on phones ---- */
+@media (max-width: 640px) {
+  .land-section { padding: 40px 0 8px; scroll-margin-top: 72px; }
+  .land-title { font-size: 1.65rem; margin-bottom: 18px; }
+  .land-lede { font-size: 0.98rem; margin: -8px 0 20px; }
+  .land-step { padding: 16px; gap: 13px; border-radius: var(--radius-md); }
+  .land-step-num { width: 32px; height: 32px; font-size: 0.95rem; }
+  .land-step h3 { font-size: 1rem; margin-top: 2px; }
+  .land-step p { font-size: 0.92rem; }
+  .land-faq details { padding: 14px 16px; }
+  .land-faq summary { font-size: 0.95rem; }
+  .land-faq p { font-size: 0.92rem; }
+  .land-cta { padding: 32px 20px; margin-top: 40px; border-radius: var(--radius-lg); }
+  .land-cta p { font-size: 0.98rem; }
+  .land-footer { margin-top: 44px; padding: 28px 2px 20px; }
+  .land-footer-grid { grid-template-columns: 1fr 1fr; gap: 22px; }
+  .land-foot-bottom { flex-direction: column; gap: 6px; }
+}
+
+/* Never allow sideways scrolling from the 3D transforms. */
+html, body { overflow-x: hidden; }
+
+/* Keep the composer comfortable on narrow phones without wrapping. */
+@media (max-width: 420px) {
+  .chat-input-row { gap: 6px; padding: 10px; }
+  .chat-input-row .emoji-btn { width: 36px; height: 36px; font-size: 1rem; }
+  .chat-input-row .btn-primary { padding: 0 12px; font-size: 0.82rem; }
+}
+
+/* Unread indicator on a conversation row: one dot per chat (not per message). */
+.unread-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--accent, #e4572e);
+  vertical-align: middle;
 }
