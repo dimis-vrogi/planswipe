@@ -279,7 +279,10 @@ const copy = {
     emailDigestNotif: "Hourly email summary",
     emailDigestHint: "One email at most per hour, and only when something new arrives. Reading your messages never triggers an email.",
     groupInviteNotif: "Group invite alerts", privacy: "Privacy",
-    showOnlineStatus: "Show online status", showProfilePublicly: "Show profile publicly",
+    whoSeesOnline: "Who can see when I'm online", whoSeesProfile: "Who can see my profile details",
+    visFriends: "Friends", visFriendsGroups: "Friends & group members", visEveryone: "Everyone",
+    visibilityHint: "Profile details means your bio, preferences and past activities. Your name and picture stay visible so people can find you.",
+    online: "Online",
     saveSettings: "Save Settings", settingsSaved: "Settings saved",
     deleteAccount: "Delete Account",
     deleteAccountConfirm: "Are you sure you want to permanently delete your account? This cannot be undone.",
@@ -574,7 +577,10 @@ const copy = {
     emailDigestNotif: "Ωριαία σύνοψη με email",
     emailDigestHint: "Το πολύ ένα email ανά ώρα, και μόνο όταν υπάρχει κάτι νέο. Η ανάγνωση των μηνυμάτων σας δεν στέλνει ποτέ email.",
     groupInviteNotif: "Ειδοποιήσεις προσκλήσεων", privacy: "Απόρρητο",
-    showOnlineStatus: "Εμφάνιση online κατάστασης", showProfilePublicly: "Δημόσιο προφίλ",
+    whoSeesOnline: "Ποιοι βλέπουν πότε είμαι online", whoSeesProfile: "Ποιοι βλέπουν τα στοιχεία μου",
+    visFriends: "Φίλοι", visFriendsGroups: "Φίλοι & μέλη ομάδων", visEveryone: "Όλοι",
+    visibilityHint: "Τα στοιχεία προφίλ είναι το βιογραφικό, οι προτιμήσεις και οι προηγούμενες δραστηριότητες. Το όνομα και η φωτογραφία σας παραμένουν ορατά για να σας βρίσκουν.",
+    online: "Σε σύνδεση",
     saveSettings: "Αποθήκευση ρυθμίσεων", settingsSaved: "Οι ρυθμίσεις αποθηκεύτηκαν",
     deleteAccount: "Διαγραφή Λογαριασμού",
     deleteAccountConfirm: "Είστε σίγουροι ότι θέλετε να διαγράψετε τον λογαριασμό; Αυτή η ενέργεια είναι μη αναστρέψιμη.",
@@ -2717,6 +2723,7 @@ function addOwnPlace() {
 
 function leaveGroup() {
   clearInterval(state.pollTimer); clearInterval(state.notifTimer);
+  clearInterval(state.dmMessageTimer); state.dmMessageTimer = null;
   removeChatButton();
   state.user = null; state.group = null; state.groupCode = "";
   state.index = 0; state.setupMode = ""; state.pendingAreaOption = null; state.pollErrorCount = 0;
@@ -3135,8 +3142,9 @@ function settingsSectionsHtml() {
       <p class="muted-note">${t("emailDigestHint")}</p>
       </section>
       <section class="wide-panel personal-form"><h3>${t("privacy")}</h3>
-        <div class="settings-toggle"><label for="privacyOnline">${t("showOnlineStatus")}</label><input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}></div>
-        <div class="settings-toggle"><label for="privacyPublic">${t("showProfilePublicly")}</label><input type="checkbox" id="privacyPublic" ${settings.showProfilePublicly !== false ? "checked" : ""}></div>
+        <div class="settings-toggle"><label for="privacyOnline">${t("whoSeesOnline")}</label>${visibilitySelect("privacyOnline", settings.onlineVisibility)}</div>
+        <div class="settings-toggle"><label for="privacyPublic">${t("whoSeesProfile")}</label>${visibilitySelect("privacyPublic", settings.profileVisibility)}</div>
+      <p class="muted-note">${t("visibilityHint")}</p>
       </section>
       <button class="btn-primary" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
       <section class="wide-panel personal-form"><h3>${t("session") || "Session"}</h3>
@@ -3150,7 +3158,11 @@ function settingsSectionsHtml() {
 function userCard(user, action = "") {
   const preferences = user.profile?.preferences || {};
   const preferenceText = [...(preferences.areas || []), ...(preferences.activities || []), ...(preferences.places || [])].slice(0, 4).join(", ");
-  return `<article class="demo-card user-card"><div class="user-card-head">${profileImage(user, "small-profile-preview")}<div><h3>${escapeHtml(user.username)}</h3><p>${escapeHtml(user.profile?.bio || "")}</p></div></div><p>${escapeHtml(preferenceText || "")}</p>${action}</article>`;
+  // user.online is null when this viewer isn't allowed to see their status.
+  const onlineDot = user.online === true
+    ? `<span class="online-dot" title="${escapeHtml(t("online"))}"></span>`
+    : "";
+  return `<article class="demo-card user-card"><div class="user-card-head">${profileImage(user, "small-profile-preview")}<div><h3>${escapeHtml(user.username)}${onlineDot}</h3><p>${escapeHtml(user.profile?.bio || "")}</p></div></div><p>${escapeHtml(preferenceText || "")}</p>${action}</article>`;
 }
 
 async function renderFriendsPage() {
@@ -3568,16 +3580,30 @@ async function renderSettingsPage() {
       <p class="muted-note">${t("emailDigestHint")}</p>
     </section>
     <section class="wide-panel personal-form"><h3>${t("privacy")}</h3>
-      <div class="settings-toggle"><label for="privacyOnline">${t("showOnlineStatus")}</label><input type="checkbox" id="privacyOnline" ${settings.showOnlineStatus !== false ? "checked" : ""}></div>
-      <div class="settings-toggle"><label for="privacyPublic">${t("showProfilePublicly")}</label><input type="checkbox" id="privacyPublic" ${settings.showProfilePublicly !== false ? "checked" : ""}></div>
+      <div class="settings-toggle"><label for="privacyOnline">${t("whoSeesOnline")}</label>${visibilitySelect("privacyOnline", settings.onlineVisibility)}</div>
+      <div class="settings-toggle"><label for="privacyPublic">${t("whoSeesProfile")}</label>${visibilitySelect("privacyPublic", settings.profileVisibility)}</div>
+      <p class="muted-note">${t("visibilityHint")}</p>
     </section>
     <button class="btn-primary" type="button" id="saveSettingsButton">${t("saveSettings")}</button>
     <section class="wide-panel personal-form" style="margin-top:18px;border-top:2px solid var(--red);"><h3 style="color:var(--red);">${t("accountManagement")}</h3><button class="danger-button" type="button" id="deleteAccountButton">${t("deleteAccount")}</button></section>`;
 }
 
+// Privacy visibility levels, shared by the online-status and profile settings.
+function visibilitySelect(id, value) {
+  const current = String(value || "friends");
+  const opts = [
+    ["friends", t("visFriends")],
+    ["friends_groups", t("visFriendsGroups")],
+    ["everyone", t("visEveryone")]
+  ];
+  return `<select id="${id}">${opts.map(([v, label]) =>
+    `<option value="${v}"${current === v ? " selected" : ""}>${escapeHtml(label)}</option>`
+  ).join("")}</select>`;
+}
+
 async function saveSettings() {
   const profile = state.account?.profile || {};
-  const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, settings: { friendRequestNotif: document.querySelector("#notifFriendReq")?.checked !== false, groupInviteNotif: document.querySelector("#notifGroupInvite")?.checked !== false, emailDigest: document.querySelector("#notifEmailDigest")?.checked !== false, showOnlineStatus: document.querySelector("#privacyOnline")?.checked !== false, showProfilePublicly: document.querySelector("#privacyPublic")?.checked !== false } } } });
+  const data = await api("/api/account", { method: "PATCH", body: { username: currentUsername(), profile: { ...profile, settings: { friendRequestNotif: document.querySelector("#notifFriendReq")?.checked !== false, groupInviteNotif: document.querySelector("#notifGroupInvite")?.checked !== false, emailDigest: document.querySelector("#notifEmailDigest")?.checked !== false, onlineVisibility: document.querySelector("#privacyOnline")?.value || "friends", profileVisibility: document.querySelector("#privacyPublic")?.value || "friends" } } } });
   saveAccount(data.user);
   alert(t("settingsSaved"));
 }
@@ -4147,8 +4173,7 @@ document.querySelector(".topbar-brand")?.addEventListener("click", () => navigat
   // CTA button → open signup (or straight into the app if already logged in).
   document.querySelector("#ctaSignupButton")?.addEventListener("click", () => {
     if (isLoggedIn()) { navigate("/main"); return; }
-    state.authMode = "signup";
-    openLogin();
+    openSignup();   // openLogin() would reset authMode back to "login"
   });
 
   // Demo social links are placeholders until real URLs are set.

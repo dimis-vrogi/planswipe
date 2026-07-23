@@ -2810,7 +2810,15 @@ textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible,
 .place-contact a:hover { text-decoration: underline; }
 
 /* ---- #6 mobile: keep everything inside the viewport, no horizontal scroll ---- */
+/* Contain sideways overflow (3D transforms, wide cards) WITHOUT creating a
+   scroll container: `overflow-x: hidden` on html/body is a well-known cause of
+   `position: sticky` silently not sticking, which would break the sticky hero
+   nav. `clip` clips identically but leaves the scroll container alone. The
+   `hidden` declaration stays first as a fallback for browsers without `clip`. */
 html, body { max-width: 100%; overflow-x: hidden; }
+@supports (overflow-x: clip) {
+  html, body { overflow-x: clip; }
+}
 *, *::before, *::after { box-sizing: border-box; }
 img, video, .search-card-photo, .detail-photo { max-width: 100%; }
 .app-shell { width: 100%; max-width: 1120px; }
@@ -4348,8 +4356,6 @@ html[data-theme="dark"] .plan-datetime-row input[type="time"] { color-scheme: da
   .land-foot-bottom { flex-direction: column; gap: 6px; }
 }
 
-/* Never allow sideways scrolling from the 3D transforms. */
-html, body { overflow-x: hidden; }
 
 /* Keep the composer comfortable on narrow phones without wrapping. */
 @media (max-width: 420px) {
@@ -4367,4 +4373,30 @@ html, body { overflow-x: hidden; }
   border-radius: 50%;
   background: var(--accent, #e4572e);
   vertical-align: middle;
+}
+
+/* Online presence dot on user cards (only rendered when the viewer is allowed
+   to see it — the server sends online:null otherwise). */
+.online-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--green-bright);
+  box-shadow: 0 0 0 3px rgba(24, 163, 116, 0.18);
+  vertical-align: middle;
+}
+/* Privacy dropdowns sit beside their label like the toggles they replaced. */
+.settings-toggle select {
+  min-width: 190px;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 600;
+}
+@media (max-width: 480px) {
+  .settings-toggle select { min-width: 150px; font-size: 0.9rem; }
 }
