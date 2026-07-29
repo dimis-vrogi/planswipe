@@ -28,6 +28,34 @@ async function fetchWithTimeout(url, options = {}, ms = 7000) {
   }
 }
 const BCRYPT_ROUNDS = 10;
+// Ranked-list replies are arrays of {place, reason}. ~40 tokens per item is a
+// safe budget; 300 (the old fixed value) truncated the JSON for 10-20 places,
+// producing the "Unterminated string" parse errors seen in production.
+function rankingTokenBudget(count) {
+  return Math.min(2000, Math.max(400, count * 45 + 120));
+}
+// Parse a JSON array from a model reply, tolerating code fences and — crucially —
+// truncation: if the array was cut off mid-item, recover the complete objects
+// that did parse rather than throwing away the whole response.
+function parseJsonArrayLoose(raw) {
+  let text = String(raw || "").replace(/```json/gi, "").replace(/```/g, "").trim();
+  const start = text.indexOf("[");
+  if (start > 0) text = text.slice(start);
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (_) {
+    // Salvage: keep whole {...} objects up to the last balanced one.
+    const objects = [];
+    let depth = 0, objStart = -1;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === "{") { if (depth === 0) objStart = i; depth++; }
+      else if (c === "}") { depth--; if (depth === 0 && objStart >= 0) { try { objects.push(JSON.parse(text.slice(objStart, i + 1))); } catch (_) {} objStart = -1; } }
+    }
+    return objects.length ? objects : null;
+  }
+}
 const APP_ORIGIN = process.env.APP_ORIGIN || "https://www.planswipe.gr";
 // #1: subscriptions stay OFF until you flip this to "true" (and configure Stripe).
 // While OFF, every feature is free for everyone and no charge flow runs.
@@ -951,6 +979,23 @@ async function resolveAreaRectangle(areaOption) {
   return geocodeAreaRectangle(areaOption.queryArea || areaOption.label || "");
 }
 
+// How far outside the requested area a result may still sit, as a fraction of
+// the area's own size. Google's viewport for a region like "north suburbs of
+// Athens" is a rough box; venues that any normal Google Maps search for that
+// area would return often sit just past its edge. A hard cut at the boundary
+// silently dropped those, so results looked thinner than Google's own.
+const AREA_MARGIN = 0.18;   // 18% of the area's width/height on each side
+
+function expandRectangle(rect, margin = AREA_MARGIN) {
+  if (!rect) return rect;
+  const dLat = (rect.high.latitude  - rect.low.latitude)  * margin;
+  const dLng = (rect.high.longitude - rect.low.longitude) * margin;
+  return {
+    low:  { latitude: rect.low.latitude  - dLat, longitude: rect.low.longitude  - dLng },
+    high: { latitude: rect.high.latitude + dLat, longitude: rect.high.longitude + dLng }
+  };
+}
+
 // True if a place's coordinates fall inside the rectangle.
 function placeInRectangle(place, rect) {
   const loc = place.location;
@@ -1118,8 +1163,12 @@ async function googleTextSearch(query, areaOption, areaLabel, typeLabel, typeId,
     }
     const data = await response.json();
     let places = data.places || [];
-    // Belt-and-suspenders: drop anything whose coordinates fall outside the rectangle.
-    if (rect) places = places.filter((p) => placeInRectangle(p, rect));
+    // Keep the area honest, but allow the margin so venues just past the
+    // boundary (which Google itself would return for this area) survive.
+    if (rect) {
+      const allowed = expandRectangle(rect);
+      places = places.filter((p) => placeInRectangle(p, allowed));
+    }
     return places;
   }
 
@@ -1192,13 +1241,13 @@ async function refinePlacesWithOpenAI(googlePlaces, area, activity, maxCount = 5
             address: p.address || p.description
           })))}. Pick up to ${maxCount} best matches from this list only. Return ONLY JSON.` }
         ],
-        temperature: 0.4, max_tokens: 300
+        temperature: 0.4, max_tokens: rankingTokenBudget(maxCount)
       })
-    });
+    }, 12000);
     if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
     const aiData = await aiResponse.json();
     const content = aiData.choices?.[0]?.message?.content || "";
-    const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+    const parsed = parseJsonArrayLoose(content);
     if (!Array.isArray(parsed) || !parsed.length) return googlePlaces.slice(0, maxCount);
     const byTitle = new Map(googlePlaces.map((p) => [p.title.toLowerCase(), p]));
     const refined = [];
@@ -1245,13 +1294,13 @@ async function refineSearchPlacesWithOpenAI(googlePlaces, area, activity, ageGro
           }
         ],
         temperature: 0.1,
-        max_tokens: 300
+        max_tokens: rankingTokenBudget(maxCount)
       })
-    });
+    }, 12000);
     if (!aiResponse.ok) return googlePlaces.slice(0, maxCount);
     const aiData = await aiResponse.json();
     const content = aiData.choices?.[0]?.message?.content || "";
-    const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+    const parsed = parseJsonArrayLoose(content);
     if (!Array.isArray(parsed)) return googlePlaces.slice(0, maxCount);
     const byTitle = new Map(googlePlaces.map((p) => [p.title.toLowerCase(), p]));
     return parsed
@@ -2533,7 +2582,10 @@ async function handleApi(request, response) {
     // 2) same name in other areas (Athens-wide, minus the selected-area matches)
     let elsewhere = (await googleTextSearch(`${query} Athens`, athensWide, "Athens", "", "", 12, matchTitles, language) || []);
     const areaRect = await resolveAreaRectangle(areaOption);
-    if (areaRect) elsewhere = elsewhere.filter((p) => !placeInRectangle(p, areaRect));
+    if (areaRect) {
+      const allowed = expandRectangle(areaRect);   // same boundary as the in-area tier
+      elsewhere = elsewhere.filter((p) => !placeInRectangle(p, allowed));
+    }
     elsewhere = elsewhere.filter((p) => !matchIds.has(p.googlePlaceId)).slice(0, 6);
 
     // 3) similar-type places in the selected area
